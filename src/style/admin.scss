@@ -21,7 +21,7 @@ th {
 }
 
 select {
-  padding: 6.5px 44px 7px 14px;
+  padding: 4.5px 44px 6px 8px;
   appearance: none;
   background-image: url("/admin/static/img/select_arrow.png");
   background-repeat: no-repeat;
@@ -52,6 +52,7 @@ input:focus {
 .page_start_box {
   display: flex;
   justify-content: space-between;
+  padding: 20px 30px;
   margin-bottom: 10px;
 }
 .page_start_box h2 {
@@ -232,7 +233,7 @@ input::placeholder {
 
 // -------------------- 테마 추가 ----------------------
 .right_box {
-  padding: 20px 30px 20px 30px;
+  padding:0;
   width: 100%;
 
   &.tracker-active {
@@ -271,9 +272,6 @@ input::placeholder {
       color: #555;
     }
 
-    .popupAccountOptionTable {
-      width: 546px;
-    }
 
     table {
       margin-bottom: 20px;
@@ -559,6 +557,77 @@ input::placeholder {
 
 }
 
+// ---------- table -----------
+
+.list_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 30px;
+
+  .result_count {
+    font-size: $font-size-sm;
+    color: $black02;
+  }
+
+  .search_area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .search_input_wrap {
+      position: relative;
+
+      input {
+        height: 30px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 0 30px;
+        font-size: $font-size-sm;
+        width: 300px;
+        background-image: url("/admin/static/img/search_icon.png");
+        background-repeat: no-repeat;
+        background-position: 3% center;
+        &::placeholder {
+          color: #bbb;
+        }
+      }
+
+      .btn_clear {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        padding: 0;
+        line-height: 1;
+        .admin_icon {
+          display: block;
+          width: 16px;
+          height: 16px;
+          background-position: -56px -95px;
+        }
+      }
+    }
+
+    select {
+      height: 30px;
+      font-size: $font-size-sm;
+      background-color: #FAFAFA;
+    }
+  }
+}
+
+.admin_page {
+
+  .table_wrap {
+    overflow-x: auto;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: $font-size-sm;
 
 
 
@@ -629,6 +698,117 @@ input::placeholder {
     &[readonly] {
       background: #F6F7FB;
       color: #666;
+    }
+  }
+}
+      thead {
+        border-top: 1px solid $gray02;
+
+        th {
+
+          padding: 10px 8px;
+          border-bottom: 1px solid $gray02;
+          border-right: 1px solid $gray02;
+          white-space: nowrap;
+          text-align: center;
+          font-size: $font-size-xs;
+          color: #555;
+
+          &:last-child {
+            border-right: none;
+          }
+        }
+      }
+
+      tbody {
+        tr {
+          &:hover {
+            background: #f9f9f9;
+          }
+        }
+
+        td {
+          padding: 10px 8px;
+          border-bottom: 1px solid $gray02;
+          text-align: center;
+          white-space: nowrap;
+
+          .status_badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: $border-radius;
+            font-size: $font-size-xs;
+
+          }
+        }
+
+        .td_actions {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+
+          .btn_detail {
+            padding: 3px 10px;
+            font-size: $font-size-xs;
+            border: 1px solid $gray02;
+            background: #fff;
+            border-radius: $border-radius;
+
+            &:hover {
+              background: #f0f0f0;
+            }
+          }
+
+          .btn_delete {
+            background: none;
+            border: none;
+            padding: 2px;
+
+            .icon_trash {
+              display: block;
+              width: 16px;
+              height: 16px;
+              background-position: -14px -86px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+// ---------- pagination  -----------
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  margin-top: 20px;
+  padding-bottom: 20px;
+
+  button {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border: none;
+    background: none;
+    font-size: $font-size-sm;
+    color: #888;
+    border-radius: $border-radius;
+
+    &.on {
+      font-weight: 700;
+      color: $theme-color;
+    }
+
+    &:hover:not(:disabled) {
+      background: #f0f0f0;
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
     }
   }
 }
