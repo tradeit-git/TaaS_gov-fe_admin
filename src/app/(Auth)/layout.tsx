@@ -2,6 +2,7 @@
 import React from 'react';
 import '@/style/admin.scss'
 import '@/style/client.scss'
+import '@/style/client-detail.scss'
 import {AdminType} from "@/types/auth/admin";
 import callApi from "@/utill/apiRequest";
 import {redirect} from "next/navigation";
