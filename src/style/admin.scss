@@ -638,12 +638,15 @@ input::placeholder {
           border-bottom: 1px solid $gray02;
           border-right: 1px solid $gray02;
           white-space: nowrap;
-          text-align: center;
           font-size: $font-size-xs;
           color: #555;
-
+          text-align: left;
           &:last-child {
+            padding-right: 30px;
             border-right: none;
+          }
+          &:first-child {
+            padding-left: 30px;
           }
         }
       }
@@ -658,7 +661,8 @@ input::placeholder {
         td {
           padding: 10px 8px;
           border-bottom: 1px solid $gray02;
-          text-align: center;
+          border-right: 1px solid $gray02;
+          text-align: left;
           white-space: nowrap;
 
           .status_badge {
@@ -666,7 +670,13 @@ input::placeholder {
             padding: 2px 10px;
             border-radius: $border-radius;
             font-size: $font-size-xs;
-
+          }
+          &:first-child {
+            padding-left: 30px;
+          }
+          &:last-child {
+            padding-right: 30px;
+            border-right: none;
           }
         }
 
