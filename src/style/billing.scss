@@ -1,0 +1,233 @@
+@use 'variable' as *;
+@use 'reset'  as *;
+// ─── 결제현황 페이지 ───
+.billing_page {
+  .billing_content {
+
+    // 검색 필터 영역
+    .billing_search_section {
+      background-color: #F9F9F9;
+      padding: 20px 30px;
+      margin-bottom: 20px;
+
+      .search_row {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+      }
+
+      .search_date {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .label {
+          white-space: nowrap;
+        }
+
+        .date_inputs {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          background-color: #fff;
+
+          input[type="date"] {
+            border: none;
+            font-size: $font-size-sm;
+            width: 140px;
+            background-color: #fff;
+            position: relative;
+          }
+          //input[type="date"]::after {
+          //  content: "";
+          //  position: absolute;
+          //  top: 50%;
+          //  right: 0;
+          //  transform: translateY(-50%);
+          //  width: 20px;
+          //  height: 20px;
+          //  background:#fff;
+          //}
+
+          .date_separator {
+            color: #999;
+          }
+        }
+      }
+
+      .search_plan {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .label {
+          white-space: nowrap;
+        }
+
+        .plan_checks {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+
+          .plan_check_item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            font-size: $font-size-sm;
+
+            input[type="checkbox"] {
+              width: 16px;
+              height: 16px;
+              cursor: pointer;
+              border: 1px solid #677793;
+            }
+
+            span {
+              user-select: none;
+            }
+          }
+        }
+      }
+
+      .search_btns {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .btn_search {
+          @include blackBtn;
+          padding: 4px 20px;
+          border: none;
+          border-radius: 4px;
+          font-size: $font-size-sm;
+          cursor: pointer;
+          height: 36px;
+        }
+
+        .btn_reset {
+          background-color: transparent;
+          color: #677793;
+          border: none;
+          border-radius: 0;
+          font-size: $font-size-sm;
+          cursor: pointer;
+          border-bottom: 1px solid #677793;
+          padding-bottom: 2px;
+          margin-left: 4px;
+
+          &:hover {
+            background-color: #f5f5f5;
+          }
+        }
+      }
+    }
+
+    // 테이블 컬럼 너비
+    .contents_box {
+      width: 100%;
+      table-layout: fixed;
+      border-top: 1px solid $theme-color;
+
+      th {
+        border-right: 1px solid $tableLine;
+        border-bottom: 1px solid $tableLine;
+        background-color: $tableBg;
+        height: 40px;
+        font-size: $font-size-sm;
+        text-align: left;
+        padding: 8px 10px;
+        &:last-child {
+          border-right: none;
+        }
+        &.text-center {
+          text-align: center;
+        }
+      }
+
+      tbody tr {
+        border-bottom: 1px solid $tableLine;
+
+        td {
+          border-right: 1px solid $tableLine;
+          border-top: none;
+          font-size: $font-size-sm;
+          padding: 8px 10px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-align: left;
+          height: 50px;
+          &:last-child {
+            border-right: none;
+          }
+          &.text-center {
+            text-align: center;
+          }
+        }
+      }
+
+      .col_num {
+        width: 50px;
+      }
+
+      .col_date {
+        width: 100px;
+      }
+
+      .col_payment_id {
+        width: 200px;
+      }
+
+      .col_user_id {
+        width: 150px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        padding: 0 10px;
+      }
+
+      .col_user_name {
+        width: 160px;
+      }
+
+      .col_plan {
+        width: 140px;
+      }
+
+      .col_amount {
+        width: 130px;
+      }
+
+      .col_method {
+        width: 160px;
+      }
+
+      .col_status {
+        width: 110px;
+
+        &.failed {
+          color: #E74C3C;
+        }
+      }
+
+      .col_invoice {
+        width: 44px;
+
+        .invoice_btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 4px;
+
+          .icon_invoice {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background-position: -158px -218px;
+          }
+        }
+      }
+    }
+  }
+}

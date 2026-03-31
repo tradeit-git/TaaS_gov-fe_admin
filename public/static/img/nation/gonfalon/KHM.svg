@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_레이어_1" data-name="레이어 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 21">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #00358a;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: #e00025;
+      }
+    </style>
+  </defs>
+  <rect class="cls-3" x="-.32" y="-.05" width="31.65" height="21.11"/>
+  <rect class="cls-1" x="-.32" y="16.63" width="31.65" height="4.42"/>
+  <rect class="cls-1" x="-.32" y="-.05" width="31.65" height="4.42"/>
+  <g>
+    <rect class="cls-2" x="8.25" y="14.39" width="14.51" height=".82"/>
+    <rect class="cls-2" x="8.91" y="13.41" width="13.17" height=".82"/>
+    <rect class="cls-2" x="9.46" y="12.43" width="12.08" height=".82"/>
+    <polygon class="cls-2" points="17.1 10.22 16.54 8.83 15.46 9.19 14.38 8.83 13.81 10.22 15.46 10.56 17.1 10.22"/>
+    <path class="cls-2" d="M15.45,9.03s.96-.48.96-.48v-.82h-.16l-.03-.7h-.23v-.61s-.01-.2-.06-.32c-.04-.12-.18-.31-.46-.29-.28-.02-.42.17-.46.29-.04.12-.05.32-.05.32v.61h-.24l-.03.7h-.16v.82l.93.47h0Z"/>
+    <rect class="cls-2" x="14.03" y="10.53" width=".61" height="1.76"/>
+    <rect class="cls-2" x="16.3" y="10.53" width=".61" height="1.76"/>
+    <rect class="cls-2" x="15.17" y="10.75" width=".61" height="1.55"/>
+    <polygon class="cls-2" points="20.99 10.64 20.54 9.54 19.68 9.83 18.83 9.54 18.38 10.64 19.68 10.92 20.99 10.64"/>
+    <path class="cls-2" d="M19.67,9.7s.76-.39.76-.39v-.65h-.13l-.02-.56h-.18v-.49s-.01-.16-.05-.25c-.03-.09-.14-.25-.37-.23-.23-.01-.33.14-.37.23-.03.09-.04.25-.04.25v.49h-.19l-.02.56h-.13v.65l.74.37h0Z"/>
+    <rect class="cls-2" x="18.55" y="10.89" width=".48" height="1.4"/>
+    <rect class="cls-2" x="20.35" y="10.89" width=".48" height="1.4"/>
+    <rect class="cls-2" x="19.45" y="11.06" width=".49" height="1.23"/>
+    <polygon class="cls-2" points="12.54 10.64 12.09 9.54 11.24 9.83 10.38 9.54 9.93 10.64 11.24 10.92 12.54 10.64"/>
+    <path class="cls-2" d="M11.22,9.7s.76-.39.76-.39v-.65h-.13l-.02-.56h-.18v-.49s-.01-.16-.05-.25c-.03-.09-.14-.25-.37-.23-.23-.01-.33.14-.37.23-.03.09-.04.25-.04.25v.49h-.19l-.02.56h-.13v.65l.74.37h0Z"/>
+    <rect class="cls-2" x="10.1" y="10.89" width=".48" height="1.4"/>
+    <rect class="cls-2" x="11.91" y="10.89" width=".48" height="1.4"/>
+    <rect class="cls-2" x="11" y="11.06" width=".48" height="1.23"/>
+  </g>
+</svg>

@@ -1,0 +1,36 @@
+@use 'variable' as *;
+html {
+    overflow-y: scroll;
+}
+* {
+    font-size: $font-size-base;
+    margin: 0; padding: 0;
+    font-family: "Noto Sans KR", sans-serif;
+    color: $theme-color;
+    font-optical-sizing: auto;
+    font-style: normal;
+    box-sizing: border-box;
+}
+
+body {
+    line-height: 1;
+}
+ol, ul, li {
+    list-style: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+a {
+    text-decoration: none;
+    color: $theme-color;
+}
+p, span, div {
+    line-height: 120%;
+}
+img {
+    vertical-align: middle;
+    /*이미지 4px 정도 뜨는 현상 없애줌 */
+    max-width: 100%;
+}

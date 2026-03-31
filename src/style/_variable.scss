@@ -1,0 +1,78 @@
+//배경컬러
+$main-color : #0E2946;
+$theme-color : #232323;
+$tableBg : #fafafa;
+$tableLine : #ddd;
+$infoBg : #f3f4f9;
+$black01: #1a1a1a;
+$gray01: #F6F7FB;
+$gray02: #EAEBED;
+$navyGray01: #A1AEBF;
+$navyGray02: #677793;
+
+//버튼색
+@mixin mainBtn {
+  background-color: $main-color;
+  color: #fff;
+}
+@mixin blackBtn {
+  background-color: #333;
+  color: #fff;
+}
+@mixin strongGrayBtn {
+  background-color: #555;
+  color: #fff;
+}
+@mixin softGrayBtn {
+  background-color: #ccc;
+  color: $theme-color;
+}
+@mixin whiteBtn {
+  background-color: #F3F3F3;
+  color: $theme-color;
+}
+@mixin bmTabSaveBtn {
+  padding: 8px 20px;
+  background-color: #5F6062;
+  color: #fff;
+}
+@mixin bmTabDeleteBtn {
+  padding: 8px 20px;
+  background-color: #ccc;
+  color: $theme-color;
+}
+
+//폰트
+$font-size-base: 13.5px;
+$font-size-base-bm: 12.5px;
+$font-size-sm: 13px;
+$font-size-sm-bm: 12px;
+$font-size-xs: 12px;
+$font-size-l: 14px;
+$font-size-xl: 15px;
+//레이아웃
+$sidebar-width: 178px;
+$container-width: calc(100% - $sidebar-width - 10px);
+$header-height: 48px;
+
+//여백, 둥글기
+$spacing-s: 4px;
+$spacing-m: 6px;
+$spacing-l: 9px;
+$border-radius: 3px;
+
+// 페이지 제목, 브레드 크럼
+@mixin pageTitle {
+  font-size: 18px;
+  color: $theme-color;
+  margin-bottom: 10px;
+}
+
+//팝업 내부 효과
+@mixin popupContainer {
+  box-shadow : 0 0 14px rgba(0,0,0,0.16);
+  border : 2px solid #e0e0e0;
+  background: #fff;
+  border-radius: 6px;
+  padding: 30px;
+}

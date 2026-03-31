@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="FLAGS" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 21">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: #00732f;
+      }
+
+      .cls-3 {
+        fill: #ce1126;
+      }
+    </style>
+  </defs>
+  <rect class="cls-3" x="-.32" y="0" width="31.65" height="7" transform="translate(31 7) rotate(180)"/>
+  <rect class="cls-1" x="-.32" y="7" width="31.65" height="7" transform="translate(31 21) rotate(180)"/>
+  <rect x="-.32" y="14" width="31.65" height="7" transform="translate(31 35) rotate(180)"/>
+  <g>
+    <polygon class="cls-2" points="8.54 12.84 9.97 11.78 11.42 12.82 10.86 11.13 12.29 10.07 10.51 10.08 9.94 8.39 9.41 10.09 7.63 10.11 9.08 11.14 8.54 12.84"/>
+    <polygon class="cls-2" points="19.63 12.84 21.06 11.78 22.51 12.82 21.94 11.13 23.37 10.07 21.59 10.08 21.03 8.39 20.49 10.09 18.71 10.11 20.16 11.14 19.63 12.84"/>
+  </g>
+</svg>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="FLAGS" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 21">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: #005eab;
+      }
+    </style>
+  </defs>
+  <rect class="cls-2" x="-.32" y="18.71" width="31.65" height="2.35"/>
+  <rect class="cls-1" x="-.32" y="16.36" width="31.65" height="2.35"/>
+  <rect class="cls-2" x="-.32" y="14.02" width="31.65" height="2.35"/>
+  <rect class="cls-1" x="-.32" y="11.67" width="31.65" height="2.35"/>
+  <rect class="cls-2" x="11.39" y="9.33" width="19.93" height="2.35"/>
+  <rect class="cls-1" x="11.39" y="6.98" width="19.93" height="2.35"/>
+  <rect class="cls-2" x="11.39" y="4.64" width="19.93" height="2.35"/>
+  <rect class="cls-1" x="11.39" y="2.29" width="19.93" height="2.35"/>
+  <rect class="cls-2" x="11.39" y="-.05" width="19.93" height="2.35"/>
+  <rect class="cls-2" x="-.32" y="-.04" width="11.71" height="11.71"/>
+  <rect class="cls-1" x="-.32" y="4.64" width="11.71" height="2.35"/>
+  <rect class="cls-1" x="-.32" y="4.64" width="11.71" height="2.35" transform="translate(11.34 .28) rotate(90)"/>
+</svg>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_레이어_1" data-name="레이어 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 21">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: #cd2e3a;
+      }
+
+      .cls-3 {
+        fill: #0047a0;
+      }
+    </style>
+  </defs>
+  <rect class="cls-1" x="-.32" y="-.05" width="31.65" height="21.11"/>
+  <g>
+    <path class="cls-2" d="M15.51,5.48c-2.15,0-3.99,1.33-4.74,3.21-.12.74-.02,1.52.41,2.1.43.59,1.17.94,1.9.96s1.46-.25,2.05-.7c.41-.31.76-.7,1.19-.98.49-.32,1.08-.48,1.66-.45.35.02.7.1,1,.28.58.34.92,1,1.03,1.67.08.47.06.95.01,1.43.38-.72.6-1.53.6-2.4,0-2.82-2.29-5.11-5.11-5.11Z"/>
+    <g>
+      <path class="cls-3" d="M20,11.56c-.11-.67-.45-1.33-1.03-1.67-.3-.18-.65-.26-1-.28-.58-.03-1.17.14-1.66.45-.43.28-.78.67-1.19.98-.58.44-1.31.72-2.05.7s-1.47-.36-1.9-.96c-.43-.58-.53-1.36-.41-2.07-.23.56-.36,1.2-.36,1.87,0,2.82,2.29,5.11,5.11,5.11,1.95,0,3.65-1.1,4.51-2.71.05-.48.07-.96-.01-1.43Z"/>
+      <rect x="6" y="5.5" width="5.01" height=".84" transform="translate(-1.18 9.59) rotate(-55.59)"/>
+      <rect x="5.1" y="4.88" width="5.01" height=".84" transform="translate(-1.06 8.59) rotate(-55.59)"/>
+      <rect x="4.21" y="4.27" width="5.01" height=".84" transform="translate(-.95 7.59) rotate(-55.59)"/>
+      <rect x="22.24" y="17.01" width="2.3" height=".84" transform="translate(-4.21 26.88) rotate(-55.59)"/>
+      <rect x="21.35" y="16.4" width="2.3" height=".84" transform="translate(-4.09 25.88) rotate(-55.59)"/>
+      <rect x="20.46" y="15.79" width="2.3" height=".84" transform="translate(-3.98 24.88) rotate(-55.59)"/>
+      <rect x="23.85" y="14.65" width="2.3" height=".84" transform="translate(-1.56 27.17) rotate(-55.59)"/>
+      <rect x="22.96" y="14.04" width="2.3" height=".84" transform="translate(-1.44 26.17) rotate(-55.59)"/>
+      <rect x="22.07" y="13.43" width="2.3" height=".84" transform="translate(-1.32 25.17) rotate(-55.59)"/>
+      <rect x="5.99" y="14.55" width="5.01" height=".84" transform="translate(.19 30.05) rotate(-121.55)"/>
+      <rect x="7.34" y="16.38" width="2.04" height=".84" transform="translate(-1.59 32.71) rotate(-121.55)"/>
+      <rect x="5.66" y="14.06" width="2.54" height=".84" transform="translate(-1.78 27.97) rotate(-121.55)"/>
+      <rect x="4.15" y="15.68" width="5.01" height=".84" transform="translate(-3.57 30.2) rotate(-121.55)"/>
+      <rect x="23.94" y="5.65" width="2.3" height=".84" transform="translate(33.04 30.61) rotate(-121.55)"/>
+      <rect x="22.1" y="6.78" width="2.3" height=".84" transform="translate(29.28 30.77) rotate(-121.55)"/>
+      <rect x="22.43" y="3.21" width="2.3" height=".84" transform="translate(32.82 25.63) rotate(-121.55)"/>
+      <rect x="20.83" y="5" width="5.16" height=".84" transform="translate(31.04 28.2) rotate(-121.55)"/>
+      <rect x="20.59" y="4.34" width="2.3" height=".84" transform="translate(29.05 25.78) rotate(-121.55)"/>
+    </g>
+  </g>
+</svg>
