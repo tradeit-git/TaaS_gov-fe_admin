@@ -1,15 +1,16 @@
 // app/layout.tsx
 import React from 'react';
 import '@/style/admin.scss'
-import '@/style/mobile.scss'
-import '@/style/mobile_detail.scss'
+import '@/style/client.scss'
 import {AdminType} from "@/types/auth/admin";
 import callApi from "@/utill/apiRequest";
 import {redirect} from "next/navigation";
 import {ADMIN_LOGIN, APP_URL} from "@/lib/routes";
 import {getServerRequestOptions} from "@/lib/serverRequest";
 import {AppConfigSchema, AppConfigType} from "@/types/common/appConfig";
-import ResponsiveLayout from "@/app/(Auth)/components/ResponsiveLayout";
+import AppConfig from "@/app/(Auth)/components/AppConfig";
+import Sidebar from "@/app/(Auth)/components/Sidebar";
+import PageVisitLogger from "@/components/PageVisitLogger";
 
 export default async function Layout({children}: { children: React.ReactNode }) {
     const options = await getServerRequestOptions();
@@ -42,6 +43,15 @@ export default async function Layout({children}: { children: React.ReactNode }) 
         redirect(`${APP_URL}${ADMIN_LOGIN}`)
     }
 
-    return <ResponsiveLayout auth={auth} appConfig={appConfig}>{children}</ResponsiveLayout>;
+    return (
+        <>
+            <PageVisitLogger />
+            <AppConfig auth={auth} appConfig={appConfig}/>
+            <div className="section_wrap">
+                <Sidebar />
+                <section className="right_box">{children}</section>
+            </div>
+        </>
+    );
 }
 

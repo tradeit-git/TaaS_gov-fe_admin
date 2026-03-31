@@ -1,0 +1,272 @@
+@use './variable' as *;
+
+// -------------------- 고객관리 ----------------------------
+.client_create_form {
+  background: #F9F9F9;
+  border-radius: 6px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+
+  .form_row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .form_field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    label {
+      font-size: $font-size-sm;
+      white-space: nowrap;
+      color: $theme-color;
+
+      .required {
+        color: #e74c3c;
+        margin-right: 2px;
+      }
+    }
+
+    input {
+      height: 32px;
+      border: 1px solid $gray02;
+      border-radius: $border-radius;
+      padding: 0 10px;
+      font-size: $font-size-sm;
+      width: 160px;
+
+      &::placeholder {
+        color: #bbb;
+      }
+    }
+
+    .btn_check {
+      height: 32px;
+      padding: 0 12px;
+      font-size: $font-size-xs;
+      border: 1px solid $gray02;
+      background: #fff;
+      border-radius: $border-radius;
+      white-space: nowrap;
+
+      &:hover {
+        background: #f0f0f0;
+      }
+    }
+  }
+
+  .form_actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+
+    .btn_create {
+      height: 32px;
+      padding: 0 20px;
+      font-size: $font-size-sm;
+      background: $theme-color;
+      color: #fff;
+      border-radius: $border-radius;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    .btn_reset {
+      height: 32px;
+      padding: 0 16px;
+      font-size: $font-size-sm;
+      border: 1px solid $gray02;
+      background: #fff;
+      border-radius: $border-radius;
+
+      &:hover {
+        background: #f0f0f0;
+      }
+    }
+  }
+}
+
+.client_list_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+
+  .result_count {
+    font-size: $font-size-sm;
+    color: #666;
+  }
+
+  .search_area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .search_input_wrap {
+      position: relative;
+
+      input {
+        height: 32px;
+        border: 1px solid $gray02;
+        border-radius: $border-radius;
+        padding: 0 30px 0 10px;
+        font-size: $font-size-sm;
+        width: 200px;
+
+        &::placeholder {
+          color: #bbb;
+        }
+      }
+
+      .btn_clear {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        font-size: 16px;
+        color: #999;
+        padding: 0;
+        line-height: 1;
+      }
+    }
+
+    select {
+      height: 32px;
+      font-size: $font-size-sm;
+    }
+  }
+}
+
+.client_table_wrap {
+  overflow-x: auto;
+
+  .client_table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: $font-size-sm;
+
+    thead {
+      border-top: 1px solid $theme-color;
+
+      th {
+        
+        padding: 10px 8px;
+        border-bottom: 1px solid $gray02;
+        border-right: 1px solid $gray02;
+        white-space: nowrap;
+        text-align: center;
+        font-size: $font-size-xs;
+        color: #555;
+
+        &:last-child {
+          border-right: none;
+        }
+      }
+    }
+
+    tbody {
+      tr {
+        &:hover {
+          background: #f9f9f9;
+        }
+      }
+
+      td {
+        padding: 10px 8px;
+        border-bottom: 1px solid $gray02;
+        text-align: center;
+        white-space: nowrap;
+
+        .status_badge {
+          display: inline-block;
+          padding: 2px 10px;
+          border-radius: $border-radius;
+          font-size: $font-size-xs;
+
+          &.active {
+            background: #e6f9e6;
+            color: #2e7d32;
+          }
+
+          &.expired {
+            background: #f0f0f0;
+            color: #777;
+          }
+        }
+      }
+
+      .td_actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+
+        .btn_detail {
+          padding: 3px 10px;
+          font-size: $font-size-xs;
+          border: 1px solid $gray02;
+          background: #fff;
+          border-radius: $border-radius;
+
+          &:hover {
+            background: #f0f0f0;
+          }
+        }
+
+        .btn_delete {
+          background: none;
+          border: none;
+          padding: 2px;
+
+          .icon_trash {
+            display: block;
+            width: 16px;
+            height: 16px;
+            background-position: -14px -86px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.client_pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  margin-top: 20px;
+  padding-bottom: 20px;
+
+  button {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border: none;
+    background: none;
+    font-size: $font-size-sm;
+    color: #888;
+    border-radius: $border-radius;
+
+    &.on {
+      font-weight: 700;
+      color: $theme-color;
+    }
+
+    &:hover:not(:disabled) {
+      background: #f0f0f0;
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+  }
+}

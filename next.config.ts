@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+    sassOptions: {
+        includePaths: [path.join(process.cwd(), 'src/style')],
+    },
     basePath: process.env.NEXT_PUBLIC_BASE_PATH,
     async rewrites() {
         return [

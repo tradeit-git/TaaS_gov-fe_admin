@@ -1,22 +1,15 @@
 //배경컬러
-$main-color : #0E2946;
 $theme-color : #232323;
-$tableBg : #fafafa;
-$tableLine : #ddd;
-$infoBg : #f3f4f9;
 $black01: #1a1a1a;
+$black02: #4a4a4a;
 $gray01: #F6F7FB;
 $gray02: #EAEBED;
-$navyGray01: #A1AEBF;
-$navyGray02: #677793;
+
 
 //버튼색
-@mixin mainBtn {
-  background-color: $main-color;
-  color: #fff;
-}
+
 @mixin blackBtn {
-  background-color: #333;
+  background-color: $black01;
   color: #fff;
 }
 @mixin strongGrayBtn {
@@ -24,26 +17,18 @@ $navyGray02: #677793;
   color: #fff;
 }
 @mixin softGrayBtn {
-  background-color: #ccc;
-  color: $theme-color;
+  border: 1px solid $gray02;
+  background-color: #F5F5F5;
+  color: $black01;
 }
 @mixin whiteBtn {
   background-color: #F3F3F3;
   color: $theme-color;
 }
-@mixin bmTabSaveBtn {
-  padding: 8px 20px;
-  background-color: #5F6062;
-  color: #fff;
-}
-@mixin bmTabDeleteBtn {
-  padding: 8px 20px;
-  background-color: #ccc;
-  color: $theme-color;
-}
+
 
 //폰트
-$font-size-base: 13.5px;
+$font-size-base: 13px;
 $font-size-base-bm: 12.5px;
 $font-size-sm: 13px;
 $font-size-sm-bm: 12px;
