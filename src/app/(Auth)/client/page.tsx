@@ -126,7 +126,8 @@ export default function Page() {
                             <td>{row.period}</td>
                             <td>{row.createdAt}</td>
                             <td className={'td_actions'}>
-                                <button type="button" className={'btn_detail'}>상세</button>
+                                <button type="button" className={'btn_detail'}>
+                                    <Link href={'/client/detail'}>상세</Link></button>
                                 <button type="button" className={'btn_delete'}>
                                     <span className={'admin_icon icon_trash'}/>
                                 </button>
