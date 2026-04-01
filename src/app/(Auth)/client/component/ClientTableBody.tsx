@@ -16,14 +16,15 @@ interface ClientRow {
 
 interface Props {
     data: ClientRow[];
+    startIndex: number;
 }
 
-export default function ClientTableBody({data}: Props) {
+export default function ClientTableBody({data, startIndex}: Props) {
     return (
         <tbody>
-        {data.map(row => (
+        {data.map((row, i) => (
             <tr key={row.id}>
-                <td>{row.id}</td>
+                <td>{startIndex + i + 1}</td>
                 <td>
                     <span className={`status_badge ${row.status === '계약' ? 'active' : 'expired'}`}>
                         {row.status}

@@ -1,30 +1,60 @@
 'use client'
 
 import Link from "next/link";
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import '@/style/client.scss'
 import ClientCreateForm from "@/app/(Auth)/client/component/ClientCreateForm";
 import ClientTableBody from "@/app/(Auth)/client/component/ClientTableBody";
 
-const mockData = [
-    { id: 20, status: '계약', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: 'Enterprise Plan', period: 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월', createdAt: 'yyyy.mm.dd' },
-    { id: 19, status: '계약', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: 'Team Plan', period: 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월', createdAt: 'yyyy.mm.dd' },
-    { id: 18, status: '계약만료', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: 'SME Plan', period: 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월', createdAt: 'yyyy.mm.dd' },
-    { id: 17, status: '계약', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: '-', period: '-', createdAt: 'yyyy.mm.dd' },
-    { id: 16, status: '계약', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: 'Enterprise Plan', period: 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월', createdAt: 'yyyy.mm.dd' },
-    { id: 15, status: '계약', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: 'Enterprise Plan', period: 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월', createdAt: 'yyyy.mm.dd' },
-    { id: 14, status: '계약', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: 'Enterprise Plan', period: 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월', createdAt: 'yyyy.mm.dd' },
-    { id: 13, status: '계약', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: 'Enterprise Plan', period: 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월', createdAt: 'yyyy.mm.dd' },
-    { id: 12, status: '계약', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: 'Enterprise Plan', period: 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월', createdAt: 'yyyy.mm.dd' },
-    { id: 11, status: '계약', name: 'OOOOOOOOOOO', bizNo: '000-00-00000', email: 'abcedf000000@abcedfghijklmn.com', password: '0000000000000', plan: 'Enterprise Plan', period: 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월', createdAt: 'yyyy.mm.dd' },
-];
+const statuses = ['계약', '계약', '계약', '계약만료'] as const;
+const plans = ['Enterprise Plan', 'Team Plan', 'SME Plan', '-'] as const;
+
+const mockData = Array.from({length: 55}, (_, i) => ({
+    id: 55 - i,
+    status: statuses[i % statuses.length],
+    name: 'OOOOOOOOOOO',
+    bizNo: '000-00-00000',
+    email: 'abcedf000000@abcedfghijklmn.com',
+    password: '0000000000000',
+    plan: plans[i % plans.length],
+    period: i % plans.length === 3 ? '-' : 'yyyy.mm.dd ~ yyyy.mm.dd / ##개월',
+    createdAt: 'yyyy.mm.dd',
+}));
 
 export default function Page() {
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    const totalResults = 1000;
-    const totalPages = 10;
+    const filteredData = useMemo(() => {
+        if (!search.trim()) return mockData;
+        const keyword = search.trim().toLowerCase();
+        return mockData.filter(row =>
+            row.name.toLowerCase().includes(keyword) ||
+            row.bizNo.includes(keyword) ||
+            row.email.toLowerCase().includes(keyword)
+        );
+    }, [search]);
+
+    const totalResults = filteredData.length;
+    const totalPages = Math.max(1, Math.ceil(totalResults / itemsPerPage));
+
+    const safePage = Math.min(currentPage, totalPages);
+
+    const startIndex = (safePage - 1) * itemsPerPage;
+    const pageData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+    // 10페이지 단위 그룹
+    const pageGroupSize = 10;
+    const currentGroup = Math.ceil(safePage / pageGroupSize);
+    const groupStart = (currentGroup - 1) * pageGroupSize + 1;
+    const groupEnd = Math.min(currentGroup * pageGroupSize, totalPages);
+    const pageNumbers = Array.from({length: groupEnd - groupStart + 1}, (_, i) => groupStart + i);
+
+    const handleItemsPerPageChange = (value: number) => {
+        setItemsPerPage(value);
+        setCurrentPage(1);
+    };
 
     return (
         <div className={'admin_page'}>
@@ -41,13 +71,13 @@ export default function Page() {
 
             {/* 검색 / 카운트 영역 */}
             <div className={'list_header'}>
-                <p className={'result_count'}>Showing 10 of {totalResults.toLocaleString()} results</p>
+                <p className={'result_count'}>Showing {pageData.length} of {totalResults.toLocaleString()} results</p>
                 <div className={'search_area'}>
                     <div className={'search_input_wrap'}>
-                        <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={'고객사 검색'}/>
-                        {search && <button type="button" className={'btn_clear'} onClick={() => setSearch('')}><span className={'admin_icon'}/> </button>}
+                        <input type="text" value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} placeholder={'고객사 검색'}/>
+                        {search && <button type="button" className={'btn_clear'} onClick={() => { setSearch(''); setCurrentPage(1); }}><span className={'admin_icon'}/> </button>}
                     </div>
-                    <select defaultValue={10}>
+                    <select value={itemsPerPage} onChange={e => handleItemsPerPageChange(Number(e.target.value))}>
                         <option value={10}>10개씩</option>
                         <option value={20}>20개씩</option>
                         <option value={50}>50개씩</option>
@@ -72,21 +102,21 @@ export default function Page() {
                         <th>관리</th>
                     </tr>
                     </thead>
-                    <ClientTableBody data={mockData} />
+                    <ClientTableBody data={pageData} startIndex={startIndex} />
                 </table>
             </div>
 
             {/* 페이지네이션 */}
             <div className={'pagination'}>
-                <button type="button" className={'btn_prev'} disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(p => p - 1)}>&lt;</button>
-                {Array.from({length: totalPages}, (_, i) => i + 1).map(page => (
+                <button type="button" className={'btn_prev'} disabled={currentGroup <= 1}
+                        onClick={() => setCurrentPage(groupStart - pageGroupSize)}><span className={'admin_icon'}/> </button>
+                {pageNumbers.map(page => (
                     <button key={page} type="button"
-                            className={`btn_page ${page === currentPage ? 'on' : ''}`}
+                            className={`btn_page ${page === safePage ? 'on' : ''}`}
                             onClick={() => setCurrentPage(page)}>{page}</button>
                 ))}
-                <button type="button" className={'btn_next'} disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(p => p + 1)}>&gt;</button>
+                <button type="button" className={'btn_next'} disabled={groupEnd >= totalPages}
+                        onClick={() => setCurrentPage(groupEnd + 1)}><span className={'admin_icon'}/></button>
             </div>
         </div>
     );
