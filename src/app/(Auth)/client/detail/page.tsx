@@ -1,8 +1,11 @@
 'use client';
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, ReactNode } from "react";
 import CreditTable from "@/app/(Auth)/client/detail/component/CreditTable";
+import { usePopupStore } from "@/stores/common/popupStore";
+import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 
 type DuplicateStatus = 'none' | 'success' | 'error';
 
@@ -15,6 +18,13 @@ interface FormItem {
     fieldKey?: string;
 }
 
+interface CreditForm {
+    id: number;
+    startDate: string;
+    endDate: string;
+    isNew?: boolean;
+}
+
 const formList: FormItem[] = [
     { label: '고객사명', required: true, hasButton: true, value: '트레이드잇', fieldKey: 'companyName' },
     { label: '사업자번호', required: true, hasButton: true, value: '000-00-00000', fieldKey: 'businessNumber' },
@@ -24,15 +34,59 @@ const formList: FormItem[] = [
 ];
 
 export default function Page() {
+    const router = useRouter();
+    const { addPopup } = usePopupStore();
+
     const [duplicateStatus, setDuplicateStatus] = useState<Record<string, DuplicateStatus>>({
         companyName: 'none',
         businessNumber: 'none',
     });
 
-    const [creditForms, setCreditForms] = useState<number[]>([1]);
+    // 임시 데이터: 기존 폼은 운영기간이 지난 상태 (2026.01.01 ~ 2026.03.31)
+    const [creditForms, setCreditForms] = useState<CreditForm[]>([
+        { id: 1, startDate: '2026-01-01', endDate: '2026-06-30', isNew: false }
+    ]);
+
+    const showAlert = (message: ReactNode, callback?: () => void, showCancel: boolean = true) => {
+        addPopup(<AlertComponent alertType="alert" infoContent={message} callback={callback} showCancel={showCancel} />);
+    };
+
+    const handleSave = () => {
+        showAlert('저장되었습니다.', () => {
+            router.push('/client');
+        }, false);
+    };
 
     const handleAddCreditForm = () => {
-        setCreditForms(prev => [...prev, prev.length + 1]);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 가장 최신 폼 (첫 번째)의 운영기간 확인
+        const latestForm = creditForms[0];
+        const endDate = new Date(latestForm.endDate);
+        endDate.setHours(0, 0, 0, 0);
+
+        // 운영기간 중인지 확인 (오늘이 종료일 이전이거나 같은 경우)
+        if (endDate >= today) {
+            showAlert(<>운영기간 중에는 서비스 플랜 정보를<br/>신규로 추가할 수 없습니다.</>);
+            return;
+        }
+
+        // 운영기간이 지난 경우, 이미 추가된 신규 폼이 있는지 확인
+        const hasNewForm = creditForms.some(form => form.isNew);
+        if (hasNewForm) {
+            showAlert('서비스 플랜은 1회만 추가할 수 있습니다.');
+            return;
+        }
+
+        // 최신 이력이 최상단으로 가도록 앞에 추가
+        const newForm: CreditForm = {
+            id: Date.now(),
+            startDate: '',
+            endDate: '',
+            isNew: true
+        };
+        setCreditForms(prev => [newForm, ...prev]);
     };
 
     const handleDuplicateCheck = (fieldKey: string) => {
@@ -118,18 +172,22 @@ export default function Page() {
                         </button>
                     {/*    */}
                     </div>
-                    {creditForms.map((formId) => (
-                        <div key={formId} className={'add_form'}>
+                    {creditForms.map((form) => (
+                        <div key={form.id} className={'add_form'}>
                             <div className={'top'}>
                                 <div className={'left'}>
                                     <p>서비스 플랜</p>
-                                    <input type="text" placeholder={'ex) 플랜명 / 月 00만'}/>
+                                    <input
+                                        type="text"
+                                        placeholder={'ex) 플랜명 / 月 00만'}
+                                        defaultValue={form.isNew ? '' : 'Team plan / 月 10만'}
+                                    />
                                 </div>
                                 <div className={'right'}>
                                     <p>운영기간</p>
-                                    <input type="date"/>
-                                    <input type="date"/>
-                                    <input type="text"/>
+                                    <input type="date" defaultValue={form.startDate}/>
+                                    <input type="date" defaultValue={form.endDate}/>
+                                    <input type="text" defaultValue={form.isNew ? '' : '3'}/>
                                     개월
                                 </div>
                             </div>
@@ -141,8 +199,8 @@ export default function Page() {
                     ))}
                 </section>
                 <div className={'btn_wrap'}>
-                    <Link href="/" className={'cancel_btn'}>취소</Link>
-                    <button className={'save_btn'}>저장</button>
+                    <Link href="/client" className={'cancel_btn'}>취소</Link>
+                    <button className={'save_btn'} onClick={handleSave}>저장</button>
                 </div>
             </div>
         </div>
