@@ -14,6 +14,7 @@
 | `POST` | `/api/admin/clients` | 회원 계정 생성 |
 | `GET` | `/api/admin/clients/{id}` | 회원 상세 조회 |
 | `PUT` | `/api/admin/clients/{id}` | 회원 정보 + 크레딧 플랜 저장 |
+| `DELETE` | `/api/admin/clients/{id}` | 회원 삭제 (soft delete) |
 | `GET` | `/api/admin/clients/check-company-name` | 고객사명 중복체크 |
 | `GET` | `/api/admin/clients/check-business-number` | 사업자번호 중복체크 |
 | `GET` | `/api/admin/clients/check-login-id` | 아이디(E-mail) 중복체크 |
@@ -448,7 +449,41 @@
 
 ---
 
-## 5. 고객사명 중복체크
+## 5. 회원 삭제
+
+**`DELETE /api/admin/clients/{id}`**
+
+### Request
+
+| 구분 | 파라미터 | 타입 | 필수 | 설명 |
+|------|----------|------|------|------|
+| Path | `id` | Long | O | 회원 PK |
+
+### Response `200 OK`
+
+```json
+{
+  "status": 200,
+  "code": "common.SUCCESS",
+  "message": null
+}
+```
+
+### Error Response `404 NOT FOUND`
+
+```json
+{
+  "status": 404,
+  "code": "common.NOT_FOUND",
+  "message": "회원을 찾을 수 없습니다."
+}
+```
+
+> soft delete 처리 (`deleted_at`에 현재 시간 기록). 삭제된 회원은 목록/상세 조회에서 제외됩니다.
+
+---
+
+## 6. 고객사명 중복체크
 
 **`GET /api/admin/clients/check-company-name`**
 
@@ -479,7 +514,7 @@
 
 ---
 
-## 6. 사업자번호 중복체크
+## 7. 사업자번호 중복체크
 
 **`GET /api/admin/clients/check-business-number`**
 
@@ -510,7 +545,7 @@
 
 ---
 
-## 7. 아이디(E-mail) 중복체크
+## 8. 아이디(E-mail) 중복체크
 
 **`GET /api/admin/clients/check-login-id`**
 

@@ -5,6 +5,8 @@ import {useCallback, useEffect, useRef, useState} from "react";
 import ContactTableBody from "@/app/(Auth)/contact/component/ContactTableBody";
 import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
+import {usePopupStore} from "@/stores/common/popupStore";
+import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 
 export const STATUS_MAP: Record<string, string> = {
     'PENDING': '접수',
@@ -52,6 +54,7 @@ interface Props {
 }
 
 export default function ContactPage({initialData}: Props) {
+    const {addPopup} = usePopupStore();
     const [data, setData] = useState<InquiryRow[]>(initialData.content);
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
@@ -102,6 +105,21 @@ export default function ContactPage({initialData}: Props) {
         }, 100);
         return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
     }, [searchInput]);
+
+    const handleDelete = (id: number) => {
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 문의를 삭제하시겠습니까?'} callback={async () => {
+            const res = await callApi(`/api/admin/inquiries/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+                fetchList();
+            } else {
+                addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
+            }
+        }}/>);
+    };
 
     // 10페이지 단위 그룹 (0-based → 1-based 표시)
     const displayPage = currentPage + 1;
@@ -180,6 +198,7 @@ export default function ContactPage({initialData}: Props) {
                         itemsPerPage={itemsPerPage}
                         statusMap={STATUS_MAP}
                         formatDate={formatDateDot}
+                        onDelete={handleDelete}
                     />
                 </table>
             </div>

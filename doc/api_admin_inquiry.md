@@ -13,6 +13,7 @@
 | `GET` | `/api/admin/inquiries/{id}` | 문의 상세 조회 (자동 열람 처리) |
 | `POST` | `/api/admin/inquiries/{id}/status` | 처리 상태 변경 |
 | `POST` | `/api/admin/inquiries/{id}/memo` | 관리자 메모 수정 |
+| `DELETE` | `/api/admin/inquiries/{id}` | 문의 삭제 (soft delete) |
 
 ---
 
@@ -28,8 +29,9 @@
 | Query | `size` | Integer | X | `20` | 페이지당 항목 수 |
 | Query | `status` | String | X | - | 처리 상태 필터. `PENDING` \| `IN_PROGRESS` \| `COMPLETED` |
 | Query | `isRead` | Boolean | X | - | 열람 여부 필터. `true` \| `false` |
+| Query | `keyword` | String | X | - | 키워드 검색 (회사명 대상, 부분 일치) |
 
-> **필터 우선순위:** `status`와 `isRead`를 동시에 보내면 `status`만 적용됩니다. 둘 다 없으면 전체 조회.
+> **필터 조합:** `status`, `isRead`, `keyword` 모두 동시 사용 가능합니다. 모든 조건은 AND로 결합됩니다.
 
 ### Response `200 OK`
 
@@ -262,6 +264,40 @@
   "message": "문의를 찾을 수 없습니다."
 }
 ```
+
+---
+
+## 5. 문의 삭제
+
+**`DELETE /api/admin/inquiries/{id}`**
+
+### Request
+
+| 구분 | 파라미터 | 타입 | 필수 | 설명 |
+|------|----------|------|------|------|
+| Path | `id` | Long | O | 문의 PK |
+
+### Response `200 OK`
+
+```json
+{
+  "status": 200,
+  "code": "common.SUCCESS",
+  "message": null
+}
+```
+
+### Error Response `404 NOT FOUND`
+
+```json
+{
+  "status": 404,
+  "code": "common.NOT_FOUND",
+  "message": "문의를 찾을 수 없습니다."
+}
+```
+
+> soft delete 처리 (`deleted_at`에 현재 시간 기록). 삭제된 문의는 목록 조회에서 제외됩니다.
 
 ---
 

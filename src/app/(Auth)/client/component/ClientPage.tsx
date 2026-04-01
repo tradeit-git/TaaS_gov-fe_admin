@@ -6,6 +6,8 @@ import ClientCreateForm from "@/app/(Auth)/client/component/ClientCreateForm";
 import ClientTableBody from "@/app/(Auth)/client/component/ClientTableBody";
 import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
+import {usePopupStore} from "@/stores/common/popupStore";
+import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 
 export interface UserRow {
     id: number;
@@ -33,6 +35,7 @@ interface Props {
 }
 
 export default function ClientPage({initialData}: Props) {
+    const {addPopup} = usePopupStore();
     const [data, setData] = useState<UserRow[]>(initialData.content);
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
@@ -87,6 +90,21 @@ export default function ClientPage({initialData}: Props) {
         setSearch('');
         setSearchInput('');
         fetchList();
+    };
+
+    const handleDelete = (id: number) => {
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 고객을 삭제하시겠습니까?'} callback={async () => {
+            const res = await callApi(`/api/admin/clients/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+                fetchList();
+            } else {
+                addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
+            }
+        }}/>);
     };
 
     // 10페이지 단위 그룹
@@ -154,6 +172,7 @@ export default function ClientPage({initialData}: Props) {
                         currentPage={currentPage}
                         itemsPerPage={itemsPerPage}
                         formatDate={formatDateDot}
+                        onDelete={handleDelete}
                     />
                 </table>
             </div>

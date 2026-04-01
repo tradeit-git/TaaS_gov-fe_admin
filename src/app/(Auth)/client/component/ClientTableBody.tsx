@@ -9,9 +9,10 @@ interface Props {
     currentPage: number;
     itemsPerPage: number;
     formatDate: (date: string | null | undefined) => string;
+    onDelete: (id: number) => void;
 }
 
-export default function ClientTableBody({data, totalElements, currentPage, itemsPerPage, formatDate}: Props) {
+export default function ClientTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete}: Props) {
     const formatPeriod = (row: UserRow) => {
         if (!row.planStartDate || !row.planEndDate) return '-';
         return `${formatDate(row.planStartDate)} ~ ${formatDate(row.planEndDate)} / ${row.planMonths ?? '-'}개월`;
@@ -40,6 +41,9 @@ export default function ClientTableBody({data, totalElements, currentPage, items
                     <td className={'td_actions'}>
                         <button type="button" className={'btn_detail'}>
                             <Link href={`/client/detail?id=${row.id}`}>상세</Link>
+                        </button>
+                        <button type="button" className={'btn_delete'} onClick={() => onDelete(row.id)}>
+                            <span className={'admin_icon icon_trash'}/>
                         </button>
                     </td>
                 </tr>

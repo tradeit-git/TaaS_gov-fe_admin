@@ -11,9 +11,10 @@ interface Props {
     itemsPerPage: number;
     statusMap: Record<string, string>;
     formatDate: (date: string | null | undefined) => string;
+    onDelete: (id: number) => void;
 }
 
-export default function ContactTableBody({data, totalElements, currentPage, itemsPerPage, statusMap, formatDate}: Props) {
+export default function ContactTableBody({data, totalElements, currentPage, itemsPerPage, statusMap, formatDate, onDelete}: Props) {
     return (
         <tbody>
         {data.map((row, i) => {
@@ -41,6 +42,9 @@ export default function ContactTableBody({data, totalElements, currentPage, item
                     <td className={'td_actions'}>
                         <button type="button" className={'btn_detail'}>
                             <Link href={`/contact/detail?id=${row.id}`}>상세</Link>
+                        </button>
+                        <button type="button" className={'btn_delete'} onClick={() => onDelete(row.id)}>
+                            <span className={'admin_icon icon_trash'}/>
                         </button>
                     </td>
                 </tr>
