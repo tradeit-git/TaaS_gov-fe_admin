@@ -1,0 +1,37 @@
+@use './variable' as *;
+
+// -------------------- 고객관리 ----------------------------
+.contact_table {
+  td {
+    .status_badge {
+      display: flex;
+      gap: 3px;
+      font-size: $font-size-xs;
+      font-weight: 500;
+      .admin_icon {
+        display: block;
+        width: 14px;
+        height: 14px;
+      }
+      &.done{
+        color: #34C759;
+        .admin_icon {
+          background-position: -88px -165px;
+        }
+      }
+      &.progress {
+        color: #FF8D28;
+        .admin_icon {
+          background-position: -54px -165px;
+        }
+      }
+      &.pending {
+        color: #287fff;
+        .admin_icon {
+          background-position: -20px -165px;
+        }
+      }
+    }
+  }
+}
+

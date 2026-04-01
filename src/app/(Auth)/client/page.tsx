@@ -5,11 +5,13 @@ import {useMemo, useState} from "react";
 import '@/style/client.scss'
 import ClientCreateForm from "@/app/(Auth)/client/component/ClientCreateForm";
 import ClientTableBody from "@/app/(Auth)/client/component/ClientTableBody";
+import {usePopupStore} from "@/stores/common/popupStore";
+import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 
 const statuses = ['계약', '계약', '계약', '계약만료'] as const;
 const plans = ['Enterprise Plan', 'Team Plan', 'SME Plan', '-'] as const;
 
-const mockData = Array.from({length: 55}, (_, i) => ({
+const initialData = Array.from({length: 55}, (_, i) => ({
     id: 55 - i,
     status: statuses[i % statuses.length],
     name: 'OOOOOOOOOOO',
@@ -22,19 +24,28 @@ const mockData = Array.from({length: 55}, (_, i) => ({
 }));
 
 export default function Page() {
+    const {addPopup} = usePopupStore();
+    const [data, setData] = useState(initialData);
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+    const handleDelete = (id: number) => {
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 고객을 삭제하시겠습니까?'} callback={() => {
+            setData(prev => prev.filter(row => row.id !== id));
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'} />);
+        }} />);
+    };
+
     const filteredData = useMemo(() => {
-        if (!search.trim()) return mockData;
+        if (!search.trim()) return data;
         const keyword = search.trim().toLowerCase();
-        return mockData.filter(row =>
+        return data.filter(row =>
             row.name.toLowerCase().includes(keyword) ||
             row.bizNo.includes(keyword) ||
             row.email.toLowerCase().includes(keyword)
         );
-    }, [search]);
+    }, [search, data]);
 
     const totalResults = filteredData.length;
     const totalPages = Math.max(1, Math.ceil(totalResults / itemsPerPage));
@@ -102,7 +113,7 @@ export default function Page() {
                         <th>관리</th>
                     </tr>
                     </thead>
-                    <ClientTableBody data={pageData} startIndex={startIndex} />
+                    <ClientTableBody data={pageData} startIndex={startIndex} totalCount={totalResults} onDelete={handleDelete} />
                 </table>
             </div>
 
