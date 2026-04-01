@@ -34,4 +34,25 @@
     }
   }
 }
+.detail_contents {
+  &.contact {
+    max-width: 1320px;
+    .account_info {
+      display: flex;
+      gap: 30px;
+      .form_item {
+        &.memo {
+          width: 630px;
+          textarea {
+            width: 100% !important;
+            height: 728px !important;
+          }
+        }
+      }
+    }
+  }
+
+
+}
+
 
