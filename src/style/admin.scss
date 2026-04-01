@@ -796,6 +796,43 @@ input::placeholder {
     gap: 8px;
     align-items: center;
 
+     .input_field {
+      flex: 1;
+      position: relative;
+
+      input {
+        width: 100%;
+      }
+
+      .status_msg {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: $font-size-xs;
+        white-space: nowrap;
+
+        &.success {
+          color: #34C759;
+        }
+
+        &.error {
+          color: #f30;
+        }
+      }
+
+      &.error {
+        input {
+          border-color: #f30;
+        }
+      }
+
+      &.success {
+        input {
+        }
+      }
+    }
+
     input {
       flex: 1;
     }
@@ -818,6 +855,11 @@ input::placeholder {
         background: #CCCCCC;
         color: #F0F0F0;
         cursor: default;
+        border-color: #CCCCCC;
+
+        &:hover {
+          background: #CCCCCC;
+        }
       }
     }
   }
