@@ -132,14 +132,20 @@
 }
 .client_table {
   td {
-    &.active {
-      background: #e6f9e6;
-      color: #2e7d32;
-    }
+    .status_badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: $font-size-xs;
+      &.active {
+        background: #E6FADA;
+        color: #3D914A;
+      }
 
-    &.expired {
-      background: #f0f0f0;
-      color: #777;
+      &.expired {
+        background: #EDEEF3;
+        color: #848891;
+      }
     }
   }
 }
