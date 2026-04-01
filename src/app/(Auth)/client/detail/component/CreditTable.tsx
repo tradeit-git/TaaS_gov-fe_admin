@@ -17,8 +17,14 @@ export default function CreditTable() {
 
     return (
         <table>
+            <colgroup>
+                <col style={{width: 74}}/>
+                <col style={{width: 158}}/>
+                <col style={{width: 200}}/>
+                <col style={{width: 90}}/>
+            </colgroup>
             <tbody>
-                {rows.map((row, index) => (
+            {rows.map((row, index) => (
                     <FormRow
                         key={index}
                         rowNumber={row}

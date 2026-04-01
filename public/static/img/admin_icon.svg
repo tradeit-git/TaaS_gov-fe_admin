@@ -22,9 +22,18 @@
 <path d="M68 99L60 106.999" stroke="#4A4A4A" stroke-linecap="round"/>
 <path d="M34 109L30.0001 105M31.3333 101.667C31.3333 104.244 29.244 106.333 26.6667 106.333C24.0893 106.333 22 104.244 22 101.667C22 99.0893 24.0893 97 26.6667 97C29.244 97 31.3333 99.0893 31.3333 101.667Z" stroke="#4A4A4A" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M56.6641 68L60.1927 71.5286C60.453 71.7889 60.453 72.2111 60.1927 72.4714L56.6641 76" stroke="#232323" stroke-linecap="round"/>
+<path d="M86.9974 133.916V142.083M82.9141 137.999H91.0807" stroke="#677793" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M20 138V133C20 132.176 20.9408 131.706 21.6 132.2L24.9333 134.7C25.4667 135.1 25.4667 135.9 24.9333 136.3L21.6 138.8C20.9408 139.294 20 138.824 20 138Z" fill="#1A1A1A"/>
+<path d="M120.997 133.916V142.083M116.914 137.999H125.081" stroke="#4A4A4A" stroke-linecap="round" stroke-linejoin="round"/>
+<g clip-path="url(#clip1_8922_118534)">
+<path d="M50.3724 137.999L52.1224 139.749L55.6224 136.249M58.8307 137.999C58.8307 141.221 56.2191 143.833 52.9974 143.833C49.7757 143.833 47.1641 141.221 47.1641 137.999C47.1641 134.778 49.7757 132.166 52.9974 132.166C56.2191 132.166 58.8307 134.778 58.8307 137.999Z" stroke="#34C759" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
 <defs>
 <clipPath id="clip0_8922_118534">
 <rect width="16" height="16" fill="white" transform="translate(91 38)"/>
+</clipPath>
+<clipPath id="clip1_8922_118534">
+<rect width="14" height="14" fill="white" transform="translate(46 131)"/>
 </clipPath>
 </defs>
 </svg>

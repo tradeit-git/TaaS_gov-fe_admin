@@ -14,7 +14,7 @@ export default function FormRow({ rowNumber, onDelete }: FormRowProps) {
                 <input type="text"/>
                 크레딧
             </td>
-            <td>
+            <td style={{ textAlign: 'center' }}>
                 <button className={'delete_btn'} onClick={onDelete}>삭제</button>
             </td>
         </tr>
