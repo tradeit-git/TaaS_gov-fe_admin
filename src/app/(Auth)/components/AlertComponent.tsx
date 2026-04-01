@@ -10,15 +10,16 @@ export default function AlertComponent(props: {
     uId?: string;
     alertType: AlertType;
     infoContent: string | ReactNode;
-    callback?: () => void
+    callback?: () => void;
+    showCancel?: boolean;
 }) {
-    const {callback, uId} = props;
+    const {callback, uId, showCancel = true} = props;
     const {closePopup} = usePopupStore();
 
     const btnBox = useMemo(() => {
         if (callback) {
             return <>
-                <button className={'cancel_btn'} onClick={() => closePopup(uId ?? "")}>취소</button>
+                {showCancel && <button className={'cancel_btn'} onClick={() => closePopup(uId ?? "")}>취소</button>}
                 <button className={'ok_btn'} type={'button'} onClick={async () => {
                     closePopup(uId ?? "")
                     callback()
@@ -29,7 +30,7 @@ export default function AlertComponent(props: {
             return <button className={'ok_btn'} type={'submit'} onClick={() => closePopup(uId ?? "")}>확인</button>
         }
 
-    }, [callback, uId, closePopup])
+    }, [callback, uId, closePopup, showCancel])
 
     return (
         <div className={'alertSection'}>
