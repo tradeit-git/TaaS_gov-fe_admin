@@ -4,7 +4,8 @@
       "Bash(grep -r \"export.*COOKIE\\\\|export.*CONST\\\\|export.*KEY\" C:_PROJECTTaaS-front-admin/src --include=*.ts --include=*.tsx)",
       "Bash(cp:*)",
       "Bash(rm -rf \"C:\\\\_PROJECT\\\\taas_gov-fe_admin\")",
-      "Bash(cp -a \"C:\\\\_PROJECT\\\\TaaS-front-admin\" \"C:\\\\_PROJECT\\\\taas_gov-fe_admin\")"
+      "Bash(cp -a \"C:\\\\_PROJECT\\\\TaaS-front-admin\" \"C:\\\\_PROJECT\\\\taas_gov-fe_admin\")",
+      "Bash(npx tsc:*)"
     ]
   }
 }

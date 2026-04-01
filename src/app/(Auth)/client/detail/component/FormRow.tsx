@@ -1,28 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import {formatNumber} from "@/utill/format";
 
 interface FormRowProps {
     rowNumber: number;
+    date: string;
+    credit: string;
+    paid: boolean;
+    minDate: string;
+    maxDate: string;
     onDelete: () => void;
-    defaultDate?: string;
-    defaultCredit?: string;
+    onDateChange: (date: string) => void;
+    onCreditChange: (credit: string) => void;
 }
 
-export default function FormRow({ rowNumber, onDelete, defaultDate = '', defaultCredit = '' }: FormRowProps) {
-    const [date, setDate] = useState(defaultDate);
-
-    const isPaid = () => {
-        if (!date) return false;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const selectedDate = new Date(date);
-        selectedDate.setHours(0, 0, 0, 0);
-        return selectedDate < today;
-    };
-
-    const isCompleted = isPaid();
-
+export default function FormRow({rowNumber, date, credit, paid, minDate, maxDate, onDelete, onDateChange, onCreditChange}: FormRowProps) {
     return (
         <tr className={'form_row'}>
             <td>{String(rowNumber).padStart(2, '0')}회차</td>
@@ -30,20 +22,23 @@ export default function FormRow({ rowNumber, onDelete, defaultDate = '', default
                 <input
                     type="date"
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    disabled={isCompleted}
+                    min={minDate}
+                    max={maxDate}
+                    onChange={(e) => onDateChange(e.target.value)}
+                    disabled={paid}
                 />
             </td>
             <td>
                 <input
                     type="text"
-                    defaultValue={defaultCredit}
-                    disabled={isCompleted}
+                    value={credit}
+                    onChange={(e) => onCreditChange(formatNumber(e.target.value))}
+                    disabled={paid}
                 />
                 크레딧
             </td>
-            <td style={{ textAlign: 'center' }}>
-                {isCompleted ? (
+            <td style={{textAlign: 'center'}}>
+                {paid ? (
                     <div>
                         <span className={'icon'}/>
                         지급완료

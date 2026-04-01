@@ -1,32 +1,29 @@
 'use client';
 
-import { useState } from 'react';
 import FormRow from './FormRow';
 import FormAdd from './FormAdd';
 
-interface CreditRow {
+export interface CreditRow {
     id: number;
+    apiId?: number;        // 서버 PK (기존 회차)
     rowNumber: number;
-    date: string;
-    credit: string;
+    date: string;          // scheduledDate
+    credit: string;        // amount (콤마 포맷)
+    status: string;        // ACTIVE=지급완료, SCHEDULED=미지급
 }
 
-export default function CreditTable() {
-    // 임시 데이터: 1회차는 지급완료(과거 날짜), 2회차는 미지급(미래 날짜)
-    const [rows, setRows] = useState<CreditRow[]>([
-        { id: 1, rowNumber: 1, date: '2026-02-01', credit: '100,000' },
-        { id: 2, rowNumber: 2, date: '2026-05-01', credit: '100,000' },
-    ]);
+interface Props {
+    rows: CreditRow[];
+    serviceStartDate: string;
+    serviceEndDate: string;
+    disabled?: boolean;
+    onAdd: () => void;
+    onDelete: (id: number) => void;
+    onDateChange: (id: number, date: string) => void;
+    onCreditChange: (id: number, credit: string) => void;
+}
 
-    const handleAdd = () => {
-        const newRowNumber = rows.length > 0 ? Math.max(...rows.map(r => r.rowNumber)) + 1 : 1;
-        setRows([...rows, { id: Date.now(), rowNumber: newRowNumber, date: '', credit: '' }]);
-    };
-
-    const handleDelete = (id: number) => {
-        setRows(rows.filter(row => row.id !== id));
-    };
-
+export default function CreditTable({rows, serviceStartDate, serviceEndDate, disabled, onAdd, onDelete, onDateChange, onCreditChange}: Props) {
     return (
         <table>
             <colgroup>
@@ -37,15 +34,20 @@ export default function CreditTable() {
             </colgroup>
             <tbody>
             {rows.map((row) => (
-                    <FormRow
-                        key={row.id}
-                        rowNumber={row.rowNumber}
-                        onDelete={() => handleDelete(row.id)}
-                        defaultDate={row.date}
-                        defaultCredit={row.credit}
-                    />
-                ))}
-                <FormAdd onAdd={handleAdd} />
+                <FormRow
+                    key={row.id}
+                    rowNumber={row.rowNumber}
+                    date={row.date}
+                    credit={row.credit}
+                    paid={row.status !== 'SCHEDULED'}
+                    minDate={serviceStartDate}
+                    maxDate={serviceEndDate}
+                    onDelete={() => onDelete(row.id)}
+                    onDateChange={(date) => onDateChange(row.id, date)}
+                    onCreditChange={(credit) => onCreditChange(row.id, credit)}
+                />
+            ))}
+            {!disabled && <FormAdd onAdd={onAdd}/>}
             </tbody>
         </table>
     );
