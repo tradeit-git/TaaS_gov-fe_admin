@@ -27,7 +27,7 @@ export default function PageVisitLogger() {
             sessionStorage.setItem(STORAGE_KEY, pathname);
 
             const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-            fetch(`${basePath}/api/common/page-log`, {
+            fetch(`${basePath}/api/admin/common/page-log`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -42,7 +42,7 @@ export const replaceBase64Images = async  (htmlString: string): Promise<string> 
             // 반드시 'image.png' 같은 이름을 지정해야 MultipartFile로 정상 매핑됨
             formData.append("image", blob, "uploaded.png");
 
-            const res = await fetch("/admin/api/common/editor/image-upload", {
+            const res = await fetch("/admin/api/admin/file-upload/editor-image", {
                 method: "POST",
                 body: formData,
             });

@@ -29,7 +29,7 @@ export default async function Layout({children}: { children: React.ReactNode }) 
 
     const appConfig = AppConfigSchema.parse({});
     try {
-        const apiRes = await callApi(`/api/common/settings`, options);
+        const apiRes = await callApi(`/api/admin/common/settings`, options);
         if (apiRes.result) {
             const apiData = apiRes.data as AppConfigType;
             appConfig.geoCodes = apiData.geoCodes ? apiData.geoCodes : [];

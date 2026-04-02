@@ -297,6 +297,12 @@
 }
 ```
 
+common
+
+
+crm admin common 
+
+
 > soft delete 처리 (`deleted_at`에 현재 시간 기록). 삭제된 문의는 목록 조회에서 제외됩니다.
 
 ---
