@@ -155,7 +155,7 @@ export default function ClientCreateForm({onCreated}: Props) {
                 </div>
                 <div className={'form_field'}>
                     <label><span className={'required'}>*</span> 패스워드</label>
-                    <input type="password" value={password} autoComplete="new-password" onChange={e => setPassword(e.target.value)} placeholder={''}/>
+                    <input type="text" value={password} autoComplete="new-password" onChange={e => setPassword(e.target.value)} placeholder={''}/>
                 </div>
             </div>
             <div className={'form_actions'}>
