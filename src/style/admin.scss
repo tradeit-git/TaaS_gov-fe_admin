@@ -626,6 +626,19 @@ input::placeholder {
 
   .table_wrap {
     overflow-x: auto;
+    .table_title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 20px;
+      h4 {
+        padding: 0 30px;
+        font-size: 14px;
+        color: #4a4a4a;
+      }
+
+    }
 
     table {
       width: 100%;
@@ -681,16 +694,46 @@ input::placeholder {
           }
         }
 
+        .cell_input {
+          width: 100%;
+          height: 28px;
+          padding: 0 8px;
+          border: 1px solid transparent;
+          background: transparent;
+          border-radius: $border-radius;
+          font: inherit;
+          color: inherit;
+          box-sizing: border-box;
+
+          &:not([readonly]) {
+            border-color: #ddd;
+            background: #fff;
+          }
+          &[readonly] {
+            cursor: default;
+            outline: none;
+            padding-left: 0;
+            padding-right: 0;
+          }
+        }
+
         .td_actions {
           display: flex;
-          align-items: center;
           gap: 6px;
+          .actions_wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 28px;
+          }
 
           .btn_detail {
             padding: 1px 8px;
             border: 1px solid #ddd;
             background: #fff;
             border-radius: $border-radius;
+            height: 24px;
             a {
               font-size: $font-size-xs;
               font-weight: 500;
@@ -706,6 +749,7 @@ input::placeholder {
             background: $gray01;
             border: 1px solid $gray02;
             padding: 4px;
+            height: 24px;
 
             .icon_trash {
               display: block;
@@ -714,9 +758,33 @@ input::placeholder {
               background-position: -92px -95px;
             }
           }
+          .btn_save {
+            background: $gray01;
+            border: 1px solid $gray02;
+            padding: 0 8px;
+            height: 24px;
+          }
+        }
+      }
+      &.user_list_table {
+        td {
+          padding: 5px 10px;
         }
       }
     }
+  }
+  .list_button {
+    padding: 7px 14px;
+    background: #4a4a4a;
+    color: #fff;
+    border-radius: 6px;
+    margin-right: 10px;
+  }
+  .table_bottom_button_wrap {
+    padding-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
   }
 }
 // ---------- pagination  -----------

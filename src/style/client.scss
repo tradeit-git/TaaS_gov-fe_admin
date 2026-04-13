@@ -95,7 +95,9 @@
         cursor: default;
       }
     }
-
+    .date_tilde {
+      margin: 0 4px;
+    }
   }
 
   .form_actions {
@@ -129,6 +131,30 @@
       }
     }
   }
+  &.trial_create_form {
+    .form_field {
+      &:nth-child(1) {
+        input {
+          width: 373px;
+        }
+      }
+      &:nth-child(2) {
+        input {
+          width: 180px;
+        }
+      }
+      &:nth-child(3) {
+        input {
+          width: 150px;
+        }
+      }
+      &:nth-child(4) {
+        input {
+          width: 150px;
+        }
+      }
+    }
+  }
 }
 .client_table {
   td {
@@ -148,5 +174,6 @@
       }
     }
   }
+
 }
 
