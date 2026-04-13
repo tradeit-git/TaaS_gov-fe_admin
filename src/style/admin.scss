@@ -544,6 +544,9 @@ input::placeholder {
         &.client {
           background-position: -122px -38px;
         }
+        &.trial {
+          background-position: -153px -38px;
+        }
       }
       &.on {
         background: rgba(255,255,255,.2);
