@@ -506,7 +506,7 @@ export default function Page() {
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>패스워드 <span>*</span></p>
-                            <input type="password" ref={passwordRef} autoComplete="new-password" defaultValue={''}/>
+                            <input type="text" ref={passwordRef} autoComplete="new-password" defaultValue={''}/>
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>계정생성일</p>
