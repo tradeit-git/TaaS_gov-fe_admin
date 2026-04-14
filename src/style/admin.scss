@@ -637,7 +637,33 @@ input::placeholder {
         font-size: 14px;
         color: #4a4a4a;
       }
-
+      .title_info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        .trial_period {
+          font-size: 13px;
+          color: #666;
+          padding-left: 12px;
+          border-left: 1px solid #ddd;
+        }
+        .btn_link {
+          display: inline-flex;
+          align-items: center;
+          padding: 4px 10px;
+          border: 1px solid #d0d0d0;
+          border-radius: 4px;
+          background: #fff;
+          color: #333;
+          font-size: 12px;
+          text-decoration: none;
+          transition: all 0.15s;
+          &:hover {
+            background: #f5f5f5;
+            border-color: #888;
+          }
+        }
+      }
     }
 
     table {
@@ -758,7 +784,7 @@ input::placeholder {
               background-position: -92px -95px;
             }
           }
-          .btn_save {
+          .btn_save, .btn_cancel {
             background: $gray01;
             border: 1px solid $gray02;
             padding: 0 8px;

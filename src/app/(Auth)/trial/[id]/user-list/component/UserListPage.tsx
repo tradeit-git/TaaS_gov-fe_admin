@@ -1,14 +1,14 @@
 'use client';
 
 import Link from "next/link";
-import {useCallback, useEffect, useState} from "react";
-import {useSearchParams} from "next/navigation";
+import {useCallback, useState} from "react";
 import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
+import {TrialKeyRow} from "@/app/(Auth)/trial/component/TrialPage";
 
-interface TrialUser {
+export interface TrialUser {
     id: number;
     loginId: string;
     name: string;
@@ -18,18 +18,25 @@ interface TrialUser {
     createdAt: string;
 }
 
-export default function UserList() {
-    const searchParams = useSearchParams();
-    const trialId = searchParams.get('id');
-    const trialName = searchParams.get('name') || '';
+interface Props {
+    trialId: string;
+    trial: TrialKeyRow | null;
+    initialData: TrialUser[];
+}
 
+const isInOperation = (startDate?: string, endDate?: string) => {
+    if (!startDate || !endDate) return false;
+    const today = new Date().toISOString().slice(0, 10);
+    return startDate <= today && today <= endDate;
+};
+
+export default function UserListPage({trialId, trial, initialData}: Props) {
     const {addPopup} = usePopupStore();
-    const [data, setData] = useState<TrialUser[]>([]);
+    const [data, setData] = useState<TrialUser[]>(initialData);
     const [editingIdx, setEditingIdx] = useState<number | null>(null);
     const [editRow, setEditRow] = useState<TrialUser | null>(null);
 
     const fetchList = useCallback(async () => {
-        if (!trialId) return;
         const res = await callApi(`/api/admin/trial-keys/${trialId}/users`, {
             method: 'GET',
             credentials: 'include',
@@ -39,13 +46,14 @@ export default function UserList() {
         }
     }, [trialId]);
 
-    useEffect(() => {
-        fetchList();
-    }, [fetchList]);
-
     const handleEdit = (idx: number) => {
         setEditingIdx(idx);
         setEditRow({...data[idx]});
+    };
+
+    const handleCancel = () => {
+        setEditingIdx(null);
+        setEditRow(null);
     };
 
     const handleChange = (field: keyof TrialUser, value: string) => {
@@ -54,7 +62,7 @@ export default function UserList() {
     };
 
     const handleSave = async () => {
-        if (!editRow || !trialId) return;
+        if (!editRow) return;
         const res = await callApi(`/api/admin/trial-keys/${trialId}/users/${editRow.id}`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
@@ -77,7 +85,6 @@ export default function UserList() {
     };
 
     const handleDelete = (userId: number) => {
-        if (!trialId) return;
         addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 회원을 삭제하시겠습니까?'} callback={async () => {
             const res = await callApi(`/api/admin/trial-keys/${trialId}/users/${userId}`, {
                 method: 'DELETE',
@@ -106,7 +113,20 @@ export default function UserList() {
             </div>
             <div className={'table_wrap'}>
                 <div className={'table_title'}>
-                    <h4>{trialName}</h4>
+                    <div className={'title_info'}>
+                        <h4>{trial?.trialName || ''}</h4>
+                        {trial && (
+                            <span className={'trial_period'}>
+                                운영기간 : {formatDateDot(trial.startDate)} ~ {formatDateDot(trial.endDate)}
+                            </span>
+                        )}
+                        {trial && isInOperation(trial.startDate, trial.endDate) && (
+                            <a className={'btn_link'}
+                               href={`https://www.tradeit.co.kr/trial-sign/${trial.trialKey}`}
+                               target="_blank" rel="noopener noreferrer"
+                               title="체험 가입 페이지 열기">사이트 바로가기 ↗</a>
+                        )}
+                    </div>
                     <Link href={'/trial'} className={'list_button'}>목록으로</Link>
                 </div>
                 <table className={'client_table user_list_table'}>
@@ -117,7 +137,7 @@ export default function UserList() {
                         <col/>
                         <col/>
                         <col width={'110px'}/>
-                        <col width={'140px'}/>
+                        <col width={'180px'}/>
                     </colgroup>
                     <thead>
                     <tr>
@@ -153,8 +173,12 @@ export default function UserList() {
                                 <td className={'td_actions'}>
                                     <div className={'actions_wrap'}>
                                         {isEditing ? (
-                                            <button type="button" className={'btn_save'}
-                                                    onClick={handleSave}>저장</button>
+                                            <>
+                                                <button type="button" className={'btn_save'}
+                                                        onClick={handleSave}>저장</button>
+                                                <button type="button" className={'btn_cancel'}
+                                                        onClick={handleCancel}>취소</button>
+                                            </>
                                         ) : (
                                             <>
                                                 <button type="button" className={'btn_detail'}
