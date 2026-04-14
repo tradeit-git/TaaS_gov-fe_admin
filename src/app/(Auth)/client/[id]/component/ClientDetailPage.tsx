@@ -1,10 +1,9 @@
 'use client';
 
 import Link from "next/link";
-import {useRouter, useSearchParams} from "next/navigation";
-import {useState, useEffect, useRef, ReactNode} from "react";
-import CreditTable from "@/app/(Auth)/client/detail/component/CreditTable";
-import {CreditRow} from "@/app/(Auth)/client/detail/component/CreditTable";
+import {useState, useRef, ReactNode} from "react";
+import CreditTable from "@/app/(Auth)/client/[id]/component/CreditTable";
+import {CreditRow} from "@/app/(Auth)/client/[id]/component/CreditTable";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import callApi from "@/utill/apiRequest";
@@ -15,7 +14,7 @@ type DuplicateStatus = 'none' | 'success' | 'error' | 'invalid';
 
 interface ServiceForm {
     id: number;
-    apiId?: number;       // 서버 PK (기존 플랜)
+    apiId?: number;
     planName: string;
     startDate: string;
     endDate: string;
@@ -24,7 +23,6 @@ interface ServiceForm {
     credits: CreditRow[];
 }
 
-// API 응답 타입
 interface ApiCreditRound {
     id: number;
     scheduledDate: string;
@@ -32,7 +30,7 @@ interface ApiCreditRound {
     status: string;
 }
 
-interface ApiCreditPlan {
+export interface ApiCreditPlan {
     id: number;
     planName: string;
     startDate: string;
@@ -42,7 +40,7 @@ interface ApiCreditPlan {
     rounds: ApiCreditRound[];
 }
 
-interface ApiUserDetailResponse {
+export interface ApiUserDetailResponse {
     user: Record<string, unknown>;
     creditPlans: ApiCreditPlan[];
 }
@@ -68,7 +66,7 @@ const buildCreditPlansPayload = (forms: ServiceForm[]) => forms.map(form => ({
     })),
 }));
 
-const mapApiToServiceForms = (plans: ApiCreditPlan[]): ServiceForm[] => {
+export const mapApiToServiceForms = (plans: ApiCreditPlan[]): ServiceForm[] => {
     return plans.map(plan => ({
         id: Date.now() + plan.id,
         apiId: plan.id,
@@ -100,15 +98,16 @@ const today = () => {
     return d;
 };
 
+interface Props {
+    id: string;
+    initialUser: UserType;
+    initialCreditPlans: ApiCreditPlan[];
+}
 
-export default function Page() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
+export default function ClientDetailPage({id, initialUser, initialCreditPlans}: Props) {
     const {addPopup} = usePopupStore();
-    const id = searchParams.get('id');
 
-    const [user, setUser] = useState<UserType | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<UserType>(initialUser);
 
     const companyNameRef = useRef<HTMLInputElement>(null);
     const businessNumberRef = useRef<HTMLInputElement>(null);
@@ -119,38 +118,13 @@ export default function Page() {
         businessNumber: 'none',
     });
 
-    const [serviceForms, setServiceForms] = useState<ServiceForm[]>([]);
-
-    useEffect(() => {
-        if (!id) return;
-        (async () => {
-            setLoading(true);
-            const res = await callApi(`/api/admin/clients/${id}`, {
-                method: 'GET',
-                credentials: 'include',
-            });
-            if (res.result && res.data) {
-                const body = res.data as ApiUserDetailResponse;
-                const parsed = UserSchema.parse(body.user);
-                setUser(parsed);
-                if (body.creditPlans) {
-                    setServiceForms(mapApiToServiceForms(body.creditPlans));
-                }
-            } else {
-                addPopup(<AlertComponent alertType={'error'} infoContent={'회원 정보를 찾을 수 없습니다.'} callback={() => router.push('/client')}/>);
-            }
-            setLoading(false);
-        })();
-    }, [id]);
+    const [serviceForms, setServiceForms] = useState<ServiceForm[]>(mapApiToServiceForms(initialCreditPlans));
 
     const showAlert = (message: ReactNode, callback?: () => void, showCancel: boolean = true) => {
         addPopup(<AlertComponent alertType="alert" infoContent={message} callback={callback} showCancel={showCancel}/>);
     };
 
-    // ─── 계정정보 저장 ───
     const handleSave = async () => {
-        if (!id || !user) return;
-
         const companyName = companyNameRef.current?.value.trim() || '';
         const businessNumber = businessNumberRef.current?.value.trim() || '';
         const password = passwordRef.current?.value || '';
@@ -191,14 +165,13 @@ export default function Page() {
                 setServiceForms(mapApiToServiceForms(resBody.creditPlans));
             }
             setDuplicateStatus({companyName: 'none', businessNumber: 'none'});
-            if (passwordRef.current) passwordRef.current.value = '';
+            if (passwordRef.current) passwordRef.current.value = parsed.password || '';
             showAlert('저장되었습니다.', undefined, false);
         } else {
             showAlert(res.message || '저장에 실패했습니다.', undefined, false);
         }
     };
 
-    // ─── 중복체크 ───
     const handleDuplicateCheck = async (fieldKey: string) => {
         const options: RequestInit = {method: 'GET', credentials: 'include'};
         const ref = fieldKey === 'companyName' ? companyNameRef : businessNumberRef;
@@ -234,22 +207,18 @@ export default function Page() {
         return '';
     };
 
-    // ─── 서비스 추가 ───
     const handleAddService = () => {
-        // 규칙6: 이미 신규 서비스가 있으면 추가 불가
         if (serviceForms.some(f => f.isNew)) {
             showAlert('서비스 플랜은 1회만 추가할 수 있습니다.');
             return;
         }
 
-        // 규칙1: 최신 서비스 운영기간 중이면 추가 불가
         const latest = serviceForms[0];
         if (latest && latest.endDate && toDate(latest.endDate) >= today()) {
             showAlert(<>운영기간 중에는 서비스 플랜 정보를<br/>신규로 추가할 수 없습니다.</>);
             return;
         }
 
-        // 이전 서비스 종료일+1 또는 오늘 중 더 늦은 날짜
         let defaultStart = today().toISOString().slice(0, 10);
         if (latest && latest.endDate) {
             const nextDay = new Date(latest.endDate);
@@ -270,17 +239,14 @@ export default function Page() {
         setServiceForms(prev => [newForm, ...prev]);
     };
 
-    // ─── 서비스 폼 업데이트 헬퍼 ───
     const updateService = (serviceId: number, updater: (form: ServiceForm) => ServiceForm) => {
         setServiceForms(prev => prev.map(f => f.id === serviceId ? updater(f) : f));
     };
 
-    // ─── 서비스 시작일 변경 ───
     const handleServiceStartDate = (serviceId: number, startDate: string) => {
         const form = serviceForms.find(f => f.id === serviceId);
         if (!form) return;
 
-        // 규칙5: 이전 서비스 종료일 이후여야 함
         const idx = serviceForms.findIndex(f => f.id === serviceId);
         const prevService = serviceForms[idx + 1];
         if (prevService && prevService.endDate && startDate && toDate(startDate) <= toDate(prevService.endDate)) {
@@ -288,13 +254,11 @@ export default function Page() {
             return;
         }
 
-        // 규칙2: 종료일보다 이전이어야 함
         if (form.endDate && startDate && toDate(startDate) >= toDate(form.endDate)) {
             showAlert('시작일은 종료일 이전이어야 합니다.');
             return;
         }
 
-        // 규칙3: 기존 크레딧 지급일이 범위 밖이면 차단
         const invalidCredits = form.credits.filter(c => c.date && c.status === 'SCHEDULED' && toDate(c.date) < toDate(startDate));
         if (invalidCredits.length > 0) {
             showAlert('시작일 이전의 크레딧 지급일이 있습니다. 지급일을 먼저 변경해주세요.');
@@ -304,18 +268,15 @@ export default function Page() {
         updateService(serviceId, f => ({...f, startDate}));
     };
 
-    // ─── 서비스 종료일 변경 ───
     const handleServiceEndDate = (serviceId: number, endDate: string) => {
         const form = serviceForms.find(f => f.id === serviceId);
         if (!form) return;
 
-        // 규칙2: 시작일보다 이후여야 함
         if (form.startDate && endDate && toDate(endDate) <= toDate(form.startDate)) {
             showAlert('종료일은 시작일 이후여야 합니다.');
             return;
         }
 
-        // 규칙3: 기존 크레딧 지급일이 범위 밖이면 차단
         const invalidCredits = form.credits.filter(c => c.date && c.status === 'SCHEDULED' && toDate(c.date) > toDate(endDate));
         if (invalidCredits.length > 0) {
             showAlert('종료일 이후의 크레딧 지급일이 있습니다. 지급일을 먼저 변경해주세요.');
@@ -325,7 +286,6 @@ export default function Page() {
         updateService(serviceId, f => ({...f, endDate}));
     };
 
-    // ─── 크레딧 회차 추가 ───
     const handleAddCredit = (serviceId: number) => {
         const form = serviceForms.find(f => f.id === serviceId);
         if (!form) return;
@@ -335,7 +295,6 @@ export default function Page() {
             return;
         }
         const newRowNumber = form.credits.length > 0 ? Math.max(...form.credits.map(r => r.rowNumber)) + 1 : 1;
-        // 최소 지급일: 오늘+1일 (스케줄러 기준)
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = tomorrow.toISOString().slice(0, 10);
@@ -348,7 +307,6 @@ export default function Page() {
             const nextStr = next.toISOString().slice(0, 10);
             if (nextStr > defaultDate) defaultDate = nextStr;
         }
-        // 범위 초과 방지
         if (defaultDate > form.endDate) defaultDate = form.endDate;
 
         updateService(serviceId, f => ({
@@ -357,7 +315,6 @@ export default function Page() {
         }));
     };
 
-    // ─── 크레딧 회차 삭제 ───
     const handleDeleteCredit = (serviceId: number, creditId: number) => {
         updateService(serviceId, form => {
             const filtered = form.credits.filter(c => c.id !== creditId);
@@ -368,7 +325,6 @@ export default function Page() {
         });
     };
 
-    // ─── 크레딧 지급일 변경 ───
     const handleCreditDateChange = (serviceId: number, creditId: number, date: string) => {
         const form = serviceForms.find(f => f.id === serviceId);
         if (!form) return;
@@ -376,7 +332,6 @@ export default function Page() {
         const idx = form.credits.findIndex(c => c.id === creditId);
         if (idx === -1) return;
 
-        // 규칙3: 운영기간 내여야 함
         if (form.startDate && toDate(date) < toDate(form.startDate)) {
             showAlert('지급일은 운영기간 시작일 이후여야 합니다.');
             return;
@@ -386,7 +341,6 @@ export default function Page() {
             return;
         }
 
-        // 규칙4: 내일 이후여야 함 (스케줄러 지급 기준)
         const minDate = new Date();
         minDate.setDate(minDate.getDate() + 1);
         minDate.setHours(0, 0, 0, 0);
@@ -395,14 +349,12 @@ export default function Page() {
             return;
         }
 
-        // 규칙4: 이전 회차 지급일보다 이후여야 함
         const prevCredit = form.credits[idx - 1];
         if (prevCredit && prevCredit.date && toDate(date) <= toDate(prevCredit.date)) {
             showAlert('이전 회차 지급일 이후로 설정해주세요.');
             return;
         }
 
-        // 다음 회차 지급일보다 이전이어야 함
         const nextCredit = form.credits[idx + 1];
         if (nextCredit && nextCredit.date && toDate(date) >= toDate(nextCredit.date)) {
             showAlert('다음 회차 지급일 이전으로 설정해주세요.');
@@ -416,16 +368,12 @@ export default function Page() {
         });
     };
 
-    // ─── 크레딧 금액 변경 ───
     const handleCreditAmountChange = (serviceId: number, creditId: number, credit: string) => {
         updateService(serviceId, form => {
             const newCredits = form.credits.map(c => c.id === creditId ? {...c, credit} : c);
             return {...form, credits: newCredits};
         });
     };
-
-    if (loading) return null;
-    if (!user) return null;
 
     return (
         <div className={'admin_page'}>
@@ -506,7 +454,7 @@ export default function Page() {
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>패스워드 <span>*</span></p>
-                            <input type="text" ref={passwordRef} autoComplete="new-password" defaultValue={''}/>
+                            <input type="text" ref={passwordRef} autoComplete="new-password" defaultValue={user.password || ''}/>
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>계정생성일</p>
@@ -588,5 +536,5 @@ export default function Page() {
                 </div>
             </div>
         </div>
-    )
+    );
 }

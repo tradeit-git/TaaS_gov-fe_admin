@@ -1,6 +1,6 @@
 'use client'
 
-import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {UserRow} from "@/app/(Auth)/client/component/ClientPage";
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
 }
 
 export default function ClientTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete}: Props) {
+    const router = useRouter();
     const formatPeriod = (row: UserRow) => {
         if (!row.planStartDate || !row.planEndDate) return '-';
         return `${formatDate(row.planStartDate)} ~ ${formatDate(row.planEndDate)} / ${row.planMonths ?? '-'}개월`;
@@ -39,9 +40,8 @@ export default function ClientTableBody({data, totalElements, currentPage, items
                     <td>{formatPeriod(row)}</td>
                     <td>{formatDate(row.createdAt)}</td>
                     <td className={'td_actions'}>
-                        <button type="button" className={'btn_detail'}>
-                            <Link href={`/client/detail?id=${row.id}`}>상세</Link>
-                        </button>
+                        <button type="button" className={'btn_detail'}
+                                onClick={() => router.push(`/client/${row.id}`)}>상세</button>
                         <button type="button" className={'btn_delete'} onClick={() => onDelete(row.id)}>
                             <span className={'admin_icon icon_trash'}/>
                         </button>
