@@ -15,6 +15,7 @@
 | `DELETE` | `/api/admin/trial-keys/{id}` | 체험 키 삭제 |
 | `GET` | `/api/admin/trial-keys/{id}/users` | 체험 키로 가입한 기업 명단 |
 | `PUT` | `/api/admin/trial-keys/{id}/users/{userId}` | 체험 가입 회원 정보 수정 |
+| `DELETE` | `/api/admin/trial-keys/{id}/users/{userId}` | 체험 가입 회원 삭제 |
 
 ---
 
@@ -262,3 +263,34 @@
 |------|------|------|
 | `404` | `common.NOT_FOUND` | 존재하지 않는 체험 키 또는 해당 키 소속 회원이 아님 |
 | `409` | `common.CONFLICT` | 이미 사용중인 아이디 (loginId 변경 시) |
+
+---
+
+## 7. 체험 가입 회원 삭제
+
+**`DELETE /api/admin/trial-keys/{id}/users/{userId}`**
+
+### Request
+
+| 구분 | 파라미터 | 타입 | 필수 | 설명 |
+|------|----------|------|------|------|
+| Path | `id` | Long | O | 체험 키 PK |
+| Path | `userId` | Long | O | 회원 PK |
+
+### Response `200 OK`
+
+```json
+{
+  "status": 200,
+  "code": "common.SUCCESS",
+  "message": null
+}
+```
+
+> soft delete 처리. `loginId`에 `_deleted_{userId}` 구분자를 추가하여 동일 이메일로 재가입 가능.
+
+### Error Responses
+
+| 상태 | 코드 | 조건 |
+|------|------|------|
+| `404` | `common.NOT_FOUND` | 존재하지 않는 체험 키 또는 해당 키 소속 회원이 아님 |
