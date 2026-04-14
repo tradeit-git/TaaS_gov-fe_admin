@@ -1,42 +1,95 @@
 'use client';
 
 import Link from "next/link";
-import {useState} from "react";
+import {useCallback, useEffect, useState} from "react";
+import {useSearchParams} from "next/navigation";
+import callApi from "@/utill/apiRequest";
+import {formatDateDot} from "@/utill/format";
+import {usePopupStore} from "@/stores/common/popupStore";
+import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 
 interface TrialUser {
-    company: string;
+    id: number;
     loginId: string;
-    password: string;
-    manager: string;
-    phone: string;
+    name: string;
+    companyName: string;
+    contact: string;
+    status: string;
     createdAt: string;
 }
 
-const initialData: TrialUser[] = [
-    {
-        company: '○○○산업',
-        loginId: 'abcdeft@gamil.com',
-        password: 'abcdef',
-        manager: '이홍구',
-        phone: '010-0000-0000',
-        createdAt: '2026.04.30',
-    },
-    {
-        company: '○○○○기술',
-        loginId: '12345@naver.com',
-        password: 'zwdff22',
-        manager: '박성열',
-        phone: '070-0000-0000',
-        createdAt: '2026.04.29',
-    },
-];
-
 export default function UserList() {
-    const [data, setData] = useState<TrialUser[]>(initialData);
-    const [editingIdx, setEditingIdx] = useState<number | null>(null);
+    const searchParams = useSearchParams();
+    const trialId = searchParams.get('id');
+    const trialName = searchParams.get('name') || '';
 
-    const handleChange = (idx: number, field: keyof TrialUser, value: string) => {
-        setData(prev => prev.map((row, i) => i === idx ? {...row, [field]: value} : row));
+    const {addPopup} = usePopupStore();
+    const [data, setData] = useState<TrialUser[]>([]);
+    const [editingIdx, setEditingIdx] = useState<number | null>(null);
+    const [editRow, setEditRow] = useState<TrialUser | null>(null);
+
+    const fetchList = useCallback(async () => {
+        if (!trialId) return;
+        const res = await callApi(`/api/admin/trial-keys/${trialId}/users`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (res.result && res.data) {
+            setData(res.data as TrialUser[]);
+        }
+    }, [trialId]);
+
+    useEffect(() => {
+        fetchList();
+    }, [fetchList]);
+
+    const handleEdit = (idx: number) => {
+        setEditingIdx(idx);
+        setEditRow({...data[idx]});
+    };
+
+    const handleChange = (field: keyof TrialUser, value: string) => {
+        if (!editRow) return;
+        setEditRow({...editRow, [field]: value});
+    };
+
+    const handleSave = async () => {
+        if (!editRow || !trialId) return;
+        const res = await callApi(`/api/admin/trial-keys/${trialId}/users/${editRow.id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({
+                companyName: editRow.companyName,
+                loginId: editRow.loginId,
+                name: editRow.name,
+                contact: editRow.contact,
+            }),
+        });
+        if (res.result) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'수정되었습니다.'}/>);
+            setEditingIdx(null);
+            setEditRow(null);
+            fetchList();
+        } else {
+            addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '수정에 실패했습니다.'}/>);
+        }
+    };
+
+    const handleDelete = (userId: number) => {
+        if (!trialId) return;
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 회원을 삭제하시겠습니까?'} callback={async () => {
+            const res = await callApi(`/api/admin/trial-keys/${trialId}/users/${userId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+                fetchList();
+            } else {
+                addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
+            }
+        }}/>);
     };
 
     return (
@@ -53,13 +106,12 @@ export default function UserList() {
             </div>
             <div className={'table_wrap'}>
                 <div className={'table_title'}>
-                    <h4>경기지역 FTA 통상진흥센터</h4>
-                    <Link href={'/trial'} className={'list_button'} >목록으로</Link>
+                    <h4>{trialName}</h4>
+                    <Link href={'/trial'} className={'list_button'}>목록으로</Link>
                 </div>
                 <table className={'client_table user_list_table'}>
                     <colgroup>
                         <col width={'50px'}/>
-                        <col/>
                         <col/>
                         <col/>
                         <col/>
@@ -72,7 +124,6 @@ export default function UserList() {
                         <th>순번</th>
                         <th>체험기업</th>
                         <th>아이디</th>
-                        <th>비밀번호</th>
                         <th>담당자명</th>
                         <th>연락처</th>
                         <th>가입일자</th>
@@ -82,37 +133,37 @@ export default function UserList() {
                     <tbody>
                     {data.map((row, i) => {
                         const isEditing = editingIdx === i;
+                        const view = isEditing && editRow ? editRow : row;
                         return (
-                            <tr key={i}>
+                            <tr key={row.id}>
                                 <td>{data.length - i}</td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
-                                           value={row.company}
-                                           onChange={e => handleChange(i, 'company', e.target.value)}/></td>
+                                           value={view.companyName}
+                                           onChange={e => handleChange('companyName', e.target.value)}/></td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
-                                           value={row.loginId}
-                                           onChange={e => handleChange(i, 'loginId', e.target.value)}/></td>
+                                           value={view.loginId}
+                                           onChange={e => handleChange('loginId', e.target.value)}/></td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
-                                           value={row.password}
-                                           onChange={e => handleChange(i, 'password', e.target.value)}/></td>
+                                           value={view.name}
+                                           onChange={e => handleChange('name', e.target.value)}/></td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
-                                           value={row.manager}
-                                           onChange={e => handleChange(i, 'manager', e.target.value)}/></td>
-                                <td><input type="text" className={'cell_input'} readOnly={!isEditing} value={row.phone}
-                                           onChange={e => handleChange(i, 'phone', e.target.value)}/></td>
-                                <td>{row.createdAt}</td>
+                                           value={view.contact}
+                                           onChange={e => handleChange('contact', e.target.value)}/></td>
+                                <td>{formatDateDot(row.createdAt)}</td>
                                 <td className={'td_actions'}>
                                     <div className={'actions_wrap'}>
                                         {isEditing ? (
                                             <button type="button" className={'btn_save'}
-                                                    onClick={() => setEditingIdx(null)}>저장</button>
+                                                    onClick={handleSave}>저장</button>
                                         ) : (
                                             <>
                                                 <button type="button" className={'btn_detail'}
                                                         disabled={editingIdx !== null}
-                                                        onClick={() => setEditingIdx(i)}>수정
+                                                        onClick={() => handleEdit(i)}>수정
                                                 </button>
                                                 <button type="button" className={'btn_delete'}
-                                                        disabled={editingIdx !== null}><span
+                                                        disabled={editingIdx !== null}
+                                                        onClick={() => handleDelete(row.id)}><span
                                                     className={'admin_icon icon_trash'}/></button>
                                             </>
                                         )}

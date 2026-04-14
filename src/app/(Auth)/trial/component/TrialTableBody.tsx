@@ -1,55 +1,31 @@
 'use client'
 
 import Link from "next/link";
+import {TrialKeyRow} from "@/app/(Auth)/trial/component/TrialPage";
 
-interface TrialRow {
-    program: string;
-    domain: string;
-    credit: number;
-    startDate: string;
-    endDate: string;
-    signupCount: number;
-    createdAt: string;
+interface Props {
+    data: TrialKeyRow[];
+    formatDate: (date: string | null | undefined) => string;
+    onDelete: (id: number) => void;
 }
 
-const mockData: TrialRow[] = [
-    {
-        program: '경기지역 FTA 통상진흥센터',
-        domain: 'ggfta',
-        credit: 1000,
-        startDate: '2026.05.01',
-        endDate: '2026.05.05',
-        signupCount: 0,
-        createdAt: '2026.04.30',
-    },
-    {
-        program: '부산테크노파크',
-        domain: 'btp',
-        credit: 500,
-        startDate: '2026.05.01',
-        endDate: '2025.05.03',
-        signupCount: 40,
-        createdAt: '2026.04.29',
-    },
-];
-
-export default function TrialTableBody() {
+export default function TrialTableBody({data, formatDate, onDelete}: Props) {
     return (
         <tbody>
-        {mockData.map((row, i) => (
-            <tr key={i}>
-                <td>{mockData.length - i}</td>
-                <td>{row.program}</td>
-                <td>{row.domain}</td>
-                <td>{row.credit.toLocaleString()}</td>
-                <td>{row.startDate} ~ {row.endDate}</td>
-                <td>{row.signupCount}</td>
-                <td>{row.createdAt}</td>
+        {data.map((row, i) => (
+            <tr key={row.id}>
+                <td>{data.length - i}</td>
+                <td>{row.trialName}</td>
+                <td>{row.trialKey}</td>
+                <td>{row.creditAmount.toLocaleString()}</td>
+                <td>{formatDate(row.startDate)} ~ {formatDate(row.endDate)}</td>
+                <td>{row.usedCount}</td>
+                <td>{formatDate(row.createdAt)}</td>
                 <td className={'td_actions'}>
                     <button type="button" className={'btn_detail'}>
-                        <Link href={'/trial/userList'}>가입명단</Link>
+                        <Link href={`/trial/user-list?id=${row.id}&name=${encodeURIComponent(row.trialName)}`}>가입명단</Link>
                     </button>
-                    <button type="button" className={'btn_delete'}>
+                    <button type="button" className={'btn_delete'} onClick={() => onDelete(row.id)}>
                         <span className={'admin_icon icon_trash'}/>
                     </button>
                 </td>
