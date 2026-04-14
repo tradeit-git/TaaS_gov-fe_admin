@@ -1,6 +1,6 @@
 'use client'
 
-import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {TrialKeyRow} from "@/app/(Auth)/trial/component/TrialPage";
 
 interface Props {
@@ -15,6 +15,7 @@ const isInOperation = (startDate: string, endDate: string) => {
 };
 
 export default function TrialTableBody({data, formatDate, onDelete}: Props) {
+    const router = useRouter();
     return (
         <tbody>
         {data.map((row, i) => (
@@ -35,9 +36,8 @@ export default function TrialTableBody({data, formatDate, onDelete}: Props) {
                 <td>{row.usedCount}</td>
                 <td>{formatDate(row.createdAt)}</td>
                 <td className={'td_actions'}>
-                    <button type="button" className={'btn_detail'}>
-                        <Link href={`/trial/${row.id}/user-list`}>가입명단</Link>
-                    </button>
+                    <button type="button" className={'btn_detail'}
+                            onClick={() => router.push(`/trial/${row.id}/user-list`)}>가입명단</button>
                     <button type="button" className={'btn_delete'} onClick={() => onDelete(row.id)}>
                         <span className={'admin_icon icon_trash'}/>
                     </button>
