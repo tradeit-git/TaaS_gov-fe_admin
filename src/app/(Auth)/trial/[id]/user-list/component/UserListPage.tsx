@@ -11,6 +11,7 @@ import {TrialKeyRow} from "@/app/(Auth)/trial/component/TrialPage";
 export interface TrialUser {
     id: number;
     loginId: string;
+    password: string;
     name: string;
     companyName: string;
     contact: string;
@@ -70,6 +71,7 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
             body: JSON.stringify({
                 companyName: editRow.companyName,
                 loginId: editRow.loginId,
+                password: editRow.password,
                 name: editRow.name,
                 contact: editRow.contact,
             }),
@@ -136,6 +138,7 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                         <col/>
                         <col/>
                         <col/>
+                        <col/>
                         <col width={'110px'}/>
                         <col width={'180px'}/>
                     </colgroup>
@@ -144,6 +147,7 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                         <th>순번</th>
                         <th>체험기업</th>
                         <th>아이디</th>
+                        <th>비밀번호</th>
                         <th>담당자명</th>
                         <th>연락처</th>
                         <th>가입일자</th>
@@ -163,6 +167,9 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
                                            value={view.loginId}
                                            onChange={e => handleChange('loginId', e.target.value)}/></td>
+                                <td><input type="text" className={'cell_input'} readOnly={!isEditing}
+                                           value={view.password}
+                                           onChange={e => handleChange('password', e.target.value)}/></td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
                                            value={view.name}
                                            onChange={e => handleChange('name', e.target.value)}/></td>
