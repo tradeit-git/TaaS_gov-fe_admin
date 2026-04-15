@@ -156,6 +156,86 @@
     }
   }
 }
+// -------------------- 토글 스위치 ----------------------------
+.toggle_switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle_slider {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: #D5D7DB;
+    border-radius: 20px;
+    transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  .toggle_label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: color 0.3s;
+
+    &.on {
+      color: #34C759;
+    }
+
+    &.off {
+      color: #999;
+    }
+  }
+
+  input:checked + .toggle_slider {
+    background: #34C759;
+    box-shadow: 0 0 8px rgba(52, 199, 89, 0.3);
+
+    &::after {
+      transform: translateX(16px);
+    }
+  }
+
+  &:hover .toggle_slider {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
+  }
+
+  &:hover input:checked + .toggle_slider {
+    box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.15);
+  }
+
+  &:active .toggle_slider::after {
+    width: 20px;
+  }
+
+  &:active input:checked + .toggle_slider::after {
+    transform: translateX(12px);
+  }
+}
+
 .client_table {
   td {
     .trial_key {
