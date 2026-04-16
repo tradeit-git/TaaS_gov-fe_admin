@@ -19,7 +19,6 @@ export default function ClientCreateForm({onCreated}: Props) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const [clientNameCheck, setClientNameCheck] = useState<CheckStatus>(null);
     const [bizNoCheck, setBizNoCheck] = useState<CheckStatus>(null);
     const [emailCheck, setEmailCheck] = useState<CheckStatus>(null);
 
@@ -28,37 +27,14 @@ export default function ClientCreateForm({onCreated}: Props) {
         setBizNo('');
         setEmail('');
         setPassword('');
-        setClientNameCheck(null);
         setBizNoCheck(null);
         setEmailCheck(null);
     };
 
-    const checkDuplicate = async (field: 'clientName' | 'bizNo' | 'email') => {
+    const checkDuplicate = async (field: 'email') => {
         const options: RequestInit = { method: 'GET', credentials: 'include' };
 
         switch (field) {
-            case 'clientName': {
-                if (!clientName.trim()) return;
-                const res = await callApi(`/api/admin/clients/check-company-name?companyName=${encodeURIComponent(clientName.trim())}`, options);
-                if (res.result && res.data) {
-                    const {duplicate} = res.data as { duplicate: boolean };
-                    setClientNameCheck(duplicate ? 'duplicate' : 'available');
-                }
-                break;
-            }
-            case 'bizNo': {
-                if (!bizNo) return;
-                if (!isValidBusinessNumber(bizNo)) {
-                    setBizNoCheck('invalid');
-                    return;
-                }
-                const res = await callApi(`/api/admin/clients/check-business-number?businessNumber=${encodeURIComponent(bizNo)}`, options);
-                if (res.result && res.data) {
-                    const {duplicate} = res.data as { duplicate: boolean };
-                    setBizNoCheck(duplicate ? 'duplicate' : 'available');
-                }
-                break;
-            }
             case 'email': {
                 if (!email.trim()) return;
                 if (!isValidEmail(email.trim())) {
@@ -80,7 +56,11 @@ export default function ClientCreateForm({onCreated}: Props) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
             return;
         }
-        if (clientNameCheck !== 'available' || bizNoCheck !== 'available' || emailCheck !== 'available') {
+        if (!isValidBusinessNumber(bizNo)) {
+            setBizNoCheck('invalid');
+            return;
+        }
+        if (emailCheck !== 'available') {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'중복체크를 완료해주세요.'}/>);
             return;
         }
@@ -113,14 +93,9 @@ export default function ClientCreateForm({onCreated}: Props) {
                     <label><span className={'required'}>*</span> 고객사명</label>
                     <div className={'input_wrap'}>
                         <input type="text" value={clientName} autoComplete="off"
-                               onChange={e => { setClientName(e.target.value); setClientNameCheck(null); }}
+                               onChange={e => setClientName(e.target.value)}
                                placeholder={''}/>
-                        {clientNameCheck === 'duplicate' && <p className={'error_msg'}>이미 등록된 정보입니다</p>}
                     </div>
-                    <button type="button"
-                            className={`btn_check ${clientNameCheck === 'available' ? 'disabled' : ''}`}
-                            disabled={clientNameCheck === 'available'}
-                            onClick={() => checkDuplicate('clientName')}>중복체크</button>
                 </div>
                 <div className={'form_field'}>
                     <label><span className={'required'}>*</span> 사업자번호</label>
@@ -131,13 +106,8 @@ export default function ClientCreateForm({onCreated}: Props) {
                                    setBizNoCheck(null);
                                }}
                                placeholder={'000-00-00000'}/>
-                        {bizNoCheck === 'duplicate' && <p className={'error_msg'}>이미 등록된 정보입니다</p>}
                         {bizNoCheck === 'invalid' && <p className={'error_msg'}>사업자번호 10자리를 입력해주세요</p>}
                     </div>
-                    <button type="button"
-                            className={`btn_check ${bizNoCheck === 'available' ? 'disabled' : ''}`}
-                            disabled={bizNoCheck === 'available'}
-                            onClick={() => checkDuplicate('bizNo')}>중복체크</button>
                 </div>
                 <div className={'form_field'}>
                     <label><span className={'required'}>*</span> 아이디(E-mail)</label>
