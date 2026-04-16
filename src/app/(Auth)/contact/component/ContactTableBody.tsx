@@ -1,6 +1,6 @@
 'use client'
 
-import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {InquiryRow} from "@/app/(Auth)/contact/component/ContactPage";
 import {formatDateTimeDot} from "@/utill/format";
 
@@ -15,6 +15,7 @@ interface Props {
 }
 
 export default function ContactTableBody({data, totalElements, currentPage, itemsPerPage, statusMap, formatDate, onDelete}: Props) {
+    const router = useRouter();
     return (
         <tbody>
         {data.map((row, i) => {
@@ -40,9 +41,8 @@ export default function ContactTableBody({data, totalElements, currentPage, item
                         </span>
                     </td>
                     <td className={'td_actions'}>
-                        <button type="button" className={'btn_detail'}>
-                            <Link href={`/contact/detail?id=${row.id}`}>상세</Link>
-                        </button>
+                        <button type="button" className={'btn_detail'}
+                                onClick={() => router.push(`/contact/${row.id}`)}>상세</button>
                         <button type="button" className={'btn_delete'} onClick={() => onDelete(row.id)}>
                             <span className={'admin_icon icon_trash'}/>
                         </button>

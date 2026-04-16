@@ -2,89 +2,25 @@
 
 import Link from "next/link";
 import '@/style/contact.scss'
-import {useEffect, useState} from "react";
-import {useSearchParams, useRouter} from "next/navigation";
+import {useState} from "react";
 import callApi from "@/utill/apiRequest";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import {formatDateDot} from "@/utill/format";
 import {InquiryRow, INQUIRY_STATUS_OPTIONS} from "@/app/(Auth)/contact/component/ContactPage";
 
-export default function Page() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
+interface Props {
+    id: string;
+    initialDetail: InquiryRow;
+}
+
+export default function ContactDetailPage({id, initialDetail}: Props) {
     const {addPopup} = usePopupStore();
-    const id = searchParams.get('id');
+    const [detail, setDetail] = useState<InquiryRow>(initialDetail);
+    const [status, setStatus] = useState(initialDetail.status);
+    const [adminMemo, setAdminMemo] = useState(initialDetail.adminMemo || '');
 
-    const [detail, setDetail] = useState<InquiryRow | null>(null);
-    const [status, setStatus] = useState('');
-    const [adminMemo, setAdminMemo] = useState('');
-    const [loading, setLoading] = useState(true);
-
-    // 상세 조회
-    useEffect(() => {
-        if (!id) return;
-        (async () => {
-            setLoading(true);
-            const res = await callApi(`/api/admin/inquiries/${id}`, {
-                method: 'GET',
-                credentials: 'include',
-            });
-            if (res.result && res.data) {
-                const d = res.data as InquiryRow;
-                setDetail(d);
-                setStatus(d.status);
-                setAdminMemo(d.adminMemo || '');
-            } else {
-                addPopup(<AlertComponent alertType={'error'} infoContent={'문의를 찾을 수 없습니다.'} callback={() => router.push('/contact')}/>);
-            }
-            setLoading(false);
-        })();
-    }, [id]);
-
-    // 상태 변경
-    const handleStatusChange = async (newStatus: string) => {
-        if (!id || newStatus === status) return;
-        const res = await callApi(`/api/admin/inquiries/${id}/status`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include',
-            body: JSON.stringify({status: newStatus}),
-        });
-        if (res.result && res.data) {
-            const d = res.data as InquiryRow;
-            setDetail(d);
-            setStatus(d.status);
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'상태가 변경되었습니다.'}/>);
-        } else {
-            addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '상태 변경에 실패했습니다.'}/>);
-        }
-    };
-
-    // 메모 저장
-    const handleSaveMemo = async () => {
-        if (!id) return;
-        const res = await callApi(`/api/admin/inquiries/${id}/memo`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include',
-            body: JSON.stringify({adminMemo}),
-        });
-        if (res.result && res.data) {
-            const d = res.data as InquiryRow;
-            setDetail(d);
-            setAdminMemo(d.adminMemo || '');
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'메모가 저장되었습니다.'}/>);
-        } else {
-            addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '메모 저장에 실패했습니다.'}/>);
-        }
-    };
-
-    // 저장 (상태 + 메모)
     const handleSave = async () => {
-        if (!id || !detail) return;
-
-        // 상태가 변경됐으면 상태 먼저 저장
         if (status !== detail.status) {
             const statusRes = await callApi(`/api/admin/inquiries/${id}/status`, {
                 method: 'POST',
@@ -98,7 +34,6 @@ export default function Page() {
             }
         }
 
-        // 메모 저장
         const memoRes = await callApi(`/api/admin/inquiries/${id}/memo`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -116,10 +51,6 @@ export default function Page() {
         }
     };
 
-    if (loading) return null;
-    if (!detail) return null;
-
-    // 전화번호 분리
     const phoneParts = detail.phone ? detail.phone.split('-') : ['', '', ''];
     const mobileParts = detail.mobile ? detail.mobile.split('-') : ['', '', ''];
     const emailParts = detail.email ? detail.email.split('@') : ['', ''];
@@ -207,5 +138,5 @@ export default function Page() {
                 </div>
             </div>
         </div>
-    )
+    );
 }
