@@ -156,10 +156,10 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                         <th style={{textAlign: 'center'}}>비밀번호</th>
                         <th style={{textAlign: 'center'}}>담당자명</th>
                         <th style={{textAlign: 'center'}}>연락처</th>
-                        <th style={{textAlign: 'center'}}>가입일자</th>
                         <th>지급크레딧</th>
                         <th>사용크레딧</th>
                         <th>남은크레딧</th>
+                        <th style={{textAlign: 'center'}}>가입일자</th>
                         <th>관리</th>
                     </tr>
                     </thead>
@@ -190,10 +190,10 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                                            style={{textAlign: 'center'}}
                                            value={view.contact}
                                            onChange={e => handleChange('contact', e.target.value)}/></td>
-                                <td style={{textAlign: 'center'}}>{formatDateDot(row.createdAt)}</td>
                                 <td style={{textAlign: 'right'}}>{row.grantedCredit.toLocaleString()}</td>
                                 <td style={{textAlign: 'right'}}>{row.usedCredit.toLocaleString()}</td>
                                 <td style={{textAlign: 'right'}}>{row.remainingCredit.toLocaleString()}</td>
+                                <td style={{textAlign: 'center'}}>{formatDateDot(row.createdAt)}</td>
                                 <td className={'td_actions'}>
                                     <div className={'actions_wrap'}>
                                         {isEditing ? (
