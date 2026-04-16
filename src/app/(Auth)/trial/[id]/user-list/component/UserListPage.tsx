@@ -17,6 +17,9 @@ export interface TrialUser {
     contact: string;
     status: string;
     createdAt: string;
+    grantedCredit: number;
+    usedCredit: number;
+    remainingCredit: number;
 }
 
 interface Props {
@@ -140,17 +143,23 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                         <col/>
                         <col/>
                         <col width={'110px'}/>
+                        <col width={'100px'}/>
+                        <col width={'100px'}/>
+                        <col width={'100px'}/>
                         <col width={'180px'}/>
                     </colgroup>
                     <thead>
                     <tr>
                         <th>순번</th>
-                        <th>체험기업</th>
-                        <th>아이디</th>
-                        <th>비밀번호</th>
-                        <th>담당자명</th>
-                        <th>연락처</th>
-                        <th>가입일자</th>
+                        <th style={{textAlign: 'center'}}>체험기업</th>
+                        <th style={{textAlign: 'center'}}>아이디</th>
+                        <th style={{textAlign: 'center'}}>비밀번호</th>
+                        <th style={{textAlign: 'center'}}>담당자명</th>
+                        <th style={{textAlign: 'center'}}>연락처</th>
+                        <th style={{textAlign: 'center'}}>가입일자</th>
+                        <th>지급크레딧</th>
+                        <th>사용크레딧</th>
+                        <th>남은크레딧</th>
                         <th>관리</th>
                     </tr>
                     </thead>
@@ -162,29 +171,39 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                             <tr key={row.id}>
                                 <td>{data.length - i}</td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
+                                           style={{textAlign: 'center'}}
                                            value={view.companyName}
                                            onChange={e => handleChange('companyName', e.target.value)}/></td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
+                                           style={{textAlign: 'center'}}
                                            value={view.loginId}
                                            onChange={e => handleChange('loginId', e.target.value)}/></td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
+                                           style={{textAlign: 'center'}}
                                            value={view.password}
                                            onChange={e => handleChange('password', e.target.value)}/></td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
+                                           style={{textAlign: 'center'}}
                                            value={view.name}
                                            onChange={e => handleChange('name', e.target.value)}/></td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
+                                           style={{textAlign: 'center'}}
                                            value={view.contact}
                                            onChange={e => handleChange('contact', e.target.value)}/></td>
-                                <td>{formatDateDot(row.createdAt)}</td>
+                                <td style={{textAlign: 'center'}}>{formatDateDot(row.createdAt)}</td>
+                                <td style={{textAlign: 'right'}}>{row.grantedCredit.toLocaleString()}</td>
+                                <td style={{textAlign: 'right'}}>{row.usedCredit.toLocaleString()}</td>
+                                <td style={{textAlign: 'right'}}>{row.remainingCredit.toLocaleString()}</td>
                                 <td className={'td_actions'}>
                                     <div className={'actions_wrap'}>
                                         {isEditing ? (
                                             <>
                                                 <button type="button" className={'btn_save'}
-                                                        onClick={handleSave}>저장</button>
+                                                        onClick={handleSave}>저장
+                                                </button>
                                                 <button type="button" className={'btn_cancel'}
-                                                        onClick={handleCancel}>취소</button>
+                                                        onClick={handleCancel}>취소
+                                                </button>
                                             </>
                                         ) : (
                                             <>
