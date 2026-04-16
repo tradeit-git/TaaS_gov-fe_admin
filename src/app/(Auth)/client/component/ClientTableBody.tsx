@@ -10,9 +10,10 @@ interface Props {
     itemsPerPage: number;
     formatDate: (date: string | null | undefined) => string;
     onDelete: (id: number) => void;
+    onToggleStatus: (id: number, currentStatus: string) => void;
 }
 
-export default function ClientTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete}: Props) {
+export default function ClientTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onToggleStatus}: Props) {
     const router = useRouter();
     const formatPeriod = (row: UserRow) => {
         if (!row.planStartDate || !row.planEndDate) return '-';
@@ -23,10 +24,24 @@ export default function ClientTableBody({data, totalElements, currentPage, items
         <tbody>
         {data.map((row, i) => {
             const rowNum = totalElements - (currentPage * itemsPerPage) - i;
+            const isActive = (row.userStatus ?? 'ACTIVE') === 'ACTIVE';
 
             return (
                 <tr key={row.id}>
                     <td>{rowNum}</td>
+                    <td>
+                        <label className={'toggle_switch'}>
+                            <input
+                                type="checkbox"
+                                checked={isActive}
+                                onChange={() => onToggleStatus(row.id, row.userStatus ?? 'ACTIVE')}
+                            />
+                            <span className={'toggle_slider'}/>
+                            <span className={`toggle_label ${isActive ? 'on' : 'off'}`}>
+                                {isActive ? 'ON' : 'OFF'}
+                            </span>
+                        </label>
+                    </td>
                     <td>
                         <span className={`status_badge ${row.status === '계약' ? 'active' : 'expired'}`}>
                             {row.status}

@@ -12,6 +12,7 @@ import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 export interface UserRow {
     id: number;
     status: string;
+    userStatus: string;
     companyName: string;
     businessNumber: string;
     loginId: string;
@@ -92,6 +93,21 @@ export default function ClientPage({initialData}: Props) {
         fetchList();
     };
 
+    const handleToggleStatus = async (id: number, currentStatus: string) => {
+        const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+        const res = await callApi(`/api/admin/clients/${id}/status`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({status: newStatus}),
+        });
+        if (res.result) {
+            setData(prev => prev.map(row => row.id === id ? {...row, userStatus: newStatus} : row));
+        } else {
+            addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '상태 변경에 실패했습니다.'}/>);
+        }
+    };
+
     const handleDelete = (id: number) => {
         addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 고객을 삭제하시겠습니까?'} callback={async () => {
             const res = await callApi(`/api/admin/clients/${id}`, {
@@ -155,6 +171,7 @@ export default function ClientPage({initialData}: Props) {
                     <thead>
                     <tr>
                         <th>순번</th>
+                        <th>상태관리</th>
                         <th>고객상태</th>
                         <th>고객사명</th>
                         <th>사업자번호</th>
@@ -173,6 +190,7 @@ export default function ClientPage({initialData}: Props) {
                         itemsPerPage={itemsPerPage}
                         formatDate={formatDateDot}
                         onDelete={handleDelete}
+                        onToggleStatus={handleToggleStatus}
                     />
                 </table>
             </div>
