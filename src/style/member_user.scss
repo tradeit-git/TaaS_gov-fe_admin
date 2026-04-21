@@ -1,0 +1,143 @@
+@use 'variable' as *;
+@use 'reset'  as *;
+
+.section_wrap {
+  overflow-x: hidden;
+    .list_header {
+        .excel_btn {
+          height: 30px;
+          padding: 0 14px;
+          font-size: 13px;
+          background: #4a4a4a;
+          color: #fff;
+          border-radius: 4px;
+        }
+      }
+    }
+
+
+.user_table {
+
+      th .credit_label {
+        display: block;
+        padding: 4px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 500;
+        margin: 0 auto;
+        width: 40px;
+        &.total {
+          background-color: #f5f5f5;
+          color: #333;
+        }
+        &.used {
+          background: #FFF7ED;
+          color: #EA580C;
+        }
+        &.remove {
+          background: #ECFDF5;
+          color: #16A34A;
+        }
+        &.remaining {
+          background: #EFF6FF;
+          color: #2563EB;
+        }
+      }
+
+      th{
+        &.credit {
+          text-align: center !important;
+        }
+        &.credit_last {
+        }
+        border-right: 1px solid $gray02 !important;
+        padding-right: 16px !important;
+      }
+
+      tbody {
+        td {
+          padding: 13px 10px;
+          &.text_center {
+            text-align: center !important;
+          }
+
+          &.credit_total {
+            color: #333;
+            font-size: 13px;
+            font-weight: 500;
+          }
+          &.credit_used {
+            color: #EA580C;
+            font-size: 13px;
+            font-weight: 500;
+          }
+          &.credit_remove {
+            color: #16A34A;
+            font-size: 13px;
+            font-weight: 500;
+          }
+          &.credit_remaining {
+            color: #2563EB;
+            font-size: 13px;
+            font-weight: 500;
+            border-right: 1px solid #e0e0e0;
+          }
+
+          .line {
+            color: #ddd;
+          }
+
+          .value {
+            display: inline-flex;
+            align-items: center;
+            min-width: 106px;
+            margin-right: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            &:last-child {
+              margin-right: 0;
+            }
+            .label {
+              padding: 6px 8px;
+              border-radius: 10px;
+              font-size: 12px;
+              //font-weight: 600;
+              margin-right: 6px;
+            }
+            &.total {
+              .label {
+                background-color: #f5f5f5;
+                color: #333;
+              }
+              color: #333;
+            }
+            &.used {
+              .label {
+                background:#FFF7ED;
+                color:#EA580C;
+              }
+              color:#EA580C;
+            }
+            &.remove {
+              .label {
+                background:#ECFDF5;
+                color:#16A34A;
+              }
+              color:#16A34A;
+            }
+            &.remaining {
+              .label {
+                background:#EFF6FF;
+                color:#2563EB;
+              }
+              color:#2563EB;
+            }
+          }
+          &.td_actions {
+            .btn_detail {
+              padding-top: 3px !important;
+            }
+          }
+        }
+      }
+}

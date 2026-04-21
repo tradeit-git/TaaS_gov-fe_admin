@@ -59,6 +59,10 @@ export  default  function Sidebar (){
                       className={['lnb_name', pathname.includes('contact') ? " on" : ""].join("")}>
                     <span className={'admin_icon contact'}/>도입문의
                 </Link>
+                <Link href={'/user'}
+                      className={['lnb_name', pathname.includes('user') ? " on" : ""].join("")}>
+                    <span className={'admin_icon user'}/>가입계정
+                </Link>
                 <Link href={'/404'}
                       className={['lnb_name', pathname.includes('account') ? " on" : ""].join("")}>
                     <span className={'admin_icon account'}/>데모계정
