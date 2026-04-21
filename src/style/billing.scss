@@ -1,0 +1,133 @@
+@use 'variable' as *;
+
+.billing_search_section {
+  background-color: #F9F9F9;
+  padding: 20px 30px;
+  border: 1px solid $gray02;
+  margin-bottom: 20px;
+
+
+  .search_row {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+
+  .search_date {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .label {
+      white-space: nowrap;
+      font-size: $font-size-sm;
+      color: $theme-color;
+    }
+
+    .date_inputs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      background-color: #fff;
+      border: 1px solid $gray02;
+      border-radius: 6px;
+
+      input[type="date"] {
+        border: none;
+        font-size: $font-size-sm;
+        width: 130px;
+        height: 28px;
+        background-color: #fff;
+      }
+
+      .date_separator {
+        color: #999;
+      }
+    }
+  }
+
+  .search_plan {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .label {
+      white-space: nowrap;
+      font-size: $font-size-sm;
+      color: $theme-color;
+    }
+
+    .plan_checks {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .plan_check_item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        font-size: $font-size-sm;
+
+        input[type="checkbox"] {
+          width: 16px;
+          height: 16px;
+          cursor: pointer;
+        }
+
+        span {
+          user-select: none;
+        }
+      }
+    }
+  }
+
+  .search_btns {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-left: auto;
+
+    .btn_search {
+      background: $black02;
+      color: #fff;
+      border-radius: $border-radius;;
+      padding: 0 20px;
+      border: none;
+      font-size: $font-size-sm;
+      cursor: pointer;
+      height: 32px;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    .btn_reset {
+      background-color: transparent;
+      color: #677793;
+      border: none;
+      font-size: $font-size-sm;
+      cursor: pointer;
+      border-bottom: 1px solid #677793;
+      padding: 0 0 2px;
+      border-radius: 0;
+
+      &:hover {
+        color: $theme-color;
+      }
+    }
+  }
+}
+
+.admin_page .table_wrap .client_table {
+  .status_failed {
+    color: #E74C3C;
+  }
+
+  .status_completed {
+    color: #16A34A;
+  }
+}

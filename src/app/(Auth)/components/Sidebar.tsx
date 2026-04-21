@@ -75,6 +75,10 @@ export  default  function Sidebar (){
                       className={['lnb_name', pathname.includes('client') ? " on" : ""].join("")}>
                     <span className={'admin_icon client'}/>계약계정
                 </Link>
+                <Link href={'/billing'}
+                      className={['lnb_name', pathname.includes('billing') ? " on" : ""].join("")}>
+                    <span className={'admin_icon billing'}/>결제현황
+                </Link>
 
             </nav>
         </section>
