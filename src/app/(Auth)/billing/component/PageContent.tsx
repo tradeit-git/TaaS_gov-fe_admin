@@ -1,19 +1,7 @@
 'use client'
 
 import React, {useMemo, useState} from "react";
-
-type PaymentHistoryItem = {
-    id: number;
-    userId: number;
-    loginId: string;
-    userName: string;
-    transactionId: string;
-    createdAt: string;
-    gradeName: string;
-    amount: number;
-    paymentMethod: string;
-    paymentStatus: 'COMPLETED' | 'FAILED';
-}
+import BillingTableBody, {PaymentHistoryItem} from "@/app/(Auth)/billing/component/BillingTableBody";
 
 type SearchInputType = {
     startDate: string;
@@ -143,8 +131,6 @@ export default function PageContent() {
         alert(`청구서 다운로드 (${transactionId})`);
     };
 
-    const getRowNo = (index: number) => totalElements - ((page - 1) * size) - index;
-
     return (
         <>
             <div className={'billing_search_section'}>
@@ -233,41 +219,13 @@ export default function PageContent() {
                         <th>청구서</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    {pagedItems.length === 0 ? (
-                        <tr>
-                            <td colSpan={10} style={{textAlign: 'center', padding: '40px'}}>결제 이력이 없습니다.</td>
-                        </tr>
-                    ) : pagedItems.map((item, index) => (
-                        <tr key={item.id}>
-                            <td>{getRowNo(index)}</td>
-                            <td>{item.createdAt}</td>
-                            <td>{item.transactionId}</td>
-                            <td>{item.loginId}</td>
-                            <td>{item.userName}</td>
-                            <td>{item.gradeName}</td>
-                            <td>${item.amount.toFixed(2)}</td>
-                            <td>{item.paymentMethod}</td>
-                            <td className={item.paymentStatus === 'FAILED' ? 'status_failed' : 'status_completed'}>
-                                {item.paymentStatus}
-                            </td>
-                            <td>
-                                {item.paymentStatus === 'FAILED'
-                                    ? <span>-</span>
-                                    : (
-                                        <button
-                                            type={'button'}
-                                            className={'btn_detail'}
-                                            onClick={() => handleInvoice(item.transactionId)}
-                                        >
-                                            다운로드
-                                        </button>
-                                    )
-                                }
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
+                    <BillingTableBody
+                        pagedItems={pagedItems}
+                        totalElements={totalElements}
+                        currentPage={page}
+                        size={size}
+                        onInvoice={handleInvoice}
+                    />
                 </table>
             </div>
 
