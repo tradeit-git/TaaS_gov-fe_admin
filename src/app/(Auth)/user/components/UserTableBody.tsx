@@ -17,7 +17,7 @@ export default function UserTableBody({pagedUsers, totalCount, currentPage, perP
         <tbody>
         {pagedUsers.length === 0 ? (
             <tr>
-                <td colSpan={15} style={{textAlign: 'center'}}>
+                <td colSpan={17} style={{textAlign: 'center'}}>
                     회원이 없습니다.
                 </td>
             </tr>
@@ -31,11 +31,13 @@ export default function UserTableBody({pagedUsers, totalCount, currentPage, perP
                 return (
                     <tr key={user.id}>
                         <td>{rowNum}</td>
-                        <td>{STATUS_LABELS[user.status] || "활성화"}</td>
+                        {/*<td>{STATUS_LABELS[user.status] || "활성화"}</td>*/}
                         <td>{user.loginId}</td>
-                        <td>{user.companyName || '-'}</td>
                         <td>{user.name}</td>
                         <td>{user.contact || '-'}</td>
+                        <td>{user.companyName || '-'}</td>
+                        <td>{user.department || '-'}</td>
+                        <td>{user.position || '-'}</td>
                         <td className={'text_center credit_total'}>{user.creditSummary ? user.creditSummary.granted.toLocaleString() : '-'}</td>
                         <td className={'text_center credit_used'}>{user.creditSummary ? user.creditSummary.used.toLocaleString() : '-'}</td>
                         <td className={'text_center credit_remove'}>{user.creditSummary ? user.creditSummary.expired.toLocaleString() : '-'}</td>

@@ -119,16 +119,24 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                             </div>
                         </li>
                         <li className={'form_item'}>
-                            <p className={'form_label'}>회사명</p>
-                            <input type="text" readOnly defaultValue={user.companyName || '-'}/>
-                        </li>
-                        <li className={'form_item'}>
                             <p className={'form_label'}>이름</p>
                             <input type="text" readOnly defaultValue={user.name}/>
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>전화번호</p>
                             <input type="text" readOnly defaultValue={user.contact || '-'}/>
+                        </li>
+                        <li className={'form_item'}>
+                            <p className={'form_label'}>회사명</p>
+                            <input type="text" readOnly defaultValue={user.companyName || '-'}/>
+                        </li>
+                        <li className={'form_item'}>
+                            <p className={'form_label'}>부서</p>
+                            <input type="text" readOnly defaultValue={user.department || '-'}/>
+                        </li>
+                        <li className={'form_item'}>
+                            <p className={'form_label'}>직함</p>
+                            <input type="text" readOnly defaultValue={user.position || '-'}/>
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>크레딧 현황</p>

@@ -17,6 +17,10 @@ const COMPANIES = [
 
 const STATUSES: Array<UserType["status"]> = ["ACTIVE", "ACTIVE", "ACTIVE", "ACTIVE", "INACTIVE", "SUSPENDED", "WITHDRAWN"];
 
+const DEPARTMENTS = ["영업팀", "마케팅팀", "개발팀", "운영팀", "재무팀", "인사팀", "기획팀", "물류팀"];
+
+const POSITIONS = ["사원", "대리", "과장", "차장", "부장", "팀장", "이사", "대표"];
+
 const pad = (n: number) => String(n).padStart(2, "0");
 const toIso = (d: Date) =>
     `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
@@ -48,8 +52,8 @@ const mockUsers: UserType[] = Array.from({length: 40}, (_, i) => {
         name: NAMES[i % NAMES.length],
         companyName: COMPANIES[i % COMPANIES.length],
         businessNumber: "",
-        department: "",
-        position: "",
+        department: DEPARTMENTS[i % DEPARTMENTS.length],
+        position: POSITIONS[i % POSITIONS.length],
         email: `tradeit${211200 + idx}@gmail.com`,
         contact,
         createdAt: toIso(createdDate),

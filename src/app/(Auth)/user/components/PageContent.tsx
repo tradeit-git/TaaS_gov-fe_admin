@@ -153,11 +153,13 @@ export default function PageContent(props: {
                 <table className={'client_table user_table'}>
                     <colgroup>
                         <col width={'58px'}/>
-                        <col width={'78px'}/>
+                        {/*<col width={'78px'}/>*/}
                         <col width={'300px'}/>
+                        <col width={'140px'}/>
+                        <col width={'140px'}/>
                         <col width={'180px'}/>
-                        <col width={'140px'}/>
-                        <col width={'140px'}/>
+                        <col width={'130px'}/>
+                        <col width={'110px'}/>
                         <col width={'110px'}/>
                         <col width={'110px'}/>
                         <col width={'110px'}/>
@@ -170,11 +172,13 @@ export default function PageContent(props: {
                     <thead>
                     <tr>
                         <th rowSpan={2} className={'num'}>순번</th>
-                        <th rowSpan={2} className={'status'}>상태</th>
+                        {/*<th rowSpan={2} className={'status'}>상태</th>*/}
                         <th rowSpan={2} className={'id'}>이메일(ID)</th>
-                        <th rowSpan={2} className={'company'}>회사명</th>
                         <th rowSpan={2} className={'name'}>이름</th>
                         <th rowSpan={2} className={'contact'}>전화번호</th>
+                        <th rowSpan={2} className={'company'}>회사명</th>
+                        <th rowSpan={2} className={'department'}>부서</th>
+                        <th rowSpan={2} className={'position'}>직함</th>
                         <th colSpan={4} className={'credit'}>크레딧 사용현황</th>
                         <th rowSpan={2} className={'sign_in'}>
                             회원가입일
