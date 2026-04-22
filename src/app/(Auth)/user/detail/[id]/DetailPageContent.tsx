@@ -83,7 +83,8 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                         <li className={'form_item'}>
                             <p className={'form_label'}>비밀번호 재설정</p>
                             <div className={'input_wrap'}>
-                                <div className={`input_field ${password ? (validatePassword ? 'success' : 'error') : ''}`}>
+                                <div
+                                    className={`input_field ${password ? (validatePassword ? 'success' : 'error') : ''}`}>
                                     <input
                                         type="password"
                                         placeholder="영문 + 숫자 8자 이상, 20자 이하"
@@ -101,7 +102,8 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                         <li className={'form_item'}>
                             <p className={'form_label'}>비밀번호 확인</p>
                             <div className={'input_wrap'}>
-                                <div className={`input_field ${confirmPassword ? (isPasswordMatch ? 'success' : 'error') : ''}`}>
+                                <div
+                                    className={`input_field ${confirmPassword ? (isPasswordMatch ? 'success' : 'error') : ''}`}>
                                     <input
                                         type="password"
                                         placeholder="비밀번호 재입력"
@@ -117,12 +119,16 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                             </div>
                         </li>
                         <li className={'form_item'}>
+                            <p className={'form_label'}>회사명</p>
+                            <input type="text" readOnly defaultValue={user.companyName || '-'}/>
+                        </li>
+                        <li className={'form_item'}>
                             <p className={'form_label'}>이름</p>
                             <input type="text" readOnly defaultValue={user.name}/>
                         </li>
                         <li className={'form_item'}>
-                            <p className={'form_label'}>회사명</p>
-                            <input type="text" readOnly defaultValue={user.companyName || '-'}/>
+                            <p className={'form_label'}>전화번호</p>
+                            <input type="text" readOnly defaultValue={user.contact || '-'}/>
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>크레딧 현황</p>
@@ -136,7 +142,8 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>최근접속일</p>
-                            <input type="text" readOnly defaultValue={user.lastLoginAt ? formatDateDot(user.lastLoginAt) : '-'}/>
+                            <input type="text" readOnly
+                                   defaultValue={user.lastLoginAt ? formatDateDot(user.lastLoginAt) : '-'}/>
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>회원가입일시</p>
@@ -144,7 +151,8 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>회원탈퇴일시</p>
-                            <input type="text" readOnly defaultValue={user.deletedAt ? formatDateTime(user.deletedAt) : '-'}/>
+                            <input type="text" readOnly
+                                   defaultValue={user.deletedAt ? formatDateTime(user.deletedAt) : '-'}/>
                         </li>
                     </ul>
                 </section>
