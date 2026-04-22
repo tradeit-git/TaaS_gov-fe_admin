@@ -41,7 +41,7 @@ export default function ClientCreateForm({onCreated}: Props) {
                     setEmailCheck('invalid');
                     return;
                 }
-                const res = await callApi(`/api/admin/clients/check-login-id?loginId=${encodeURIComponent(email.trim())}`, options);
+                const res = await callApi(`/api/admin/members/clients/check-login-id?loginId=${encodeURIComponent(email.trim())}`, options);
                 if (res.result && res.data) {
                     const {duplicate} = res.data as { duplicate: boolean };
                     setEmailCheck(duplicate ? 'duplicate' : 'available');
@@ -65,7 +65,7 @@ export default function ClientCreateForm({onCreated}: Props) {
             return;
         }
 
-        const res = await callApi(`/api/admin/clients`, {
+        const res = await callApi(`/api/admin/members/clients`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             credentials: 'include',

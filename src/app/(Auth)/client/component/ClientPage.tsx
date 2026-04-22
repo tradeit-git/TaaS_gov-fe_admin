@@ -57,7 +57,7 @@ export default function ClientPage({initialData}: Props) {
         params.set('size', String(itemsPerPage));
         if (search.trim()) params.set('keyword', search.trim());
 
-        const res = await callApi(`/api/admin/clients?${params.toString()}`, {
+        const res = await callApi(`/api/admin/members/clients?${params.toString()}`, {
             method: 'GET',
             credentials: 'include',
         });
@@ -95,7 +95,7 @@ export default function ClientPage({initialData}: Props) {
 
     const handleToggleStatus = async (id: number, currentStatus: string) => {
         const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-        const res = await callApi(`/api/admin/clients/${id}/status`, {
+        const res = await callApi(`/api/admin/members/clients/${id}/status`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             credentials: 'include',
@@ -110,7 +110,7 @@ export default function ClientPage({initialData}: Props) {
 
     const handleDelete = (id: number) => {
         addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 고객을 삭제하시겠습니까?'} callback={async () => {
-            const res = await callApi(`/api/admin/clients/${id}`, {
+            const res = await callApi(`/api/admin/members/clients/${id}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });

@@ -1,147 +1,195 @@
 'use client'
 import ExcelDownloadButton from "@/app/(Auth)/user/components/ExcelDownloadButton";
 import UserTableBody from "@/app/(Auth)/user/components/UserTableBody";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import "@/style/member_user.scss";
 import {UserType} from "@/types/user/user";
+import callApi from "@/utill/apiRequest";
+import {usePopupStore} from "@/stores/common/popupStore";
+import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 
-type SortByOptionType = "no_desc" | "createdAt_asc" | "createdAt_desc" | "lastLoginAt_asc" | "lastLoginAt_desc" | "noLoginDays_asc" | "noLoginDays_desc";
-
-type PageNationOptionType = {
-    perPage: number;
-    page: number;
+export interface UserApiRow {
+    id: number;
+    status: "ACTIVE" | "SUSPENDED" | "INACTIVE" | "WITHDRAWN";
+    statusUpdatedAt: string;
+    loginId: string;
+    userType: string;
+    name: string;
+    companyName: string;
+    businessNumber: string;
+    department: string;
+    position: string;
+    email: string;
+    contact: string;
+    createdAt: string;
+    updatedAt: string | null;
+    deletedAt: string | null;
+    creditTotal: number;
+    creditUsed: number;
+    creditExpired: number;
+    creditBalance: number;
+    lastLoginAt: string | null;
 }
 
-export default function PageContent(props: {
-    users: UserType[],
-}) {
+export interface UserListResponse {
+    content: UserApiRow[];
+    totalElements: number;
+    totalPages: number;
+    currentPage: number;
+}
 
-    const [users, setUsers] = useState<UserType[]>(props.users);
-    const [searchText, setSearchText] = useState("");
+const mapToUserType = (row: UserApiRow): UserType => ({
+    ...row,
+    password: '',
+    userFiles: [],
+    creditSummary: {
+        granted: row.creditTotal ?? 0,
+        used: row.creditUsed ?? 0,
+        expired: row.creditExpired ?? 0,
+        balance: row.creditBalance ?? 0,
+    },
+});
 
+type SortByOptionType = "createdAt_asc" | "createdAt_desc" | "lastLoginAt_asc" | "lastLoginAt_desc" | "noLoginDays_asc" | "noLoginDays_desc";
+
+interface Props {
+    initialData: UserListResponse;
+}
+
+export default function PageContent({initialData}: Props) {
+    const {addPopup} = usePopupStore();
+    const [data, setData] = useState<UserType[]>(initialData.content.map(mapToUserType));
+    const [searchInput, setSearchInput] = useState('');
+    const [search, setSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(0);
+    const [itemsPerPage, setItemsPerPage] = useState(15);
+    const [totalElements, setTotalElements] = useState(initialData.totalElements);
+    const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
     const [sortByOption, setSortByOption] = useState<SortByOptionType>("createdAt_desc");
+    const isInitial = useRef(true);
 
-    const [pageNationOption, setPageNationOption] = useState<PageNationOptionType>({
-        page: 1,
-        perPage: 15,
-    });
+    const fetchList = useCallback(async () => {
+        if (isInitial.current) {
+            isInitial.current = false;
+            return;
+        }
+
+        const params = new URLSearchParams();
+        params.set('page', String(currentPage));
+        params.set('size', String(itemsPerPage));
+        if (search.trim()) params.set('keyword', search.trim());
+
+        const res = await callApi(`/api/admin/members/users?${params.toString()}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (res.result && res.data) {
+            const body = res.data as UserListResponse;
+            setData(body.content.map(mapToUserType));
+            setTotalElements(body.totalElements);
+            setTotalPages(Math.max(1, body.totalPages));
+        }
+    }, [currentPage, itemsPerPage, search]);
 
     useEffect(() => {
-        setUsers(props.users);
-    }, [props.users]);
+        fetchList();
+    }, [fetchList]);
+
+    // 디바운스 검색
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            setSearch(searchInput);
+            setCurrentPage(0);
+        }, 100);
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    }, [searchInput]);
 
     const handleDelete = (id: number) => {
-        if (!confirm("해당 회원을 삭제하시겠습니까?")) return;
-        setUsers(prev => prev.filter(u => u.id !== id));
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 회원을 삭제하시겠습니까?'} callback={async () => {
+            const res = await callApi(`/api/admin/members/users/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+                fetchList();
+            } else {
+                addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
+            }
+        }}/>);
     };
 
-    const filteredUsers = useMemo(() => {
-        const keyword = searchText.toLowerCase();
-        if (!keyword) return users;
-
-        return users.filter(user =>
-            (user.loginId ?? "").toLowerCase().includes(keyword) ||
-            (user.email ?? "").toLowerCase().includes(keyword) ||
-            (user.name ?? "").toLowerCase().includes(keyword) ||
-            (user.companyName ?? "").toLowerCase().includes(keyword)
-        );
-    }, [users, searchText]);
-
-    const maxPage = useMemo(() => {
-        const {perPage} = pageNationOption;
-        return Math.max(Math.floor(filteredUsers.length / perPage) + (filteredUsers.length % perPage === 0 ? 0 : 1), 1);
-    }, [filteredUsers, pageNationOption])
-
-    useEffect(() => {
-        if(maxPage < pageNationOption.page) {
-            setPageNationOption(prev => ({...prev, page: maxPage}));
-        }
-    }, [maxPage, pageNationOption.page]);
-
-    const navigationCnt = 10;
-    const navigations = useMemo(() => {
-        const {page} = pageNationOption;
-        const groupStart = Math.floor((page - 1) / navigationCnt) * navigationCnt + 1;
-        const groupEnd = Math.min(groupStart + 9, maxPage);
-        const result = [];
-        for (let i = groupStart; i <= groupEnd; i++) {
-            result.push(i);
-        }
-        return result;
-    }, [maxPage, pageNationOption]);
-
+    // 클라이언트 정렬
     const getLoginTime = (user: UserType) => user.lastLoginAt ? new Date(user.lastLoginAt).getTime() : 0;
 
-    const sortedUsers = useMemo(() => {
-        if (sortByOption === "createdAt_asc") {
-            return [...filteredUsers].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    const sortedData = React.useMemo(() => {
+        const arr = [...data];
+        switch (sortByOption) {
+            case "createdAt_asc":
+                return arr.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+            case "createdAt_desc":
+                return arr.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            case "lastLoginAt_asc":
+                return arr.sort((a, b) => getLoginTime(a) - getLoginTime(b));
+            case "lastLoginAt_desc":
+                return arr.sort((a, b) => getLoginTime(b) - getLoginTime(a));
+            case "noLoginDays_asc":
+                return arr.sort((a, b) => getLoginTime(b) - getLoginTime(a));
+            case "noLoginDays_desc":
+                return arr.sort((a, b) => {
+                    if (!a.lastLoginAt && !b.lastLoginAt) return 0;
+                    if (!a.lastLoginAt) return 1;
+                    if (!b.lastLoginAt) return -1;
+                    return getLoginTime(a) - getLoginTime(b);
+                });
+            default:
+                return arr;
         }
-        if (sortByOption === "createdAt_desc") {
-            return [...filteredUsers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        }
-        if (sortByOption === "lastLoginAt_asc") {
-            return [...filteredUsers].sort((a, b) => getLoginTime(a) - getLoginTime(b));
-        }
-        if (sortByOption === "lastLoginAt_desc") {
-            return [...filteredUsers].sort((a, b) => getLoginTime(b) - getLoginTime(a));
-        }
-        if (sortByOption === "noLoginDays_asc") {
-            return [...filteredUsers].sort((a, b) => getLoginTime(b) - getLoginTime(a));
-        }
-        if (sortByOption === "noLoginDays_desc") {
-            return [...filteredUsers].sort((a, b) => {
-                if (!a.lastLoginAt && !b.lastLoginAt) return 0;
-                if (!a.lastLoginAt) return 1;
-                if (!b.lastLoginAt) return -1;
-                return getLoginTime(a) - getLoginTime(b);
-            });
-        }
-        return filteredUsers;
-    }, [filteredUsers, sortByOption]);
+    }, [data, sortByOption]);
 
-    const pagedUsers = useMemo(() => {
-        const { page, perPage } = pageNationOption;
-        const start = (page - 1) * perPage;
-        return sortedUsers.slice(start, start + perPage);
-    }, [sortedUsers, pageNationOption]);
+    // 페이지네이션
+    const displayPage = currentPage + 1;
+    const pageGroupSize = 10;
+    const currentGroup = Math.ceil(displayPage / pageGroupSize);
+    const groupStart = (currentGroup - 1) * pageGroupSize + 1;
+    const groupEnd = Math.min(currentGroup * pageGroupSize, totalPages);
+    const pageNumbers = Array.from({length: groupEnd - groupStart + 1}, (_, i) => groupStart + i);
+
+    const handleItemsPerPageChange = (value: number) => {
+        setItemsPerPage(value);
+        setCurrentPage(0);
+    };
 
     return (
         <>
             <div className={'list_header'}>
                 <p className={'result_count'}>
-                    회원 수 : <b>{filteredUsers.length}</b> 명
+                    회원 수 : <b>{totalElements}</b> 명
                 </p>
                 <div className={'search_area'}>
                     <div className={'search_input_wrap'}>
                         <input
                             type="text"
                             placeholder="회원 검색"
-                            value={searchText}
-                            onChange={(e) => {
-                                setSearchText(e.target.value);
-                                setPageNationOption(prev => ({...prev, page: 1}));
-                            }}
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
                         />
-                        {searchText && (
+                        {searchInput && (
                             <button
                                 type="button"
                                 className={'btn_clear'}
-                                onClick={() => {
-                                    setSearchText('');
-                                    setPageNationOption(prev => ({...prev, page: 1}));
-                                }}
+                                onClick={() => { setSearchInput(''); setSearch(''); setCurrentPage(0); }}
                             >
                                 <span className={'admin_icon'}/>
                             </button>
                         )}
                     </div>
-                    <ExcelDownloadButton users={users}/>
+                    <ExcelDownloadButton keyword={search}/>
                     <select
-                        value={pageNationOption.perPage}
-                        onChange={(e) => setPageNationOption({
-                            page: 1,
-                            perPage: Number(e.target.value),
-                        })}
+                        value={itemsPerPage}
+                        onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
                     >
                         <option value={15}>15개씩</option>
                         <option value={30}>30개씩</option>
@@ -153,7 +201,6 @@ export default function PageContent(props: {
                 <table className={'client_table user_table'}>
                     <colgroup>
                         <col width={'58px'}/>
-                        {/*<col width={'78px'}/>*/}
                         <col width={'300px'}/>
                         <col width={'140px'}/>
                         <col width={'140px'}/>
@@ -172,7 +219,6 @@ export default function PageContent(props: {
                     <thead>
                     <tr>
                         <th rowSpan={2} className={'num'}>순번</th>
-                        {/*<th rowSpan={2} className={'status'}>상태</th>*/}
                         <th rowSpan={2} className={'id'}>이메일(ID)</th>
                         <th rowSpan={2} className={'name'}>이름</th>
                         <th rowSpan={2} className={'contact'}>전화번호</th>
@@ -223,10 +269,10 @@ export default function PageContent(props: {
                     </tr>
                     </thead>
                     <UserTableBody
-                        pagedUsers={pagedUsers}
-                        totalCount={filteredUsers.length}
-                        currentPage={pageNationOption.page}
-                        perPage={pageNationOption.perPage}
+                        pagedUsers={sortedData}
+                        totalCount={totalElements}
+                        currentPage={currentPage + 1}
+                        perPage={itemsPerPage}
                         onDelete={handleDelete}
                     />
                 </table>
@@ -235,42 +281,30 @@ export default function PageContent(props: {
                 <button
                     type="button"
                     className={'btn_prev'}
-                    disabled={pageNationOption.page - navigationCnt < 1}
-                    onClick={() => {
-                        const {page} = pageNationOption;
-                        if ((page - 1) - navigationCnt < 0) return;
-                        const movePage = (Math.floor(((page - 1) - navigationCnt) / navigationCnt) + 1) * navigationCnt;
-                        setPageNationOption({...pageNationOption, page: movePage});
-                    }}
+                    disabled={currentGroup <= 1}
+                    onClick={() => setCurrentPage(groupStart - pageGroupSize - 1)}
                 >
                     <span className={'admin_icon'}/>
                 </button>
-                {navigations.map((item) => (
+                {pageNumbers.map(page => (
                     <button
-                        key={item}
+                        key={page}
                         type="button"
-                        className={`btn_page ${pageNationOption.page === item ? 'on' : ''}`}
-                        onClick={() => {
-                            if (item <= maxPage) setPageNationOption({...pageNationOption, page: item});
-                        }}
+                        className={`btn_page ${page === displayPage ? 'on' : ''}`}
+                        onClick={() => setCurrentPage(page - 1)}
                     >
-                        {item}
+                        {page}
                     </button>
                 ))}
                 <button
                     type="button"
                     className={'btn_next'}
-                    disabled={(Math.floor((pageNationOption.page - 1) / navigationCnt) + 1) * navigationCnt + 1 > maxPage}
-                    onClick={() => {
-                        const {page} = pageNationOption;
-                        const movePage = (Math.floor((page - 1) / navigationCnt) + 1) * navigationCnt + 1;
-                        if (movePage > maxPage) return;
-                        setPageNationOption({...pageNationOption, page: movePage});
-                    }}
+                    disabled={groupEnd >= totalPages}
+                    onClick={() => setCurrentPage(groupEnd)}
                 >
                     <span className={'admin_icon'}/>
                 </button>
             </div>
         </>
-    )
+    );
 }

@@ -150,7 +150,7 @@ export default function ClientDetailPage({id, initialUser, initialCreditPlans}: 
         };
         if (password) body.password = password;
 
-        const res = await callApi(`/api/admin/clients/${id}`, {
+        const res = await callApi(`/api/admin/members/clients/${id}`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             credentials: 'include',
@@ -185,13 +185,13 @@ export default function ClientDetailPage({id, initialUser, initialCreditPlans}: 
         }
 
         if (fieldKey === 'companyName') {
-            const res = await callApi(`/api/admin/clients/check-company-name?companyName=${encodeURIComponent(value.trim())}`, options);
+            const res = await callApi(`/api/admin/members/clients/check-company-name?companyName=${encodeURIComponent(value.trim())}`, options);
             if (res.result && res.data) {
                 const {duplicate} = res.data as { duplicate: boolean };
                 setDuplicateStatus(prev => ({...prev, companyName: duplicate ? 'error' : 'success'}));
             }
         } else if (fieldKey === 'businessNumber') {
-            const res = await callApi(`/api/admin/clients/check-business-number?businessNumber=${encodeURIComponent(value.trim())}`, options);
+            const res = await callApi(`/api/admin/members/clients/check-business-number?businessNumber=${encodeURIComponent(value.trim())}`, options);
             if (res.result && res.data) {
                 const {duplicate} = res.data as { duplicate: boolean };
                 setDuplicateStatus(prev => ({...prev, businessNumber: duplicate ? 'error' : 'success'}));

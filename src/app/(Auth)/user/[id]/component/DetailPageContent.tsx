@@ -27,12 +27,12 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
 
         const updateRequest = {
             user: {...user, id: Number(user.id)},
-            newPassword: password || null,
+            password: password || null,
         };
 
         try {
-            const res = await callApi(`/api/admin/users/${user.id}`, {
-                method: 'POST',
+            const res = await callApi(`/api/admin/members/users/${user.id}`, {
+                method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(updateRequest),
             });
@@ -87,6 +87,7 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                                     className={`input_field ${password ? (validatePassword ? 'success' : 'error') : ''}`}>
                                     <input
                                         type="password"
+                                        autoComplete="new-password"
                                         placeholder="영문 + 숫자 8자 이상, 20자 이하"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
@@ -106,6 +107,7 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                                     className={`input_field ${confirmPassword ? (isPasswordMatch ? 'success' : 'error') : ''}`}>
                                     <input
                                         type="password"
+                                        autoComplete="new-password"
                                         placeholder="비밀번호 재입력"
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -166,7 +168,7 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                 </section>
                 <div className={'btn_wrap'}>
                     <Link href={'/user'} className={'cancel_btn'}>목록으로</Link>
-                    <button type={'button'} className={'save_btn'} onClick={handleUpdate}>정보수정</button>
+                    <button type={'button'} className={'save_btn'} onClick={handleUpdate} disabled={!password || !confirmPassword}>정보수정</button>
                 </div>
             </div>
         </div>

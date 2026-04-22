@@ -47,7 +47,7 @@ export default function UserTableBody({pagedUsers, totalCount, currentPage, perP
                         <td>{noLoginDays}</td>
                         <td className={'td_actions'}>
                             <div className={'actions_wrap'}>
-                                <Link className={'btn_detail'} href={`/user/detail/${user.id}`}>상세</Link>
+                                <Link className={'btn_detail'} href={`/user/${user.id}`}>상세</Link>
                                 <button
                                     type={'button'}
                                     className={'btn_delete'}

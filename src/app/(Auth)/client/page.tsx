@@ -14,7 +14,7 @@ export default async function Page() {
     };
 
     try {
-        const res = await callApi(`/api/admin/clients?page=0&size=10`, options);
+        const res = await callApi(`/api/admin/members/clients?page=0&size=10`, options);
         if (res.result && res.data) {
             initialData = res.data as UserListResponse;
         }
