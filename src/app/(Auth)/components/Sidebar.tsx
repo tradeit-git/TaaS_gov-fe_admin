@@ -16,6 +16,8 @@ export  default  function Sidebar (){
     const router = useRouter();
     const {auth, setAuth } = useAuthStore();
     const [collapsed, setCollapsed] = useState(false); // 접힘 여부
+    const topSegment = pathname.split('/')[1] ?? '';
+    const isOn = (seg: string) => topSegment === seg ? ' on' : '';
 
     const onClickLogoutBtn = () => {
         Cookies.remove("_TaaS.auth.admin.token")
@@ -56,28 +58,32 @@ export  default  function Sidebar (){
 
             <nav className="lnb_menu">
                 <Link href={'/contact'}
-                      className={['lnb_name', pathname.includes('contact') ? " on" : ""].join("")}>
+                      className={`lnb_name${isOn('contact')}`}>
                     <span className={'admin_icon contact'}/>도입문의
                 </Link>
+                <Link href={'/onboarding'}
+                      className={`lnb_name${isOn('onboarding')}`}>
+                    <span className={'admin_icon onboarding'}/>웨비나 온보딩
+                </Link>
                 <Link href={'/user'}
-                      className={['lnb_name', pathname.includes('user') ? " on" : ""].join("")}>
+                      className={`lnb_name${isOn('user')}`}>
                     <span className={'admin_icon user'}/>가입계정
                 </Link>
                 <Link href={'/404'}
-                      className={['lnb_name', pathname.includes('account') ? " on" : ""].join("")}>
+                      className={`lnb_name${isOn('account')}`}>
                     <span className={'admin_icon account'}/>데모계정(개발중)
                 </Link>
                 <Link href={'/trial'}
-                      className={['lnb_name', pathname.includes('trial') ? " on" : ""].join("")}>
+                      className={`lnb_name${isOn('trial')}`}>
                     <span className={'admin_icon trial'}/>체험계정
                 </Link>
                 <Link href={'/client'}
-                      className={['lnb_name', pathname.includes('client') ? " on" : ""].join("")}>
+                      className={`lnb_name${isOn('client')}`}>
                     <span className={'admin_icon client'}/>계약계정
                 </Link>
                 {/*<Link href={'/billing'}*/}
                 <Link href={'/404'}
-                      className={['lnb_name', pathname.includes('billing') ? " on" : ""].join("")}>
+                      className={`lnb_name${isOn('billing')}`}>
                     <span className={'admin_icon billing'}/>결제현황(개발중)
                 </Link>
 

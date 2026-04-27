@@ -134,6 +134,8 @@
             }
           }
           &.td_actions {
+            display: table-cell !important;
+            vertical-align: middle !important;
             .btn_detail {
               padding-top: 3px !important;
             }

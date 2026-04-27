@@ -61,6 +61,7 @@
         font-size: 11px;
         color: #f30
       }
+
     }
     input {
       height: 32px;
@@ -150,6 +151,32 @@
       &:nth-child(4) {
         input {
           width: 150px;
+        }
+      }
+    }
+  }
+  &.onboarding_create_form {
+    .form_field {
+      &:nth-child(1) {
+        .input_wrap {
+          display: flex;
+          gap: 8px;
+          input[type="date"] {
+            width: 150px;
+          }
+          input[type=radio] {
+            width: 14px;
+          }
+        }
+        .time_wrap {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+      }
+      &:nth-child(3) {
+        input {
+          width: 340px;
         }
       }
     }
@@ -272,12 +299,63 @@
         color: #3D914A;
       }
 
+      &.upcoming {
+        background: #FFF3CD;
+        color: #B5852C;
+      }
+
       &.expired {
         background: #EDEEF3;
         color: #848891;
       }
     }
-  }
 
+    .url_cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      .cell_input {
+        flex: 1;
+        min-width: 0;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .btn_link {
+        margin-left: 0;
+        flex-shrink: 0;
+      }
+    }
+
+    .class_name {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cell_select {
+      width: 100%;
+      height: 28px;
+      padding: 0 6px;
+      border: 1px solid #ddd;
+      border-radius: $border-radius;
+      background: #fff;
+      font: inherit;
+      color: inherit;
+      box-sizing: border-box;
+    }
+  &:last-child {
+
+  }
+  }
+  &.onboarding_table {
+    td {
+      &:last-child {
+        height: 49px;
+      }
+    }
+  }
 }
 
