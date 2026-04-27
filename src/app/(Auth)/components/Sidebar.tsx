@@ -65,7 +65,7 @@ export  default  function Sidebar (){
                 </Link>
                 <Link href={'/404'}
                       className={['lnb_name', pathname.includes('account') ? " on" : ""].join("")}>
-                    <span className={'admin_icon account'}/>데모계정
+                    <span className={'admin_icon account'}/>데모계정(개발중)
                 </Link>
                 <Link href={'/trial'}
                       className={['lnb_name', pathname.includes('trial') ? " on" : ""].join("")}>
@@ -75,9 +75,10 @@ export  default  function Sidebar (){
                       className={['lnb_name', pathname.includes('client') ? " on" : ""].join("")}>
                     <span className={'admin_icon client'}/>계약계정
                 </Link>
-                <Link href={'/billing'}
+                {/*<Link href={'/billing'}*/}
+                <Link href={'/404'}
                       className={['lnb_name', pathname.includes('billing') ? " on" : ""].join("")}>
-                    <span className={'admin_icon billing'}/>결제현황
+                    <span className={'admin_icon billing'}/>결제현황(개발중)
                 </Link>
 
             </nav>
