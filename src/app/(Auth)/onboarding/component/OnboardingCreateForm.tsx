@@ -110,7 +110,7 @@ export default function OnboardingCreateForm({onCreated}: Props) {
                     <label><span className={'required'}>*</span> 온보딩 클래스</label>
                     <select>
                         <option>선택</option>
-                        <option>우리 제품의 실제 해외 바이어 찾기 기본 실습</option>
+                        <option>우리 제품의 실제 해외 바이어 찾기 '기본 실습'</option>
                         <option>산업별 실제 해외 바이어 발굴 실습 '화장품, 뷰티'</option>
                         <option>산업별 실제 해외 바이어 발굴 실습 '식품, K-Food'</option>
                         <option>산업별 실제 해외 바이어 발굴 실습 '자동차부품'</option>

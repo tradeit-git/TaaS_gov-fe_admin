@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import {useEffect, useMemo, useRef, useState} from "react";
-import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import OnboardingCreateForm from "@/app/(Auth)/onboarding/component/OnboardingCreateForm";
+import OnboardingTableBody from "@/app/(Auth)/onboarding/component/OnboardingTableBody";
 
 export interface OnboardingRow {
     id: number;
@@ -17,33 +17,13 @@ export interface OnboardingRow {
 }
 
 export const ONBOARDING_CLASSES = [
-    "우리 제품의 실제 해외 바이어 찾기 기본 실습",
+    "우리 제품의 실제 해외 바이어 찾기 '기본 실습'",
     "산업별 실제 해외 바이어 발굴 실습 '화장품, 뷰티'",
     "산업별 실제 해외 바이어 발굴 실습 '식품, K-Food'",
     "산업별 실제 해외 바이어 발굴 실습 '자동차부품'",
     "산업별 실제 해외 바이어 발굴 실습 '기계, 산업제'",
     "산업별 실제 해외 바이어 발굴 실습 '생활 소비재, 기타 소비재'",
 ] as const;
-
-type OnboardingStatus = '예정' | '진행중' | '종료';
-
-const DURATION_MS = 2 * 60 * 60 * 1000; // 웨비나 진행 시간 2시간 가정
-
-const computeStatus = (scheduledAt: string): OnboardingStatus => {
-    const start = new Date(scheduledAt.replace(' ', 'T'));
-    if (Number.isNaN(start.getTime())) return '예정';
-    const end = new Date(start.getTime() + DURATION_MS);
-    const now = new Date();
-    if (now < start) return '예정';
-    if (now < end) return '진행중';
-    return '종료';
-};
-
-const statusBadgeClass = (s: OnboardingStatus) => {
-    if (s === '진행중') return 'status_badge active';
-    if (s === '예정') return 'status_badge upcoming';
-    return 'status_badge expired';
-};
 
 const MOCK_ROWS: OnboardingRow[] = [
     { id: 1,  scheduledAt: '2026-04-15 10:00', onboardingClass: ONBOARDING_CLASSES[0], url: 'https://app.zoom.us/wc/85398779074/join?ref_from=launch&pwd=gxdymahZw2yQSybcxvfREVPfkqtHXd.1&_x_zm_rtaid=l18DaEaCST-77MhC4a9ZZg.1777263976590.d94736a234ca082f799844a93e753da0&_x_zm_rhtaid=58&fromPWA=1', host: '이한열', createdAt: '2026-04-12' },
@@ -195,85 +175,19 @@ export default function OnboardingPage(_props: Props) {
                         <th>관리</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    {pageData.map((row, i) => {
-                        const isEditing = editingId === row.id;
-                        const view = isEditing && editRow ? editRow : row;
-                        const status = computeStatus(view.scheduledAt);
-                        const rowNum = totalElements - (currentPage * itemsPerPage) - i;
-                        return (
-                            <tr key={row.id}>
-                                <td>{rowNum}</td>
-                                <td>
-                                    <span className={statusBadgeClass(status)}>{status}</span>
-                                </td>
-                                <td>
-                                    <input type="text" className={'cell_input'} readOnly={!isEditing}
-                                           value={view.scheduledAt}
-                                           onChange={e => handleChange('scheduledAt', e.target.value)}/>
-                                </td>
-                                <td>
-                                    {isEditing ? (
-                                        <select className={'cell_select'}
-                                                value={view.onboardingClass}
-                                                onChange={e => handleChange('onboardingClass', e.target.value)}>
-                                            {ONBOARDING_CLASSES.map(c => (
-                                                <option key={c} value={c}>{c}</option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        <span className={'class_name'} title={view.onboardingClass}>
-                                            {view.onboardingClass}
-                                        </span>
-                                    )}
-                                </td>
-                                <td>
-                                    <div className={'url_cell'}>
-                                        <input type="text" className={'cell_input'} readOnly={!isEditing}
-                                               value={view.url}
-                                               onChange={e => handleChange('url', e.target.value)}/>
-                                        <a className={'btn_link'}
-                                           href={view.url}
-                                           target="_blank" rel="noopener noreferrer"
-                                           title="온보딩 페이지 열기">↗</a>
-                                    </div>
-                                </td>
-                                <td>
-                                    <input type="text" className={'cell_input'} readOnly={!isEditing}
-                                           value={view.host}
-                                           onChange={e => handleChange('host', e.target.value)}/>
-                                </td>
-                                <td>{formatDateDot(row.createdAt)}</td>
-                                <td className={'td_actions'}>
-                                    <div className={'actions_wrap'}>
-                                        {isEditing ? (
-                                            <>
-                                                <button type="button" className={'btn_save'}
-                                                        onClick={handleSave}>저장
-                                                </button>
-                                                <button type="button" className={'btn_cancel'}
-                                                        onClick={handleCancel}>취소
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <button type="button" className={'btn_detail'}
-                                                        disabled={editingId !== null}
-                                                        onClick={() => handleEdit(row)}>수정
-                                                </button>
-                                                <button type="button" className={'btn_delete'}
-                                                        disabled={editingId !== null}
-                                                        onClick={() => handleDelete(row.id)}>
-                                                    <span className={'admin_icon icon_trash'}/>
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        );
-                    })}
-                    </tbody>
+                    <OnboardingTableBody
+                        pageData={pageData}
+                        totalElements={totalElements}
+                        currentPage={currentPage}
+                        itemsPerPage={itemsPerPage}
+                        editingId={editingId}
+                        editRow={editRow}
+                        onEdit={handleEdit}
+                        onCancel={handleCancel}
+                        onChange={handleChange}
+                        onSave={handleSave}
+                        onDelete={handleDelete}
+                    />
                 </table>
             </div>
 

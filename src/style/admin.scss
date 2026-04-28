@@ -749,8 +749,16 @@ input::placeholder {
             padding-left: 0;
             padding-right: 0;
           }
+          &.date {
+            width: 116px;
+          }
         }
-
+        .cell_select {
+          &.time {
+            width: 50px;
+            margin-left: 6px;
+          }
+        }
         .td_actions {
           display: flex;
           gap: 6px;
