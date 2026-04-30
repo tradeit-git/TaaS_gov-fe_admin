@@ -1,46 +1,37 @@
 'use client'
 
 import {formatDateDot} from "@/utill/format";
-import {ONBOARDING_CLASSES, OnboardingRow} from "@/app/(Auth)/onboarding/component/OnboardingPage";
+import {
+    HostAdmin,
+    OnboardingEditState,
+    OnboardingSession,
+    ONBOARDING_CLASSES,
+} from "@/app/(Auth)/onboarding/component/OnboardingPage";
 
-type OnboardingStatus = '예정' | '진행중' | '종료';
-
-const DURATION_MS = 2 * 60 * 60 * 1000;
-
-const computeStatus = (scheduledAt: string): OnboardingStatus => {
-    const start = new Date(scheduledAt.replace(' ', 'T'));
-    if (Number.isNaN(start.getTime())) return '예정';
-    const end = new Date(start.getTime() + DURATION_MS);
-    const now = new Date();
-    if (now < start) return '예정';
-    if (now < end) return '진행중';
-    return '종료';
-};
-
-const statusBadgeClass = (s: OnboardingStatus) => {
-    if (s === '진행중') return 'status_badge active';
-    if (s === '예정') return 'status_badge upcoming';
+const statusBadgeClass = (status: string) => {
+    if (status === '예정') return 'status_badge upcoming';
     return 'status_badge expired';
 };
 
-const ONBOARDING_TIMES = ['10:00', '14:00'] as const;
-const ONBOARDING_HOSTS = ['이한열', '양민지', '정유나'] as const;
-
-const splitScheduledAt = (scheduledAt: string): { date: string; time: string } => {
-    const [date = '', time = ''] = scheduledAt.split(' ');
-    return {date, time};
+const formatSessionAt = (sessionAt: string): string => {
+    if (!sessionAt) return '';
+    const [date = '', rest = ''] = sessionAt.split('T');
+    const time = rest.slice(0, 5);
+    if (!date) return sessionAt;
+    return time ? `${date} ${time}` : date;
 };
 
 interface Props {
-    pageData: OnboardingRow[];
+    pageData: OnboardingSession[];
     totalElements: number;
     currentPage: number;
     itemsPerPage: number;
+    hosts: HostAdmin[];
     editingId: number | null;
-    editRow: OnboardingRow | null;
-    onEdit: (row: OnboardingRow) => void;
+    editRow: OnboardingEditState | null;
+    onEdit: (row: OnboardingSession) => void;
     onCancel: () => void;
-    onChange: (field: keyof OnboardingRow, value: string) => void;
+    onChange: (field: keyof OnboardingEditState, value: string | number) => void;
     onSave: () => void;
     onDelete: (id: number) => void;
 }
@@ -50,6 +41,7 @@ export default function OnboardingTableBody({
                                                  totalElements,
                                                  currentPage,
                                                  itemsPerPage,
+                                                 hosts,
                                                  editingId,
                                                  editRow,
                                                  onEdit,
@@ -62,56 +54,25 @@ export default function OnboardingTableBody({
         <tbody>
         {pageData.map((row, i) => {
             const isEditing = editingId === row.id;
-            const view = isEditing && editRow ? editRow : row;
-            const status = computeStatus(view.scheduledAt);
+            const editClass = isEditing && editRow ? editRow.className : row.className;
+            const editHostId = isEditing && editRow ? editRow.hostAdminId : row.hostAdmin.id;
             const rowNum = totalElements - (currentPage * itemsPerPage) - i;
             return (
                 <tr key={row.id}>
                     <td>{rowNum}</td>
                     <td>
-                        <span className={statusBadgeClass(status)}>{status}</span>
+                        <span className={statusBadgeClass(row.status)}>{row.status}</span>
                     </td>
                     <td>
-                        {isEditing ? (
-                            <div className={'datetime_cell'}>
-                                <input type="date" className={'cell_input date'}
-                                       value={splitScheduledAt(view.scheduledAt).date}
-                                       onChange={e => onChange('scheduledAt', `${e.target.value} ${splitScheduledAt(view.scheduledAt).time}`)}/>
-                                <select className={'cell_select time'}
-                                        value={splitScheduledAt(view.scheduledAt).time}
-                                        onChange={e => onChange('scheduledAt', `${splitScheduledAt(view.scheduledAt).date} ${e.target.value}`)}>
-                                    {ONBOARDING_TIMES.map(t => (
-                                        <option key={t} value={t}>{t}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        ) : (
-                            <input type="text" className={'cell_input'} readOnly
-                                   value={view.scheduledAt} onChange={() => {}}/>
-                        )}
-                    </td>
-                    <td>
-                        {isEditing ? (
-                            <select className={'cell_select'}
-                                    value={view.onboardingClass}
-                                    onChange={e => onChange('onboardingClass', e.target.value)}>
-                                {ONBOARDING_CLASSES.map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                        ) : (
-                            <span className={'class_name'} title={view.onboardingClass}>
-                                {view.onboardingClass}
-                            </span>
-                        )}
+                        <input type="text" className={'cell_input'} readOnly
+                               value={formatSessionAt(row.sessionAt)} onChange={() => {}}/>
                     </td>
                     <td>
                         <div className={'url_cell'}>
-                            <input type="text" className={'cell_input'} readOnly={!isEditing}
-                                   value={view.url}
-                                   onChange={e => onChange('url', e.target.value)}/>
+                            <input type="text" className={'cell_input'} readOnly
+                                   value={row.url} onChange={() => {}}/>
                             <a className={'btn_link'}
-                               href={view.url}
+                               href={row.url}
                                target="_blank" rel="noopener noreferrer"
                                title="온보딩 페이지 열기">↗</a>
                         </div>
@@ -119,14 +80,29 @@ export default function OnboardingTableBody({
                     <td>
                         {isEditing ? (
                             <select className={'cell_select'}
-                                    value={view.host}
-                                    onChange={e => onChange('host', e.target.value)}>
-                                {ONBOARDING_HOSTS.map(h => (
-                                    <option key={h} value={h}>{h}</option>
+                                    value={editClass}
+                                    onChange={e => onChange('className', e.target.value)}>
+                                {ONBOARDING_CLASSES.map(c => (
+                                    <option key={c} value={c}>{c}</option>
                                 ))}
                             </select>
                         ) : (
-                            <span>{view.host}</span>
+                            <span className={'class_name'} title={row.className}>
+                                {row.className}
+                            </span>
+                        )}
+                    </td>
+                    <td>
+                        {isEditing ? (
+                            <select className={'cell_select'}
+                                    value={editHostId}
+                                    onChange={e => onChange('hostAdminId', Number(e.target.value))}>
+                                {hosts.map(h => (
+                                    <option key={h.id} value={h.id}>{h.name}</option>
+                                ))}
+                            </select>
+                        ) : (
+                            <span>{row.hostAdmin.name}</span>
                         )}
                     </td>
                     <td>{formatDateDot(row.createdAt)}</td>

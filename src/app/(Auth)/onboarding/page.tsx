@@ -1,12 +1,11 @@
 import '@/style/client.scss'
 import callApi from "@/utill/apiRequest";
 import {getServerRequestOptions} from "@/lib/serverRequest";
-import OnboardingPage from "@/app/(Auth)/onboarding/component/OnboardingPage";
-import {UserListResponse} from "@/app/(Auth)/client/component/ClientPage";
+import OnboardingPage, {OnboardingListResponse} from "@/app/(Auth)/onboarding/component/OnboardingPage";
 
 export default async function Page() {
     const options = await getServerRequestOptions();
-    let initialData: UserListResponse = {
+    let initialData: OnboardingListResponse = {
         content: [],
         totalElements: 0,
         totalPages: 1,
@@ -14,9 +13,9 @@ export default async function Page() {
     };
 
     try {
-        const res = await callApi(`/api/admin/members/clients?page=0&size=10`, options);
+        const res = await callApi(`/api/admin/onboarding-sessions?page=0&size=10`, options);
         if (res.result && res.data) {
-            initialData = res.data as UserListResponse;
+            initialData = res.data as OnboardingListResponse;
         }
     } catch (e) {
         console.error(e);

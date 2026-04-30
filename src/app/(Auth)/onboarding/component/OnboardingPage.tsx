@@ -1,19 +1,46 @@
 'use client'
 
 import Link from "next/link";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
+import callApi from "@/utill/apiRequest";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import OnboardingCreateForm from "@/app/(Auth)/onboarding/component/OnboardingCreateForm";
 import OnboardingTableBody from "@/app/(Auth)/onboarding/component/OnboardingTableBody";
 
-export interface OnboardingRow {
+export interface HostAdmin {
     id: number;
-    scheduledAt: string;
-    onboardingClass: string;
+    loginId: string;
+    name: string;
+    department: string;
+    position: string;
+    email: string;
+    contact: string;
+}
+
+export interface OnboardingSession {
+    id: number;
+    sessionAt: string;
+    className: string;
     url: string;
-    host: string;
+    hostAdmin: HostAdmin;
+    status: string;
     createdAt: string;
+    updatedAt: string;
+}
+
+export interface OnboardingListResponse {
+    content: OnboardingSession[];
+    totalElements: number;
+    totalPages: number;
+    currentPage: number;
+}
+
+export interface OnboardingEditState {
+    sessionAt: string;
+    className: string;
+    url: string;
+    hostAdminId: number;
 }
 
 export const ONBOARDING_CLASSES = [
@@ -25,35 +52,66 @@ export const ONBOARDING_CLASSES = [
     "산업별 실제 해외 바이어 발굴 실습 '생활 소비재, 기타 소비재'",
 ] as const;
 
-const MOCK_ROWS: OnboardingRow[] = [
-    { id: 1,  scheduledAt: '2026-04-15 10:00', onboardingClass: ONBOARDING_CLASSES[0], url: 'https://app.zoom.us/wc/85398779074/join?ref_from=launch&pwd=gxdymahZw2yQSybcxvfREVPfkqtHXd.1&_x_zm_rtaid=l18DaEaCST-77MhC4a9ZZg.1777263976590.d94736a234ca082f799844a93e753da0&_x_zm_rhtaid=58&fromPWA=1', host: '이한열', createdAt: '2026-04-12' },
-    { id: 2,  scheduledAt: '2026-04-18 14:00', onboardingClass: ONBOARDING_CLASSES[1], url: 'https://meet.tradeit.global/onb/def456', host: '양민지', createdAt: '2026-04-14' },
-    { id: 3,  scheduledAt: '2026-04-20 10:00', onboardingClass: ONBOARDING_CLASSES[2], url: 'https://meet.tradeit.global/onb/ghi789', host: '정유나', createdAt: '2026-04-15' },
-    { id: 4,  scheduledAt: '2026-04-23 14:00', onboardingClass: ONBOARDING_CLASSES[3], url: 'https://meet.tradeit.global/onb/jkl012', host: '이한열', createdAt: '2026-04-18' },
-    { id: 5,  scheduledAt: '2026-04-25 10:00', onboardingClass: ONBOARDING_CLASSES[4], url: 'https://meet.tradeit.global/onb/mno345', host: '양민지', createdAt: '2026-04-20' },
-    { id: 6,  scheduledAt: '2026-04-27 14:00', onboardingClass: ONBOARDING_CLASSES[5], url: 'https://meet.tradeit.global/onb/now111', host: '정유나', createdAt: '2026-04-22' },
-    { id: 7,  scheduledAt: '2026-04-29 10:00', onboardingClass: ONBOARDING_CLASSES[0], url: 'https://meet.tradeit.global/onb/pqr678', host: '이한열', createdAt: '2026-04-23' },
-    { id: 8,  scheduledAt: '2026-04-30 14:00', onboardingClass: ONBOARDING_CLASSES[1], url: 'https://meet.tradeit.global/onb/stu901', host: '양민지', createdAt: '2026-04-24' },
-    { id: 9,  scheduledAt: '2026-05-02 10:00', onboardingClass: ONBOARDING_CLASSES[2], url: 'https://meet.tradeit.global/onb/vwx234', host: '정유나', createdAt: '2026-04-25' },
-    { id: 10, scheduledAt: '2026-05-05 14:00', onboardingClass: ONBOARDING_CLASSES[3], url: 'https://meet.tradeit.global/onb/yz1567', host: '이한열', createdAt: '2026-04-26' },
-    { id: 11, scheduledAt: '2026-05-07 10:00', onboardingClass: ONBOARDING_CLASSES[4], url: 'https://meet.tradeit.global/onb/abc890', host: '양민지', createdAt: '2026-04-26' },
-    { id: 12, scheduledAt: '2026-05-10 14:00', onboardingClass: ONBOARDING_CLASSES[5], url: 'https://meet.tradeit.global/onb/def111', host: '정유나', createdAt: '2026-04-27' },
-];
-
 interface Props {
-    initialData?: unknown;
+    initialData: OnboardingListResponse;
 }
 
-export default function OnboardingPage(_props: Props) {
+export default function OnboardingPage({initialData}: Props) {
     const {addPopup} = usePopupStore();
-    const [data, setData] = useState<OnboardingRow[]>(MOCK_ROWS);
+    const [data, setData] = useState<OnboardingSession[]>(initialData.content);
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalElements, setTotalElements] = useState(initialData.totalElements);
+    const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
+    const [hosts, setHosts] = useState<HostAdmin[]>([]);
 
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [editRow, setEditRow] = useState<OnboardingRow | null>(null);
+    const [editRow, setEditRow] = useState<OnboardingEditState | null>(null);
+
+    const isInitial = useRef(true);
+
+    const fetchList = useCallback(async () => {
+        if (isInitial.current) {
+            isInitial.current = false;
+            return;
+        }
+
+        const params = new URLSearchParams();
+        params.set('page', String(currentPage));
+        params.set('size', String(itemsPerPage));
+        if (search.trim()) params.set('keyword', search.trim());
+
+        const res = await callApi(`/api/admin/onboarding-sessions?${params.toString()}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (res.result && res.data) {
+            const body = res.data as OnboardingListResponse;
+            setData(body.content);
+            setTotalElements(body.totalElements);
+            setTotalPages(Math.max(1, body.totalPages));
+        }
+    }, [currentPage, itemsPerPage, search]);
+
+    useEffect(() => {
+        fetchList();
+    }, [fetchList]);
+
+    const fetchHosts = useCallback(async () => {
+        const res = await callApi(`/api/admin/onboarding-sessions/hosts`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (res.result && res.data) {
+            setHosts(res.data as HostAdmin[]);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchHosts();
+    }, [fetchHosts]);
 
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => {
@@ -61,29 +119,26 @@ export default function OnboardingPage(_props: Props) {
         debounceRef.current = setTimeout(() => {
             setSearch(searchInput);
             setCurrentPage(0);
-        }, 100);
+        }, 300);
         return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
     }, [searchInput]);
 
-    const filtered = useMemo(() => {
-        const kw = search.trim();
-        if (!kw) return data;
-        return data.filter(r => r.host.includes(kw) || r.url.includes(kw));
-    }, [data, search]);
-
-    const totalElements = filtered.length;
-    const totalPages = Math.max(1, Math.ceil(totalElements / itemsPerPage));
-    const pageData = filtered.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
-
     const handleCreated = () => {
+        isInitial.current = false;
         setCurrentPage(0);
         setSearch('');
         setSearchInput('');
+        fetchList();
     };
 
-    const handleEdit = (row: OnboardingRow) => {
+    const handleEdit = (row: OnboardingSession) => {
         setEditingId(row.id);
-        setEditRow({...row});
+        setEditRow({
+            sessionAt: row.sessionAt,
+            className: row.className,
+            url: row.url,
+            hostAdminId: row.hostAdmin.id,
+        });
     };
 
     const handleCancel = () => {
@@ -91,23 +146,54 @@ export default function OnboardingPage(_props: Props) {
         setEditRow(null);
     };
 
-    const handleChange = (field: keyof OnboardingRow, value: string) => {
+    const handleChange = (field: keyof OnboardingEditState, value: string | number) => {
         if (!editRow) return;
-        setEditRow({...editRow, [field]: value});
+        setEditRow({...editRow, [field]: value} as OnboardingEditState);
     };
 
-    const handleSave = () => {
-        if (!editRow) return;
-        setData(prev => prev.map(r => r.id === editRow.id ? editRow : r));
-        addPopup(<AlertComponent alertType={'alert'} infoContent={'수정되었습니다.'}/>);
-        setEditingId(null);
-        setEditRow(null);
+    const handleSave = async () => {
+        if (!editRow || editingId === null) return;
+        if (!editRow.sessionAt || !editRow.className || !editRow.url.trim() || !editRow.hostAdminId) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
+            return;
+        }
+
+        const res = await callApi(`/api/admin/onboarding-sessions/${editingId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({
+                sessionAt: editRow.sessionAt,
+                className: editRow.className,
+                url: editRow.url.trim(),
+                hostAdminId: editRow.hostAdminId,
+            }),
+        });
+
+        if (res.result) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'수정되었습니다.'}/>);
+            setEditingId(null);
+            setEditRow(null);
+            isInitial.current = false;
+            fetchList();
+        } else {
+            addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '수정에 실패했습니다.'}/>);
+        }
     };
 
     const handleDelete = (id: number) => {
-        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 온보딩을 삭제하시겠습니까?'} callback={() => {
-            setData(prev => prev.filter(r => r.id !== id));
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 온보딩을 삭제하시겠습니까?'} callback={async () => {
+            const res = await callApi(`/api/admin/onboarding-sessions/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+                isInitial.current = false;
+                fetchList();
+            } else {
+                addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
+            }
         }}/>);
     };
 
@@ -134,10 +220,10 @@ export default function OnboardingPage(_props: Props) {
                 </ul>
             </div>
 
-            <OnboardingCreateForm onCreated={handleCreated}/>
+            <OnboardingCreateForm hosts={hosts} onCreated={handleCreated}/>
 
             <div className={'list_header'}>
-                <p className={'result_count'}>Showing {pageData.length} of {totalElements.toLocaleString()} results</p>
+                <p className={'result_count'}>Showing {data.length} of {totalElements.toLocaleString()} results</p>
                 <div className={'search_area'}>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder={'진행자/URL 검색'}/>
@@ -156,8 +242,8 @@ export default function OnboardingPage(_props: Props) {
                     <colgroup>
                         <col width={'60px'}/>
                         <col width={'120px'}/>
-                        <col width={'200px'}/>
-                        <col width={'240px'}/>
+                        <col width={'150px'}/>
+                        <col width={'540px'}/>
                         <col/>
                         <col width={'120px'}/>
                         <col width={'120px'}/>
@@ -168,18 +254,19 @@ export default function OnboardingPage(_props: Props) {
                         <th>순번</th>
                         <th>상태</th>
                         <th>일시</th>
-                        <th>클래스</th>
                         <th>URL</th>
+                        <th>클래스</th>
                         <th>진행자</th>
                         <th>생성일자</th>
                         <th>관리</th>
                     </tr>
                     </thead>
                     <OnboardingTableBody
-                        pageData={pageData}
+                        pageData={data}
                         totalElements={totalElements}
                         currentPage={currentPage}
                         itemsPerPage={itemsPerPage}
+                        hosts={hosts}
                         editingId={editingId}
                         editRow={editRow}
                         onEdit={handleEdit}

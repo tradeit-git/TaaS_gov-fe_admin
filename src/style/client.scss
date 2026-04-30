@@ -156,7 +156,29 @@
     }
   }
   &.onboarding_create_form {
-    .form_field {
+    height: auto;
+    align-items: center;
+
+    .form_grid {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      flex: 1;
+    }
+    .form_grid_col {
+      &.left {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      &.right {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        flex-wrap: wrap;
+      }
+    }
+    .form_grid_col.left .form_field {
       &:nth-child(1) {
         .input_wrap {
           display: flex;
@@ -164,20 +186,20 @@
           input[type="date"] {
             width: 150px;
           }
-          input[type=radio] {
-            width: 14px;
-          }
-        }
-        .time_wrap {
-          display: flex;
-          align-items: center;
-          gap: 4px;
         }
       }
-      &:nth-child(3) {
+      &:nth-child(2) {
         input {
           width: 340px;
         }
+      }
+    }
+    .form_grid_col.right .form_field {
+      &:nth-child(1) select {
+        max-width: 320px;
+      }
+      &:nth-child(2) select {
+        min-width: 140px;
       }
     }
   }
