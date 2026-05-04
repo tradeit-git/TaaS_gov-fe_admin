@@ -38,7 +38,6 @@ export default function OnboardingCreateForm({hosts, onCreated}: Props) {
         setUrl('');
         setHostAdminId('');
         setSessionAtCheck(null);
-        setUrlCheck(null);
     };
 
     const checkDuplicate = async (field: 'sessionAt' | 'url') => {
@@ -58,20 +57,6 @@ export default function OnboardingCreateForm({hosts, onCreated}: Props) {
             }
             return;
         }
-
-        const trimmedUrl = url.trim();
-        if (!trimmedUrl) {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'URL을 먼저 입력해주세요.'}/>);
-            return;
-        }
-        const res = await callApi(`/api/admin/onboarding-sessions/check-duplicate?url=${encodeURIComponent(trimmedUrl)}`, {
-            method: 'GET',
-            credentials: 'include',
-        });
-        if (res.result && res.data) {
-            const {urlDuplicated} = res.data as { urlDuplicated: boolean };
-            setUrlCheck(urlDuplicated ? 'duplicate' : 'available');
-        }
     };
 
     const handleCreate = async () => {
@@ -81,7 +66,7 @@ export default function OnboardingCreateForm({hosts, onCreated}: Props) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
             return;
         }
-        if (sessionAtCheck !== 'available' || urlCheck !== 'available') {
+        if (sessionAtCheck !== 'available') {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'중복체크를 완료해주세요.'}/>);
             return;
         }
@@ -115,10 +100,16 @@ export default function OnboardingCreateForm({hosts, onCreated}: Props) {
                         <label><span className={'required'}>*</span> 일시</label>
                         <div className={'input_wrap'}>
                             <input type="date" value={sessionDate}
-                                   onChange={e => { setSessionDate(e.target.value); setSessionAtCheck(null); }}/>
+                                   onChange={e => {
+                                       setSessionDate(e.target.value);
+                                       setSessionAtCheck(null);
+                                   }}/>
                             {sessionAtCheck === 'duplicate' && <p className={'error_msg'}>이미 등록된 일시입니다</p>}
                             <select value={sessionTime}
-                                    onChange={e => { setSessionTime(e.target.value); setSessionAtCheck(null); }}>
+                                    onChange={e => {
+                                        setSessionTime(e.target.value);
+                                        setSessionAtCheck(null);
+                                    }}>
                                 <option value="">선택</option>
                                 {ONBOARDING_TIMES.map(t => (
                                     <option key={t} value={t}>{t}</option>
@@ -131,22 +122,18 @@ export default function OnboardingCreateForm({hosts, onCreated}: Props) {
                                 onClick={() => checkDuplicate('sessionAt')}>중복체크
                         </button>
                     </div>
+                </div>
+                <div className={'form_grid_col right'}>
                     <div className={'form_field'}>
                         <label><span className={'required'}>*</span> 접속 URL</label>
                         <div className={'input_wrap'}>
                             <input type="text" value={url}
-                                   onChange={e => { setUrl(e.target.value); setUrlCheck(null); }}
+                                   onChange={e => {
+                                       setUrl(e.target.value);
+                                   }}
                                    placeholder={''}/>
-                            {urlCheck === 'duplicate' && <p className={'error_msg'}>이미 등록된 URL입니다</p>}
                         </div>
-                        <button type="button"
-                                className={`btn_check ${urlCheck === 'available' ? 'disabled' : ''}`}
-                                disabled={urlCheck === 'available'}
-                                onClick={() => checkDuplicate('url')}>중복체크
-                        </button>
                     </div>
-                </div>
-                <div className={'form_grid_col right'}>
                     <div className={'form_field'}>
                         <label><span className={'required'}>*</span> 온보딩 클래스</label>
                         <select value={className} onChange={e => setClassName(e.target.value)}>
