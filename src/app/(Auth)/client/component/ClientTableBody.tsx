@@ -19,7 +19,7 @@ export default function ClientTableBody({data, totalElements, currentPage, items
         if (!row.planStartDate || !row.planEndDate) return '-';
         return `${formatDate(row.planStartDate)} ~ ${formatDate(row.planEndDate)} / ${row.planMonths ?? '-'}개월`;
     };
-
+    console.log(data)
     return (
         <tbody>
         {data.map((row, i) => {
@@ -53,6 +53,7 @@ export default function ClientTableBody({data, totalElements, currentPage, items
                     <td>{row.password}</td>
                     <td>{row.planName || '-'}</td>
                     <td>{formatPeriod(row)}</td>
+                    <td>{(row.creditBalance ?? 0).toLocaleString()}</td>
                     <td>{formatDate(row.createdAt)}</td>
                     <td className={'td_actions'}>
                         <button type="button" className={'btn_detail'}

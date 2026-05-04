@@ -6,6 +6,7 @@ import CreditTable from "@/app/(Auth)/client/[id]/component/CreditTable";
 import {CreditRow} from "@/app/(Auth)/client/[id]/component/CreditTable";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
+import CreditSummaryPanel from "@/app/(Auth)/components/CreditSummaryPanel";
 import callApi from "@/utill/apiRequest";
 import {UserSchema, UserType} from "@/types/user/user";
 import {formatDateDot, formatBusinessNumber, isValidBusinessNumber} from "@/utill/format";
@@ -387,6 +388,7 @@ export default function ClientDetailPage({id, initialUser, initialCreditPlans}: 
                     <li>상세</li>
                 </ul>
             </div>
+            <div className={'detail_layout'}>
             <div className={'detail_contents'}>
                 <section className={'account_info'}>
                     <div className={'title'}>
@@ -534,6 +536,8 @@ export default function ClientDetailPage({id, initialUser, initialCreditPlans}: 
                     <Link href="/client" className={'cancel_btn'}>취소</Link>
                     <button className={'save_btn'} onClick={handleSave}>저장</button>
                 </div>
+            </div>
+            <CreditSummaryPanel userId={Number(id)}/>
             </div>
         </div>
     );

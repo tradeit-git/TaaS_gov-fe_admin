@@ -6,6 +6,7 @@ import {STATUS_LABELS, formatDateTime, formatDateDot} from "@/utill/format";
 import {useRouter} from "next/navigation";
 import callApi from "@/utill/apiRequest";
 import {UserType} from "@/types/user/user";
+import CreditSummaryPanel from "@/app/(Auth)/components/CreditSummaryPanel";
 
 export default function DetailPageContent({initialUser}: { initialUser: UserType }) {
     const [password, setPassword] = useState("");
@@ -63,6 +64,7 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                     <li>상세</li>
                 </ul>
             </div>
+            <div className={'detail_layout'}>
             <div className={'detail_contents'}>
                 <section className={'account_info'}>
                     <div className={'title'}>
@@ -170,6 +172,8 @@ export default function DetailPageContent({initialUser}: { initialUser: UserType
                     <Link href={'/user'} className={'cancel_btn'}>목록으로</Link>
                     <button type={'button'} className={'save_btn'} onClick={handleUpdate} disabled={!password || !confirmPassword}>정보수정</button>
                 </div>
+            </div>
+            <CreditSummaryPanel userId={Number(user.id)}/>
             </div>
         </div>
     );

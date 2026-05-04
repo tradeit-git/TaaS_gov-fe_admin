@@ -22,6 +22,10 @@ export interface UserRow {
     planEndDate: string | null;
     planMonths: number | null;
     createdAt: string;
+    creditTotal: number;
+    creditUsed: number;
+    creditExpired: number;
+    creditBalance: number;
 }
 
 export interface UserListResponse {
@@ -179,6 +183,7 @@ export default function ClientPage({initialData}: Props) {
                         <th>패스워드</th>
                         <th>서비스 플랜</th>
                         <th>운영기간</th>
+                        <th>남은 크레딧</th>
                         <th>계정생성일</th>
                         <th>관리</th>
                     </tr>
