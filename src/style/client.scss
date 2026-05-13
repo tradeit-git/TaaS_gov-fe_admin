@@ -158,6 +158,7 @@
   &.onboarding_create_form {
     height: auto;
     align-items: center;
+    margin-top: 30px;
 
     .form_grid {
       display: flex;
@@ -371,6 +372,30 @@
   &:last-child {
 
   }
+  }
+  &.company_table {
+    table-layout: fixed;
+    td:nth-child(2),
+    td:nth-child(3),
+    td:nth-child(5),
+    td:nth-child(9) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    thead {
+      tr:first-child {
+        th[colSpan] {
+          text-align: center;
+          border-bottom: 1px solid #EAEBED;
+        }
+      }
+      tr:nth-child(2) {
+        th {
+          border-top: none;
+        }
+      }
+    }
   }
   &.onboarding_table {
     td {

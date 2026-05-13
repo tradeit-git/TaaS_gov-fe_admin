@@ -1,0 +1,1003 @@
+@use './variable' as *;
+
+// -------------------- 가입회원사 상세 ----------------------------
+
+.company_detail_page {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.company_detail_layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 60px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// ── 섹션 타이틀 공통 ──
+.section_title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: $font-size-l;
+  font-weight: 500;
+  color: $theme-color;
+  margin-bottom: 16px;
+
+  .arrow_icon {
+    width: 6px;
+    height: 9px;
+    background-position: -20px -131px;
+  }
+}
+
+// ── 왼쪽: 계정정보 ──
+.company_detail_left {
+  width: 570px;
+  flex-shrink: 0;
+
+  .form_list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .form_item {
+    .form_label {
+      font-size: $font-size-sm-bm;
+      color: $theme-color;
+      margin-bottom: 10px;
+    }
+
+    input {
+      width: 100%;
+      height: 34px;
+      border: 1px solid $gray02;
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: $font-size-sm;
+      color: $theme-color;
+      background: #fff;
+
+      &::placeholder {
+        color: #bbb;
+      }
+
+      &:disabled,
+      &[readonly] {
+        background: #F6F7FB;
+        color: #888;
+        cursor: default;
+      }
+    }
+  }
+
+  .btn_wrap {
+    display: flex;
+    justify-content: right;
+    gap: 10px;
+    margin-top: 16px;
+
+    .cancel_btn,
+    .save_btn {
+      min-width: 72px;
+      height: 36px;
+      font-size: $font-size-sm;
+      border-radius: 6px;
+      text-align: center;
+      line-height: 36px;
+    }
+
+    .cancel_btn {
+      border: none;
+      background: #F6F7FB;
+      color: $theme-color;
+
+      &:hover {
+        background: #eee;
+      }
+    }
+
+    .save_btn {
+      background: $theme-color;
+      color: #fff;
+      border: none;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+  }
+}
+
+// ── 크레딧 사용내역 팝업 ──
+.credit_usage_popup {
+  width: 860px;
+  height: 720px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+
+  .popup_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: $theme-color;
+    }
+
+    .filter_chips {
+      display: flex;
+      gap: 6px;
+
+      .chip {
+        padding: 0 12px;
+        font-size: $font-size-xs;
+        font-weight: 500;
+        border: none;
+        border-radius: 15px;
+        color: #fff;
+        opacity: 0.35;
+        transition: opacity 0.15s;
+        line-height: 25px;
+
+        &.on {
+          opacity: 1;
+        }
+
+        &.type_grant {
+          background: #1a1a1a;
+        }
+
+        &.type_use {
+          background: #1a1a1a;
+        }
+
+        &.type_expire {
+          background: #1a1a1a;
+        }
+
+        &.type_revoke {
+          background: #1a1a1a;
+        }
+
+        &:hover {
+          opacity: 0.85;
+        }
+      }
+    }
+  }
+
+  .usage_table_wrap {
+    table {
+      width: 100%;
+      border-collapse: separate;
+      font-size: $font-size-sm;
+      border: 1px solid $gray02;
+      border-radius: 6px;
+      thead {
+        background: $gray01;
+
+        th {
+          padding: 12px 16px;
+          text-align: left;
+          color: #888;
+          font-weight: 400;
+          font-size: $font-size-xs;
+          border-bottom: 1px solid $gray02;
+          white-space: nowrap;
+
+          &.num {
+            text-align: right;
+          }
+        }
+      }
+
+      tbody {
+        tr:not(:last-child) td {
+          border-bottom: 1px solid #F0F0F0;
+        }
+
+        td {
+          padding: 14px 16px;
+          color: $theme-color;
+          white-space: nowrap;
+          font-size: $font-size-sm;
+
+          &.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+          }
+
+          &.desc_cell {
+            white-space: normal;
+            max-width: 360px;
+
+            .desc_tag {
+              display: inline-block;
+              margin-left: 8px;
+              padding: 2px 8px;
+              font-size: 11px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              background: #fff;
+              color: #666;
+              vertical-align: middle;
+              cursor: pointer;
+
+              &:hover {
+                background: #f5f5f5;
+              }
+            }
+
+            .desc_tag_wrap {
+              position: relative;
+              display: inline-block;
+              vertical-align: middle;
+            }
+
+            .detail_popup {
+              position: absolute;
+              top: calc(100% + 6px);
+              left: 0;
+              z-index: 10;
+              width: 280px;
+              background: #fff;
+              border: 1px solid #E0E0E0;
+              border-radius: 8px;
+              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+              padding: 16px;
+
+              .detail_popup_header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #F0F0F0;
+
+                strong {
+                  font-size: $font-size-sm;
+                  font-weight: 600;
+                }
+
+                button {
+                  width: 16px; height: 16px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: none;
+
+                  &:hover {
+                    background-color: #f5f5f5;
+                  }
+                  .admin_icon {
+                    width: 16px; height: 16px;
+                    background-position: -56px -95px;
+                  }
+
+                  &:hover {
+                    color: $theme-color;
+                  }
+                }
+              }
+
+              .detail_popup_body {
+                display: grid;
+                grid-template-columns: 72px 1fr;
+                gap: 6px 12px;
+                font-size: $font-size-xs;
+
+                dt {
+                  color: #888;
+                }
+
+                dd {
+                  color: $theme-color;
+                  margin: 0;
+                }
+              }
+            }
+          }
+
+          &.delta_positive {
+            color: #2563EB;
+            font-weight: 500;
+          }
+
+          &.delta_negative {
+            color: #E74C3C;
+            font-weight: 500;
+          }
+
+          &.delta_expire {
+            color: #E74C3C;
+            font-weight: 500;
+          }
+
+          &.empty {
+            text-align: center;
+            padding: 40px 16px;
+            color: #999;
+          }
+        }
+      }
+    }
+
+    .usage_badge {
+      display: inline-block;
+      min-width: 36px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      text-align: center;
+      border-radius: 4px;
+
+      &.type_grant {
+        background: #E8F0FE;
+        color: #2563EB;
+      }
+
+      &.type_use {
+        background: #FDECEC;
+        color: #E74C3C;
+      }
+
+      &.type_expire {
+        background: #EDEFF2;
+        color: #6B7280;
+      }
+
+      &.type_revoke {
+        background: #FEF3C7;
+        color: #B45309;
+      }
+    }
+  }
+
+  .popup_footer {
+    display: flex;
+    justify-content: flex-end;
+
+    .btn_close {
+      min-width: 72px;
+      height: 38px;
+      font-size: $font-size-sm;
+      font-weight: 500;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      color: $theme-color;
+
+      &:hover {
+        background: #F6F7FB;
+      }
+    }
+  }
+}
+
+// ── 오른쪽: 플랜 상세정보 ──
+.company_detail_right {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .plan_list {
+    &.expanded {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+  }
+
+  .plan_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    .section_title {
+      margin-bottom: 0;
+    }
+
+    .btn_add_plan {
+      height: 32px;
+      padding: 0 16px;
+      font-size: $font-size-sm;
+      background: $theme-color;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      white-space: nowrap;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+  }
+
+  // ── 플랜 카드 공통 ──
+  .plan_card {
+    border: 1px solid $gray02;
+    background-color: #eee;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 12px;
+
+    &.standard:not(.expired) {
+      background-color: #fff;
+      border-color: #3B82F6;
+    }
+
+    &.overseas {
+      border-color: #3B82F6;
+      background-color: #fff;
+
+      &.expired {
+        border-color: $gray02;
+        background-color: #eee;
+
+        table {
+          border-color: #fafafa;
+          thead {
+            background-color: unset;
+            th {
+              border-color: #fafafa;
+            }
+          }
+          tr:not(:last-child) td {
+            border-color: #fafafa;
+          }
+          .row_completed {
+            opacity: 1;
+          }
+        }
+
+        .credit_table_wrap tbody {
+          tr.row_completed td.negative {
+            color: $theme-color;
+          }
+        }
+      }
+    }
+
+    &.expired {
+      .credit_summary_row .summary_item {
+        &.grant, &.used, &.remain, &.expired {
+          color: $theme-color;
+        }
+      }
+    }
+  }
+
+  // ── 플랜 카드 헤더 (해외영업) ──
+  .plan_card_header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    .btn_edit {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border: 1px solid $gray02;
+      border-radius: 6px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .icon_edit {
+        display: block;
+        width: 14px;
+        height: 14px;
+        background-position: -156px -165px;
+      }
+
+      &:hover {
+        background: #f5f5f5;
+      }
+    }
+  }
+
+  // ── 플랜 정보 그리드 ──
+  .plan_info_grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+
+    &.overseas_grid {
+      flex: 1;
+    }
+  }
+
+  .plan_info_item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 166px;
+
+    &.period {
+      min-width: 200px;
+    }
+
+    .label {
+      font-size: $font-size-xs;
+      color: #888;
+    }
+
+    .value {
+      font-size: $font-size-sm;
+      color: $theme-color;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  }
+
+  // ── 상태 뱃지 ──
+  .plan_badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+
+    &.badge_active {
+      background: #34C759;
+      color: #fff;
+    }
+
+    &.badge_expired {
+      background: #4A4A4A;
+      color: #fff;
+    }
+  }
+
+  // ── 크레딧 테이블 (해외영업) ──
+  .credit_table_wrap {
+    margin-top: 16px;
+
+    table {
+      width: 100%;
+      max-width: 750px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: $font-size-sm;
+      border: 1px solid $gray02;
+      border-radius: 6px;
+      overflow: hidden;
+
+      thead {
+        background: #F9FAFB;
+
+        th {
+          padding: 8px 12px;
+          text-align: left;
+          color: #555;
+          font-weight: 400;
+          font-size: $font-size-xs;
+          border-bottom: 1px solid $gray02;
+          white-space: nowrap;
+        }
+      }
+
+      tbody {
+        tr:not(:last-child) td {
+          border-bottom: 1px solid #F0F0F0;
+        }
+
+        tr.row_completed {
+          opacity: 0.5;
+
+          td.negative {
+            color: $theme-color;
+          }
+        }
+
+        td {
+          padding: 10px 12px;
+          color: $theme-color;
+          white-space: nowrap;
+
+          &.negative {
+            color: #E74C3C;
+          }
+        }
+      }
+    }
+
+    .credit_status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+
+      &.badge_completed {
+        background: #f5f5f5;
+        color: #4a4a4a;
+      }
+
+      &.badge_progress {
+        background: #E1EDFF;
+        color: #3B82F6;
+      }
+
+      &.badge_scheduled {
+        background: #E1F2E5;
+        color: #2AA148;
+      }
+    }
+
+    .btn_usage {
+      height: 26px;
+      padding: 0 10px;
+      font-size: $font-size-xs;
+      border: 1px solid $gray02;
+      border-radius: 4px;
+      background: #fff;
+      color: $theme-color;
+      line-height: 24px;
+
+      &:hover {
+        background: #f5f5f5;
+      }
+    }
+  }
+
+  // ── 크레딧 요약 (일반 플랜) ──
+  .credit_summary_row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 16px;
+
+    .summary_label {
+      font-size: $font-size-xs;
+      color: #888;
+    }
+
+    .summary_values {
+      display: flex;
+      align-items: center;
+      gap: 35px;
+    }
+
+    .summary_item {
+      font-size: $font-size-sm;
+      color: $theme-color;
+      width: 100px;
+
+
+      .line {
+        display: inline-flex;
+        width: 1px; height: 8px;
+        border-radius: 5px;
+        background-color: #aaa;
+        margin: 0 8px;
+      }
+    }
+
+    .btn_usage {
+      height: 26px;
+      padding: 0 10px;
+      font-size: $font-size-xs;
+      border: 1px solid $gray02;
+      border-radius: 4px;
+      background: #fff;
+      color: $theme-color;
+      line-height: 24px;
+
+      &:hover {
+        background: #f5f5f5;
+      }
+    }
+  }
+
+  // ── 더보기 버튼 ──
+  .btn_more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 160px;
+    height: 36px;
+    margin: 0 auto;
+    font-size: $font-size-sm;
+    border: 1px solid $gray02;
+    border-radius: 20px;
+    background: #fff;
+    color: #888;
+    padding-right: 4px;
+
+    .more_icon {
+      width: 14px; height: 14px;
+      background-position: -122px -165px;
+    }
+
+    &:hover {
+      background: #f9f9f9;
+      color: $theme-color;
+    }
+  }
+}
+
+// ── 해외영업실행 플랜등록 팝업 ──
+.overseas_plan_popup {
+  width: 504px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 25px 30px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  max-height: 91dvh;
+  overflow-y: auto;
+
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: $theme-color;
+    margin-bottom: 20px;
+  }
+
+  // ── 공통 input / select / date 스타일 ──
+  %field_input {
+    width: 100%;
+    height: 30px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 0 12px;
+    font-size: $font-size-sm;
+    color: $theme-color;
+    background: #fff;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: #3B82F6;
+    }
+
+    &::placeholder {
+      color: #bbb;
+    }
+  }
+
+  .popup_field {
+    margin-bottom: 14px;
+
+    // 필수(*) 라벨 — 파란색
+    > label.label_required {
+      display: block;
+      font-size: $font-size-sm;
+      color: #666;
+      margin-bottom: 6px;
+
+      .required {
+        color: #E74C3C;
+        margin-left: 1px;
+      }
+    }
+
+    // 선택 라벨 — 어두운 색
+    > label.label_optional {
+      display: block;
+      font-size: $font-size-sm;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    // 날짜 범위
+    .date_range {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      input[type="date"] {
+        @extend %field_input;
+        flex: 1;
+      }
+
+      .tilde {
+        color: #888;
+        flex-shrink: 0;
+      }
+    }
+
+    // 금액
+    .amount_wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      input {
+        @extend %field_input;
+        flex: 1;
+      }
+
+      .unit {
+        font-size: $font-size-sm;
+        color: #666;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+    }
+
+    // 기본 텍스트 input
+    > input[type="text"] {
+      @extend %field_input;
+    }
+
+    // select
+    > select {
+      @extend %field_input;
+      appearance: none;
+      background-image: url("/admin/static/img/select_arrow.png");
+      background-repeat: no-repeat;
+      background-position: calc(100% - 14px) center;
+      background-size: 1rem;
+      padding-right: 36px;
+    }
+
+    // 단일 날짜 (계약일자)
+    input.date_single {
+      @extend %field_input;
+      width: 220px;
+    }
+
+    // ── 크레딧 설정 행 ──
+    .credit_setting_row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+
+      > span {
+        font-size: $font-size-sm;
+        color: $theme-color;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      input[type="date"] {
+        @extend %field_input;
+        width: 144px;
+        flex: none;
+
+        &:disabled {
+          background-color: #F5F5F5;
+        }
+      }
+
+      .credit_input {
+        @extend %field_input;
+        width: 100px;
+        flex: none;
+
+        &:disabled {
+          background-color: #F5F5F5;
+        }
+      }
+
+      .btn_register {
+        height: 30px;
+        padding: 0 14px;
+        font-size: $font-size-sm;
+        font-weight: 500;
+        background: #666666;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        white-space: nowrap;
+        flex-shrink: 0;
+
+        &:hover {
+          background: #333;
+        }
+      }
+    }
+  }
+
+  // ── 크레딧 회차 테이블 ──
+  .credit_rounds_table {
+    margin-top: 12px;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: $font-size-sm;
+
+      thead {
+        th {
+          padding: 10px 14px;
+          text-align: left;
+          color: #555;
+          font-weight: 400;
+          font-size: $font-size-xs;
+          border-top: 1px solid $gray02;
+          border-bottom: 1px solid $gray02;
+          border-right: 1px solid $gray02;
+          background: #FAFAFA;
+
+          &:first-child {
+            border-left: 1px solid $gray02;
+          }
+        }
+      }
+
+      tbody {
+        tr {
+          border-bottom: 1px solid $gray02;
+
+          &.round_past {
+            background: #F5F6F8;
+
+            td {
+              color: #aaa;
+            }
+          }
+        }
+
+        td {
+          padding: 10px 14px;
+          color: $theme-color;
+          border-right: 1px solid $gray02;
+
+          &:first-child {
+            border-left: 1px solid $gray02;
+          }
+        }
+      }
+    }
+  }
+
+  // ── 하단 버튼 ──
+  .popup_btn_wrap {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+
+    .cancel_btn,
+    .save_btn {
+      min-width: 72px;
+      height: 34px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+    }
+
+    .cancel_btn {
+      border: 1px solid #ddd;
+      background: #fff;
+      color: $theme-color;
+
+      &:hover {
+        background: #F6F7FB;
+      }
+    }
+
+    .save_btn {
+      background: $theme-color;
+      color: #fff;
+      border: none;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+  }
+}

@@ -52,8 +52,7 @@ input:focus {
 .page_start_box {
   display: flex;
   justify-content: space-between;
-  padding: 20px 30px;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
 }
 .page_start_box h2 {
   font-size: 18px;
@@ -525,7 +524,7 @@ input::placeholder {
       margin-bottom: 4px;
       font-size: $font-size-base;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       border-radius: $spacing-m;
       font-weight: 400;
@@ -556,6 +555,9 @@ input::placeholder {
         &.onboarding {
           background-position: -241px -38px;
         }
+        &.management {
+          background-position: -122px -38px;
+        }
       }
       &.on {
         background: rgba(255,255,255,.2);
@@ -575,7 +577,7 @@ input::placeholder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 30px;
+  margin: 30px 0 16px;
 
   .result_count {
     font-size: $font-size-sm;
@@ -631,7 +633,36 @@ input::placeholder {
   }
 }
 
+// ---------- 안내 배너 -----------
+.info_banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #F9F9F9;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  font-size: $font-size-sm;
+  color: #333;
+  line-height: 1.5;
+  margin-top: 30px;
+
+  .info_icon {
+    color: #3B82F6;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  p {
+    strong {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+  }
+}
+
 .admin_page {
+  padding: 30px;
 
   .table_wrap {
     overflow-x: auto;
@@ -696,17 +727,18 @@ input::placeholder {
           color: #555;
           text-align: left;
           &:last-child {
-            padding-right: 30px;
+            padding-right: 20px;
             border-right: none;
           }
           &:first-child {
-            padding-left: 30px;
+            padding-left: 20px;
           }
         }
       }
 
       tbody {
         tr {
+          border-bottom: 1px solid $gray02;
           &:hover {
             background: #f9f9f9;
           }
@@ -714,15 +746,14 @@ input::placeholder {
 
         td {
           padding: 10px 16px;
-          border-bottom: 1px solid $gray02;
           border-right: 1px solid $gray02;
           text-align: left;
           white-space: nowrap;
           &:first-child {
-            padding-left: 30px;
+            padding-left: 20px;
           }
           &:last-child {
-            padding-right: 30px;
+            padding-right: 20px;
             border-right: none;
 
           }
