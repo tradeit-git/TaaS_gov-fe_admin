@@ -57,6 +57,10 @@ export  default  function Sidebar (){
             </div>
 
             <nav className="lnb_menu">
+                <Link href={'/trial'}
+                      className={`lnb_name${isOn('trial')}`}>
+                    <span className={'admin_icon trial'}/>체험계정
+                </Link>
                 <Link href={'/contact'}
                       className={`lnb_name${isOn('contact')}`}>
                     <span className={'admin_icon contact'}/>도입문의
@@ -71,16 +75,17 @@ export  default  function Sidebar (){
                 {/*</Link>*/}
                 <Link href={'/404'}
                       className={`lnb_name${isOn('account')}`}>
-                    <span className={'admin_icon account'}/>영업계정(개발중)
+                    <span className={'admin_icon account'}/>내부영업계정
                 </Link>
                 <Link href={'/company-management'}
                       className={`lnb_name${isOn('company-management')}`}>
-                    <span className={'admin_icon management'}/>가입회원사
+                    <span className={'admin_icon user'}/>가입회원관리
                 </Link>
-                <Link href={'/404'}
-                      className={`lnb_name${isOn('trial')}`}>
-                    <span className={'admin_icon trial'}/>제휴회원사(개발중)
+                <Link href={'/partner-management'}
+                      className={`lnb_name${isOn('partner-management')}`}>
+                    <span className={'admin_icon partner management'}/>협회제휴관리
                 </Link>
+
                 {/*<Link href={'/client'}*/}
                 {/*      className={`lnb_name${isOn('client')}`}>*/}
                 {/*    <span className={'admin_icon client'}/>계약계정*/}
@@ -88,7 +93,7 @@ export  default  function Sidebar (){
                 {/*<Link href={'/billing'}*/}
                 <Link href={'/404'}
                       className={`lnb_name${isOn('billing')}`}>
-                    <span className={'admin_icon billing'}/>결제현황(개발중)
+                    <span className={'admin_icon billing'}/>결제현황
                 </Link>
 
             </nav>

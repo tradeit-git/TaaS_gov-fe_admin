@@ -1,0 +1,315 @@
+@use './variable' as *;
+
+// -------------------- 협회제휴관리 ----------------------------
+.partner_create_form {
+  background: #F9F9F9;
+  padding: 20px 30px;
+  margin-bottom: 20px;
+  border-top: 1px solid #EAEBED;
+  border-bottom: 1px solid #EAEBED;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .form_row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .form_field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    label {
+      font-size: $font-size-sm;
+      white-space: nowrap;
+      color: $theme-color;
+    }
+
+    .input_wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .error_msg {
+        position: absolute;
+        bottom: -16px;
+        font-size: 11px;
+        color: #f30;
+      }
+    }
+
+    input {
+      height: 32px;
+      border: 1px solid #ddd;
+      border-radius: $border-radius;
+      padding: 0 10px;
+      font-size: $font-size-sm;
+
+      &::placeholder {
+        color: #bbb;
+      }
+    }
+
+    // 제휴명
+    &.field_name input {
+      width: 200px;
+    }
+
+    // 전용경로
+    &.field_path {
+      .domain_prefix {
+        font-size: $font-size-sm;
+        color: #555;
+        white-space: nowrap;
+      }
+      input {
+        width: 180px;
+      }
+    }
+
+    // 중복체크
+    .btn_check {
+      height: 32px;
+      padding: 0 12px;
+      font-size: $font-size-sm;
+      border: 1px solid #ccc;
+      background: #F5F6F7;
+      border-radius: $border-radius;
+      white-space: nowrap;
+      cursor: pointer;
+
+      &:hover {
+        background: #e8e8e8;
+      }
+      &:disabled {
+        background: #ccc;
+        border-color: #ccc;
+        color: #F0F0F0;
+        cursor: default;
+      }
+    }
+
+    // 보너스 크레딧
+    &.field_credit {
+      input {
+        width: 80px;
+        text-align: right;
+      }
+      .unit {
+        font-size: $font-size-sm;
+        color: #555;
+      }
+    }
+
+    // 가입혜택기간
+    &.field_period {
+      input[type="date"] {
+        width: 145px;
+      }
+      .date_tilde {
+        margin: 0 4px;
+        color: #555;
+      }
+    }
+  }
+
+  .form_actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+
+    .btn_create {
+      height: 32px;
+      padding: 0 14px;
+      font-size: $font-size-sm;
+      background: $black02;
+      color: #fff;
+      border-radius: $border-radius;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    .btn_reset {
+      font-size: $font-size-sm;
+      border: none;
+      background: none;
+      color: #677793;
+      border-radius: $border-radius;
+      text-decoration: underline;
+      cursor: pointer;
+
+      &:hover {
+        background: #f0f0f0;
+      }
+    }
+  }
+}
+
+// -------------------- 테이블 ----------------------------
+.partner_table {
+  table-layout: fixed;
+
+  td {
+    .partner_key {
+      vertical-align: middle;
+    }
+
+    .btn_link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      margin-left: 6px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      background: #fff;
+      color: #555;
+      font-size: 12px;
+      line-height: 1;
+      text-decoration: none;
+      vertical-align: middle;
+      transition: all 0.15s;
+
+      &:hover {
+        background: #f5f5f5;
+        color: #111;
+        border-color: #888;
+      }
+    }
+
+    .status_badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: $font-size-xs;
+      font-weight: 500;
+
+      &.active {
+        background: #E6FADA;
+        color: #3D914A;
+      }
+
+      &.upcoming {
+        background: #FFF3CD;
+        color: #B5852C;
+      }
+
+      &.expired {
+        background: #EDEEF3;
+        color: #848891;
+      }
+    }
+  }
+
+  td:nth-child(3),
+  td:nth-child(4) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// -------------------- 상세 페이지 (가입명단) ----------------------------
+.partner_info_bar {
+  background: #F9F9F9;
+  padding: 20px 30px;
+  margin-bottom: 20px;
+  border-top: 1px solid #EAEBED;
+  border-bottom: 1px solid #EAEBED;
+
+  .info_row {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+
+  .info_field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    label {
+      font-size: $font-size-sm;
+      color: $theme-color;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    span {
+      font-size: $font-size-sm;
+      color: #333;
+    }
+
+    .date_tilde {
+      margin: 0 2px;
+      color: #555;
+    }
+
+    .btn_site_link {
+      display: inline-flex;
+      align-items: center;
+      height: 30px;
+      padding: 0 12px;
+      font-size: $font-size-sm;
+      border: 1px solid #ccc;
+      border-radius: $border-radius;
+      background: #fff;
+      color: #333;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+
+      &:hover {
+        background: #f5f5f5;
+        border-color: #888;
+      }
+    }
+  }
+}
+
+.partner_page {
+  .td_actions .btn_delete_text {
+    padding: 1px 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: $border-radius;
+    height: 24px;
+    font-size: $font-size-xs;
+    font-weight: 500;
+    color: $black02;
+    width: 100%;
+
+    &:hover {
+      background: #f0f0f0;
+    }
+  }
+
+  .btn_excel_download {
+    height: 32px;
+    padding: 0 14px;
+    font-size: $font-size-sm;
+    border: 1px solid #ccc;
+    border-radius: $border-radius;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+      background: #f5f5f5;
+      border-color: #888;
+    }
+  }
+}
