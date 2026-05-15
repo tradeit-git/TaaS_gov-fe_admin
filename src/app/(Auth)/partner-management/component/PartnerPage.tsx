@@ -7,6 +7,7 @@ import PartnerTableBody from "@/app/(Auth)/partner-management/component/PartnerT
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
+import callApi from "@/utill/apiRequest";
 
 export interface PartnerRow {
     id: number;
@@ -19,81 +20,69 @@ export interface PartnerRow {
     createdAt: string;
 }
 
-const MOCK_DATA: PartnerRow[] = [
-    {
-        id: 1,
-        partnerKey: 'mss2026',
-        partnerName: '서울중소기업벤처 2026',
-        startDate: '2025-01-01',
-        endDate: '2025-12-31',
-        creditAmount: 30,
-        usedCount: 1250,
-        createdAt: '2025-01-01',
-    },
-    {
-        id: 2,
-        partnerKey: 'btp2026',
-        partnerName: '부산테크노파크 2026',
-        startDate: '2026-01-01',
-        endDate: '2026-12-31',
-        creditAmount: 10,
-        usedCount: 3480,
-        createdAt: '2026-01-15',
-    },
-    {
-        id: 3,
-        partnerKey: 'ggfta',
-        partnerName: '경기북서부FTA 통상진흥센터',
-        startDate: '2026-07-01',
-        endDate: '2027-06-30',
-        creditAmount: 20,
-        usedCount: 0,
-        createdAt: '2026-05-10',
-    },
-];
+interface CoalitionApiRow {
+    id: number;
+    coalitionName: string;
+    coalitionKey: string;
+    bonusCredit: number;
+    startDate: string;
+    endDate: string;
+    createdAt: string;
+    userCount: number;
+    status: string;
+}
+
+interface CoalitionListResponse {
+    content: CoalitionApiRow[];
+    totalElements: number;
+    totalPages: number;
+}
+
+const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
+    id: row.id,
+    partnerKey: row.coalitionKey,
+    partnerName: row.coalitionName,
+    startDate: row.startDate,
+    endDate: row.endDate,
+    creditAmount: row.bonusCredit,
+    usedCount: row.userCount,
+    createdAt: row.createdAt,
+});
 
 export default function PartnerPage() {
     const {addPopup} = usePopupStore();
-    const [data, setData] = useState<PartnerRow[]>(MOCK_DATA);
+    const [data, setData] = useState<PartnerRow[]>([]);
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [totalElements, setTotalElements] = useState(MOCK_DATA.length);
+    const [totalElements, setTotalElements] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState('');
 
-    const applyFilter = useCallback(() => {
-        let filtered = [...MOCK_DATA];
+    const fetchList = useCallback(async () => {
+        const params = new URLSearchParams();
+        params.set('page', String(currentPage + 1));
+        params.set('size', String(itemsPerPage));
+        if (statusFilter) params.set('status', statusFilter);
+        if (search.trim()) params.set('search', search.trim());
 
-        if (search.trim()) {
-            const kw = search.trim().toLowerCase();
-            filtered = filtered.filter(r =>
-                r.partnerName.toLowerCase().includes(kw) ||
-                r.partnerKey.toLowerCase().includes(kw)
-            );
+        const res = await callApi(`/api/admin/coalition-keys/list?${params.toString()}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        if (res.result && res.data) {
+            const body = res.data as CoalitionListResponse;
+            setData(body.content.map(mapToPartnerRow));
+            setTotalElements(body.totalElements);
+            setTotalPages(Math.max(1, body.totalPages));
         }
-
-        if (statusFilter) {
-            const today = new Date().toISOString().slice(0, 10);
-            filtered = filtered.filter(r => {
-                if (statusFilter === 'upcoming') return r.startDate > today;
-                if (statusFilter === 'active') return r.startDate <= today && today <= r.endDate;
-                if (statusFilter === 'expired') return r.endDate < today;
-                return true;
-            });
-        }
-
-        const start = currentPage * itemsPerPage;
-        const paged = filtered.slice(start, start + itemsPerPage);
-        setData(paged);
-        setTotalElements(filtered.length);
-        setTotalPages(Math.max(1, Math.ceil(filtered.length / itemsPerPage)));
     }, [currentPage, itemsPerPage, search, statusFilter]);
 
     useEffect(() => {
-        applyFilter();
-    }, [applyFilter]);
+        fetchList();
+    }, [fetchList]);
 
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => {
@@ -120,12 +109,21 @@ export default function PartnerPage() {
     };
 
     const handleCreated = () => {
-        applyFilter();
+        fetchList();
     };
 
     const handleDelete = (id: number) => {
-        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 제휴를 삭제하시겠습니까?'} callback={() => {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 제휴를 삭제하시겠습니까?'} callback={async () => {
+            const res = await callApi(`/api/admin/coalition-keys/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+                fetchList();
+            } else {
+                addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
+            }
         }}/>);
     };
 
@@ -151,9 +149,9 @@ export default function PartnerPage() {
                         setCurrentPage(0);
                     }}>
                         <option value="">전체</option>
-                        <option value="upcoming">예정</option>
-                        <option value="active">진행</option>
-                        <option value="expired">종료</option>
+                        <option value="예정">예정</option>
+                        <option value="진행">진행</option>
+                        <option value="종료">종료</option>
                     </select>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
@@ -213,16 +211,19 @@ export default function PartnerPage() {
 
             {/* 페이지네이션 */}
             <div className={'pagination'}>
-                <button type="button" className={'btn_prev'} disabled={currentGroup <= 1}
-                        onClick={() => setCurrentPage(groupStart - pageGroupSize - 1)}><span
-                    className={'admin_icon'}/></button>
+                {currentGroup > 1 &&
+                    <button type="button" className={'btn_prev'}
+                            onClick={() => setCurrentPage(groupStart - pageGroupSize - 1)}><span
+                        className={'admin_icon'}/></button>}
                 {pageNumbers.map(page => (
                     <button key={page} type="button"
                             className={`btn_page ${page === displayPage ? 'on' : ''}`}
                             onClick={() => setCurrentPage(page - 1)}>{page}</button>
                 ))}
-                <button type="button" className={'btn_next'} disabled={groupEnd >= totalPages}
-                        onClick={() => setCurrentPage(groupEnd)}><span className={'admin_icon'}/></button>
+                {groupEnd < totalPages &&
+                    <button type="button" className={'btn_next'}
+                            onClick={() => setCurrentPage(groupEnd)}><span
+                        className={'admin_icon'}/></button>}
             </div>
         </div>
     );

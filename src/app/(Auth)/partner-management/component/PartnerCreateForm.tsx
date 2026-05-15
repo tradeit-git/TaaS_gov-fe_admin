@@ -1,8 +1,9 @@
 'use client'
 
-import {useState} from "react";
+import {useRef, useState} from "react";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
+import callApi from "@/utill/apiRequest";
 
 interface Props {
     onCreated?: () => void;
@@ -16,6 +17,7 @@ export default function PartnerCreateForm({onCreated}: Props) {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [isDuplChecked, setIsDuplChecked] = useState(false);
+    const isComposing = useRef(false);
 
     const handleReset = () => {
         setPartnerName('');
@@ -31,9 +33,23 @@ export default function PartnerCreateForm({onCreated}: Props) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'경로를 입력해주세요.'}/>);
             return;
         }
-        // 목업: 항상 사용 가능
-        addPopup(<AlertComponent alertType={'alert'} infoContent={'사용 가능한 경로입니다.'}/>);
-        setIsDuplChecked(true);
+
+        const res = await callApi(`/api/admin/coalition-keys/check-duplicate?coalitionKey=${encodeURIComponent(partnerKey.trim())}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        if (res && res.result) {
+            if (res.data as unknown as boolean) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'이미 사용 중인 경로입니다.'}/>);
+                setIsDuplChecked(false);
+            } else {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'사용 가능한 경로입니다.'}/>);
+                setIsDuplChecked(true);
+            }
+        } else {
+            addPopup(<AlertComponent alertType={'error'} infoContent={res?.message || '중복체크에 실패했습니다.'}/>);
+        }
     };
 
     const handleCreate = async () => {
@@ -50,10 +66,28 @@ export default function PartnerCreateForm({onCreated}: Props) {
             return;
         }
 
-        // 목업: 등록 성공
-        addPopup(<AlertComponent alertType={'alert'} infoContent={'등록되었습니다.'}/>);
-        handleReset();
-        onCreated?.();
+        const res = await callApi(`/api/admin/coalition-keys`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({
+                coalitionKey: partnerKey,
+                coalitionName: partnerName,
+                bonusCredit: Number(creditAmount),
+                startDate: startDate,
+                endDate: endDate,
+            }),
+        });
+
+        if(res && res.result) {
+            // 목업: 등록 성공
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'등록되었습니다.'}/>);
+            handleReset();
+            onCreated?.();
+        } else {
+            //  addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '수정에 실패했습니다.'}/>);
+            addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '등록에 실패하였습니다.'}/>);
+        }
     };
 
     return (
@@ -71,7 +105,18 @@ export default function PartnerCreateForm({onCreated}: Props) {
                     <div className={'input_wrap'}>
                         <span className={'domain_prefix'}>www.tradeit.co.kr/partner/</span>
                         <input type="text" value={partnerKey} autoComplete="off" maxLength={20}
+                               onCompositionStart={() => { isComposing.current = true; }}
+                               onCompositionEnd={e => {
+                                   isComposing.current = false;
+                                   const filtered = e.currentTarget.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
+                                   setPartnerKey(filtered);
+                                   setIsDuplChecked(false);
+                               }}
                                onChange={e => {
+                                   if (isComposing.current) {
+                                       setPartnerKey(e.target.value);
+                                       return;
+                                   }
                                    setPartnerKey(e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20));
                                    setIsDuplChecked(false);
                                }}
