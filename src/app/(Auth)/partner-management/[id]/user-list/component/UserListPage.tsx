@@ -1,11 +1,11 @@
 'use client';
 
 import Link from "next/link";
-import {useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
-import {PartnerRow} from "@/app/(Auth)/partner-management/component/PartnerPage";
+import callApi from "@/utill/apiRequest";
 
 export interface PartnerUser {
     id: number;
@@ -18,15 +18,92 @@ export interface PartnerUser {
     createdAt: string;
 }
 
-interface Props {
-    partnerId: string;
-    partner: PartnerRow;
-    initialData: PartnerUser[];
+interface CoalitionUserApiRow {
+    id: number;
+    companyName: string;
+    loginId: string;
+    name: string;
+    department: string;
+    position: string;
+    contact: string;
+    createdAt: string;
 }
 
-export default function UserListPage({partnerId, partner, initialData}: Props) {
+interface CoalitionDetailApiRow {
+    id: number;
+    coalitionName: string;
+    coalitionKey: string;
+    bonusCredit: number;
+    startDate: string;
+    endDate: string;
+    createdAt: string;
+}
+
+interface PartnerInfo {
+    partnerName: string;
+    partnerKey: string;
+    creditAmount: number;
+    startDate: string;
+    endDate: string;
+}
+
+const mapToPartnerUser = (row: CoalitionUserApiRow): PartnerUser => ({
+    id: row.id,
+    companyName: row.companyName,
+    loginId: row.loginId,
+    name: row.name,
+    department: row.department,
+    position: row.position,
+    phone: row.contact,
+    createdAt: row.createdAt,
+});
+
+const mapToPartnerInfo = (row: CoalitionDetailApiRow): PartnerInfo => ({
+    partnerName: row.coalitionName,
+    partnerKey: row.coalitionKey,
+    creditAmount: row.bonusCredit,
+    startDate: row.startDate,
+    endDate: row.endDate,
+});
+
+interface Props {
+    partnerId: string;
+}
+
+export default function UserListPage({partnerId}: Props) {
     const {addPopup} = usePopupStore();
-    const [data] = useState<PartnerUser[]>(initialData);
+    const [partner, setPartner] = useState<PartnerInfo | null>(null);
+    const [data, setData] = useState<PartnerUser[]>([]);
+
+    const fetchPartner = useCallback(async () => {
+        const res = await callApi(`/api/admin/coalition-keys/${partnerId}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        if (res.result && res.data) {
+            setPartner(mapToPartnerInfo(res.data as CoalitionDetailApiRow));
+        }
+    }, [partnerId]);
+
+    const fetchUsers = useCallback(async () => {
+        const res = await callApi(`/api/admin/coalition-keys/${partnerId}/users`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        if (res.result && res.data) {
+            const rows = res.data as CoalitionUserApiRow[];
+            setData(rows.map(mapToPartnerUser));
+        } else {
+            addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '데이터를 불러오지 못했습니다.'}/>);
+        }
+    }, [partnerId]);
+
+    useEffect(() => {
+        fetchPartner();
+        fetchUsers();
+    }, [fetchPartner, fetchUsers]);
 
     const handleExcelDownload = () => {
         addPopup(<AlertComponent alertType={'alert'} infoContent={'다운로드 기능은 준비 중입니다.'}/>);
@@ -46,7 +123,7 @@ export default function UserListPage({partnerId, partner, initialData}: Props) {
             </div>
 
             {/* 제휴 정보 영역 */}
-            <div className={'partner_info_bar'}>
+            {partner && <div className={'partner_info_bar'}>
                 <div className={'info_row'}>
                     <div className={'info_field'}>
                         <label>제휴명</label>
@@ -72,7 +149,7 @@ export default function UserListPage({partnerId, partner, initialData}: Props) {
                         <span>{formatDateDot(partner.endDate)}</span>
                     </div>
                 </div>
-            </div>
+            </div>}
 
             {/* 검색 / 카운트 영역 */}
             <div className={'list_header'}>
