@@ -1,7 +1,7 @@
 'use client'
 
 import {useRouter} from "next/navigation";
-import {CompanyRow} from "@/app/(Auth)/company-management/component/CompanyManagementPage";
+import {CompanyRow} from "@/app/(Auth)/users/component/CompanyManagementPage";
 
 interface Props {
     data: CompanyRow[];

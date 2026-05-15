@@ -1,6 +1,6 @@
 // import callApi from "@/utill/apiRequest";
 // import {getServerRequestOptions} from "@/lib/serverRequest";
-import CompanyManagementPage, {CompanyListResponse} from "@/app/(Auth)/company-management/component/CompanyManagementPage";
+import CompanyManagementPage, {CompanyListResponse} from "@/app/(Auth)/users/component/CompanyManagementPage";
 
 // 목업 데이터
 const MOCK_DATA: CompanyListResponse = {

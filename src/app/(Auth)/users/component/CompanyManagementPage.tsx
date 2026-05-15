@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useCallback, useEffect, useRef, useState} from "react";
-import CompanyManagementTableBody from "@/app/(Auth)/company-management/component/CompanyManagementTableBody";
+import CompanyManagementTableBody from "@/app/(Auth)/users/component/CompanyManagementTableBody";
 // import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
 

@@ -1,4 +1,4 @@
-import CompanyDetailPage, {CompanyDetailData} from "@/app/(Auth)/company-management/[id]/component/CompanyDetailPage";
+import CompanyDetailPage, {CompanyDetailData} from "@/app/(Auth)/users/component/component/CompanyDetailPage";
 
 // 목업 데이터
 const MOCK_DETAIL: CompanyDetailData = {

@@ -5,8 +5,8 @@ import {useRef, useState} from "react";
 import {formatDateDot, formatDateTimeDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
-import OverseasPlanPopup from "@/app/(Auth)/company-management/[id]/component/OverseasPlanPopup";
-import CreditUsagePopup from "@/app/(Auth)/company-management/[id]/component/CreditUsagePopup";
+import OverseasPlanPopup from "@/app/(Auth)/users/component/component/OverseasPlanPopup";
+import CreditUsagePopup from "@/app/(Auth)/users/component/component/CreditUsagePopup";
 
 /* ───────── 타입 정의 ───────── */
 export interface AccountInfo {
