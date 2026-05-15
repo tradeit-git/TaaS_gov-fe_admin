@@ -1,28 +1,13 @@
 'use client';
 
-import Link from "next/link";
 import {useRef, useState} from "react";
 import {formatDateDot, formatDateTimeDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
-import OverseasPlanPopup from "@/app/(Auth)/users/component/component/OverseasPlanPopup";
-import CreditUsagePopup from "@/app/(Auth)/users/component/component/CreditUsagePopup";
+import OverseasPlanPopup from "@/app/(Auth)/users/[id]/component/OverseasPlanPopup";
+import CreditUsagePopup from "@/app/(Auth)/users/[id]/component/CreditUsagePopup";
 
 /* ───────── 타입 정의 ───────── */
-export interface AccountInfo {
-    id: number;
-    affiliationName: string | null;
-    loginId: string;
-    password: string;
-    name: string;
-    phone: string;
-    companyName: string;
-    department: string | null;
-    position: string | null;
-    createdAt: string;
-    lastLoginAt: string | null;
-}
-
 export interface CreditItem {
     id: number;
     status: 'completed' | 'in_progress' | 'scheduled';
@@ -66,14 +51,8 @@ export interface StandardPlan {
 
 export type PlanItem = OverseasPlan | StandardPlan;
 
-export interface CompanyDetailData {
-    account: AccountInfo;
-    plans: PlanItem[];
-}
-
 interface Props {
-    id: string;
-    initialData: CompanyDetailData;
+    plans: PlanItem[];
 }
 
 /* ───────── 상태 뱃지 ───────── */
@@ -93,19 +72,11 @@ const STATUS_CLASS: Record<string, string> = {
     scheduled: 'badge_scheduled',
 };
 
-/* ───────── 컴포넌트 ───────── */
-export default function CompanyDetailPage({id, initialData}: Props) {
+export default function PlanSection({plans}: Props) {
     const {addPopup} = usePopupStore();
-    const {account, plans} = initialData;
-    const [password, setPassword] = useState(account.password);
-    const [visiblePlans, setVisiblePlans] = useState(2);
+    const [visiblePlans] = useState(2);
     const [expanded, setExpanded] = useState(false);
     const planListRef = useRef<HTMLDivElement>(null);
-
-    const handleSave = () => {
-        // TODO: API 연동
-        addPopup(<AlertComponent alertType={'alert'} infoContent={'저장되었습니다.'}/>);
-    };
 
     const handleOpenUsagePopup = () => {
         addPopup(<CreditUsagePopup/>);
@@ -152,106 +123,34 @@ export default function CompanyDetailPage({id, initialData}: Props) {
     };
 
     return (
-        <div className={'admin_page company_detail_page'}>
-            <div className={'page_start_box'}>
-                <h2>상세</h2>
-                <ul className={'breadcrumb'}>
-                    <li>홈</li>
-                    <li><span className={'admin_icon icon_next'}/></li>
-                    <li><Link href={'/company-management'}>가입회원사</Link></li>
-                    <li><span className={'admin_icon icon_next'}/></li>
-                    <li>상세</li>
-                </ul>
+        <div className={'company_detail_right'}>
+            <div className={'plan_header'}>
+                <div className={'section_title'}>
+                    <span className={'admin_icon arrow_icon'}/>
+                    플랜 상세정보
+                </div>
+                <button type={'button'} className={'btn_add_plan'} onClick={handleOpenOverseasPlanPopup}>
+                    + 해외영업실행플랜 등록
+                </button>
             </div>
 
-            <div className={'company_detail_layout'}>
-                {/* ── 왼쪽: 계정정보 ── */}
-                <div className={'company_detail_left'}>
-                    <div className={'section_title'}>
-                        <span className={'admin_icon arrow_icon'}/>
-                        계정정보
+            <div ref={planListRef} className={`plan_list ${expanded ? 'expanded' : ''}`}>
+                {(expanded ? plans : plans.slice(0, visiblePlans)).map(plan => (
+                    <div key={plan.id} className={`plan_card ${plan.type === 'overseas' ? 'overseas' : 'standard'} ${plan.status === 'expired' ? 'expired' : ''}`}>
+                        {plan.type === 'overseas' ? (
+                            <OverseasPlanCard plan={plan} formatNum={formatNum} onUsage={handleOpenUsagePopup} onEdit={() => handleEditOverseasPlan(plan)}/>
+                        ) : (
+                            <StandardPlanCard plan={plan} formatNum={formatNum} onUsage={handleOpenUsagePopup}/>
+                        )}
                     </div>
-
-                    <ul className={'form_list'}>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>제휴가입</p>
-                            <input type="text" readOnly disabled value={account.affiliationName || '-'}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>아이디(e-mail)</p>
-                            <input type="text" readOnly disabled value={account.loginId}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>패스워드</p>
-                            <input type="text" value={password} onChange={e => setPassword(e.target.value)}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>이름</p>
-                            <input type="text" readOnly disabled value={account.name}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>전화번호</p>
-                            <input type="text" readOnly disabled value={account.phone}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>회사명</p>
-                            <input type="text" readOnly disabled value={account.companyName}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>부서</p>
-                            <input type="text" readOnly disabled value={account.department || '-'}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>직함</p>
-                            <input type="text" readOnly disabled value={account.position || '-'}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>회원가입일</p>
-                            <input type="text" readOnly disabled value={formatDateDot(account.createdAt)}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>최근접속일</p>
-                            <input type="text" readOnly disabled value={account.lastLoginAt ? formatDateDot(account.lastLoginAt) : '-'}/>
-                        </li>
-                    </ul>
-
-                    <div className={'btn_wrap'}>
-                        <Link href="/company-management" className={'cancel_btn'}>취소</Link>
-                        <button className={'save_btn'} onClick={handleSave}>저장</button>
-                    </div>
-                </div>
-
-                {/* ── 오른쪽: 플랜 상세정보 ── */}
-                <div className={'company_detail_right'}>
-                    <div className={'plan_header'}>
-                        <div className={'section_title'}>
-                            <span className={'admin_icon arrow_icon'}/>
-                            플랜 상세정보
-                        </div>
-                        <button type={'button'} className={'btn_add_plan'} onClick={handleOpenOverseasPlanPopup}>
-                            + 해외영업실행플랜 등록
-                        </button>
-                    </div>
-
-                    <div ref={planListRef} className={`plan_list ${expanded ? 'expanded' : ''}`}>
-                        {(expanded ? plans : plans.slice(0, visiblePlans)).map(plan => (
-                            <div key={plan.id} className={`plan_card ${plan.type === 'overseas' ? 'overseas' : 'standard'} ${plan.status === 'expired' ? 'expired' : ''}`}>
-                                {plan.type === 'overseas' ? (
-                                    <OverseasPlanCard plan={plan} formatNum={formatNum} onUsage={handleOpenUsagePopup} onEdit={() => handleEditOverseasPlan(plan)}/>
-                                ) : (
-                                    <StandardPlanCard plan={plan} formatNum={formatNum} onUsage={handleOpenUsagePopup}/>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    {plans.length > visiblePlans && !expanded && (
-                        <button type={'button'} className={'btn_more'} onClick={() => setExpanded(true)}>
-                            <span className={'admin_icon more_icon'}/> 더보기
-                        </button>
-                    )}
-                </div>
+                ))}
             </div>
+
+            {plans.length > visiblePlans && !expanded && (
+                <button type={'button'} className={'btn_more'} onClick={() => setExpanded(true)}>
+                    <span className={'admin_icon more_icon'}/> 더보기
+                </button>
+            )}
         </div>
     );
 }
