@@ -1,67 +1,79 @@
 import CompanyDetailPage from "@/app/(Auth)/users/[id]/component/CompanyDetailPage";
-import {PlanItem} from "@/app/(Auth)/users/[id]/component/PlanSection";
+import {CreditPlan} from "@/app/(Auth)/users/[id]/component/PlanSection";
 import {getServerRequestOptions} from "@/lib/serverRequest";
 import callApi from "@/utill/apiRequest";
 import {redirect} from "next/navigation";
 import {ApiUserDetailResponse} from "@/app/(Auth)/client/[id]/component/ClientDetailPage";
 import {UserSchema} from "@/types/user/user";
 
-// 목업 데이터 (플랜)
-const MOCK_PLANS: PlanItem[] = [
+// 목업 데이터 (플랜) - 3가지 paymentMethod 케이스
+const MOCK_PLANS: CreditPlan[] = [
     {
         id: 1,
-        type: 'overseas',
+        status: 'ACTIVE',
         planName: '해외영업실행',
-        status: 'active',
-        contractStartDate: '2026-01-01',
-        contractEndDate: '2026-06-30',
-        contractAmount: '11,940,000원(vat포함)',
-        contractMethod: 'GA계약',
+        startDate: '2026-01-01',
+        endDate: '2026-06-30',
+        months: 6,
+        paymentMethod: 'GA_CONTRACT',
+        paymentMethodName: 'GA 계약',
+        billingDay: null,
         contractDate: '2025-12-15',
-        credits: [
-            { id: 1, status: 'completed', startDate: '2026-01-01', endDate: '2026-01-31', creditGrant: 30000, creditUsed: -30000, creditRemain: 0 },
-            { id: 2, status: 'completed', startDate: '2026-02-01', endDate: '2026-02-28', creditGrant: 30000, creditUsed: -26990, creditRemain: 3010 },
-            { id: 3, status: 'completed', startDate: '2026-03-01', endDate: '2026-03-31', creditGrant: 30000, creditUsed: -28800, creditRemain: 1200 },
-            { id: 4, status: 'completed', startDate: '2026-04-01', endDate: '2026-04-30', creditGrant: 30000, creditUsed: -30000, creditRemain: 0 },
-            { id: 5, status: 'in_progress', startDate: '2026-05-01', endDate: '2026-05-31', creditGrant: 30000, creditUsed: -10000, creditRemain: 20000 },
-            { id: 6, status: 'scheduled', startDate: '2026-06-01', endDate: '2026-06-30', creditGrant: null, creditUsed: null, creditRemain: null },
+        contractAmount: 11940000,
+        paymentAmount: null,
+        paymentDate: null,
+        createdAt: '2025-12-15T00:00:00',
+        rounds: [
+            {id: 11, scheduledDate: '2026-01-01', expireAt: '2026-01-31T23:59:59', grantedAmount: 30000, usedAmount: 30000, balance: 0, expiredAmount: 0, creditType: 'PAID', status: 'EXHAUSTED'},
+            {id: 12, scheduledDate: '2026-02-01', expireAt: '2026-02-28T23:59:59', grantedAmount: 30000, usedAmount: 26990, balance: 3010, expiredAmount: 0, creditType: 'PAID', status: 'EXPIRED'},
+            {id: 13, scheduledDate: '2026-03-01', expireAt: '2026-03-31T23:59:59', grantedAmount: 30000, usedAmount: 28800, balance: 1200, expiredAmount: 0, creditType: 'PAID', status: 'EXPIRED'},
+            {id: 14, scheduledDate: '2026-04-01', expireAt: '2026-04-30T23:59:59', grantedAmount: 30000, usedAmount: 30000, balance: 0, expiredAmount: 0, creditType: 'PAID', status: 'EXHAUSTED'},
+            {id: 15, scheduledDate: '2026-05-01', expireAt: '2026-05-31T23:59:59', grantedAmount: 30000, usedAmount: 10000, balance: 20000, expiredAmount: 0, creditType: 'PAID', status: 'ACTIVE'},
+            {id: 16, scheduledDate: '2026-06-01', expireAt: '2026-06-30T23:59:59', grantedAmount: null, usedAmount: null, balance: null, expiredAmount: null, creditType: 'PAID', status: 'SCHEDULED'},
         ],
     },
     {
         id: 2,
-        type: 'standard',
+        status: 'EXPIRED',
         planName: '개인',
-        status: 'expired',
-        usageStartDate: '2025-01-01',
-        usageEndDate: '2025-05-31',
-        paymentAmount: '49,000원(vat포함)',
-        paymentMethod: '정기카드결제 (매월18일)',
+        startDate: '2025-01-01',
+        endDate: '2025-05-31',
+        months: 5,
+        paymentMethod: 'PG_CARD',
+        paymentMethodName: '정기 카드 결제',
+        billingDay: 18,
+        contractDate: null,
+        contractAmount: null,
+        paymentAmount: 49000,
         paymentDate: '2025-01-18T14:30:00',
-        creditSummary: { grant: 5000, used: -1000, remain: 4000, expired: -4000 },
+        createdAt: '2025-01-18T14:30:00',
+        rounds: [
+            {id: 21, scheduledDate: '2025-01-18', expireAt: '2025-02-17T23:59:59', grantedAmount: 1000, usedAmount: 200, balance: 800, expiredAmount: 800, creditType: 'PAID', status: 'EXPIRED'},
+            {id: 22, scheduledDate: '2025-02-18', expireAt: '2025-03-17T23:59:59', grantedAmount: 1000, usedAmount: 300, balance: 700, expiredAmount: 700, creditType: 'PAID', status: 'EXPIRED'},
+            {id: 23, scheduledDate: '2025-03-18', expireAt: '2025-04-17T23:59:59', grantedAmount: 1000, usedAmount: 500, balance: 500, expiredAmount: 500, creditType: 'PAID', status: 'EXPIRED'},
+            {id: 24, scheduledDate: '2025-04-18', expireAt: '2025-05-17T23:59:59', grantedAmount: 1000, usedAmount: 0, balance: 1000, expiredAmount: 1000, creditType: 'PAID', status: 'EXPIRED'},
+            {id: 25, scheduledDate: '2025-05-18', expireAt: '2025-05-31T23:59:59', grantedAmount: 1000, usedAmount: 0, balance: 1000, expiredAmount: 1000, creditType: 'PAID', status: 'EXPIRED'},
+        ],
     },
     {
         id: 3,
-        type: 'standard',
-        planName: '팀',
-        status: 'expired',
-        usageStartDate: '2024-07-01',
-        usageEndDate: '2024-12-31',
-        paymentAmount: '149,000원(vat포함)',
-        paymentMethod: '정기카드결제 (매월1일)',
-        paymentDate: '2024-07-01T10:15:00',
-        creditSummary: { grant: 15000, used: -12000, remain: 3000, expired: -3000 },
-    },
-    {
-        id: 4,
-        type: 'standard',
-        planName: '개인',
-        status: 'expired',
-        usageStartDate: '2024-01-01',
-        usageEndDate: '2024-06-30',
-        paymentAmount: '49,000원(vat포함)',
-        paymentMethod: '정기카드결제 (매월18일)',
-        paymentDate: '2024-01-18T09:00:00',
-        creditSummary: { grant: 5000, used: -4500, remain: 500, expired: -500 },
+        status: 'EXPIRED',
+        planName: '팀(이관)',
+        startDate: '2024-07-01',
+        endDate: '2024-12-31',
+        months: 6,
+        paymentMethod: 'BANK_TRANSFER',
+        paymentMethodName: '계좌이체',
+        billingDay: null,
+        contractDate: '2024-06-25',
+        contractAmount: 894000,
+        paymentAmount: null,
+        paymentDate: null,
+        createdAt: '2024-06-25T00:00:00',
+        rounds: [
+            {id: 31, scheduledDate: '2024-07-01', expireAt: '2024-07-31T23:59:59', grantedAmount: 15000, usedAmount: 12000, balance: 3000, expiredAmount: 3000, creditType: 'PAID', status: 'EXPIRED'},
+            {id: 32, scheduledDate: '2024-08-01', expireAt: '2024-08-31T23:59:59', grantedAmount: 15000, usedAmount: 10000, balance: 5000, expiredAmount: 5000, creditType: 'PAID', status: 'EXPIRED'},
+        ],
     },
 ];
 
@@ -78,6 +90,7 @@ export default async function Page({params}: Props) {
 
     const body = res.data as ApiUserDetailResponse;
     const initialUser = UserSchema.parse(body.user);
+    const initialPlans = (body.creditPlans as unknown as CreditPlan[] | undefined) ?? MOCK_PLANS;
 
-    return <CompanyDetailPage id={id} initialUser={initialUser} initialPlans={MOCK_PLANS}/>;
+    return <CompanyDetailPage id={id} initialUser={initialUser} initialPlans={initialPlans}/>;
 }

@@ -3,12 +3,12 @@
 import Link from "next/link";
 import {UserType} from "@/types/user/user";
 import AccountInfoSection from "@/app/(Auth)/users/[id]/component/AccountInfoSection";
-import PlanSection, {PlanItem} from "@/app/(Auth)/users/[id]/component/PlanSection";
+import PlanSection, {CreditPlan} from "@/app/(Auth)/users/[id]/component/PlanSection";
 
 interface Props {
     id: string;
     initialUser: UserType;
-    initialPlans: PlanItem[];
+    initialPlans: CreditPlan[];
 }
 
 export default function CompanyDetailPage({initialUser, initialPlans}: Props) {

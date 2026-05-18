@@ -1,15 +1,18 @@
 'use client';
 
-import {useState, useMemo} from "react";
+import {useMemo, useState} from "react";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 
-interface CreditRound {
+export type RoundStatus = 'SCHEDULED' | 'ACTIVE' | 'EXPIRED' | 'EXHAUSTED';
+
+export interface CreditRound {
     round: number;
     period: string;
     credit: string;
     periodStartDate?: string;
     periodEndDate?: string;
+    status?: RoundStatus;
 }
 
 interface Props {
@@ -19,29 +22,16 @@ interface Props {
 }
 
 export interface OverseasPlanFormData {
-    contractStartDate: string;
-    contractEndDate: string;
+    planStartDate: string;
+    planMonths: number;
     contractAmount: string;
     contractMethod: string;
     managerGA: string;
     managerTP: string;
     contractDate: string;
-    creditStartDate: string;
     monthlyCredit: string;
     credits: CreditRound[];
 }
-
-const toDateOnly = (s: string) => {
-    const d = new Date(s);
-    d.setHours(0, 0, 0, 0);
-    return d;
-};
-
-const getToday = () => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-};
 
 const formatD = (d: Date) =>
     `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
@@ -49,106 +39,143 @@ const formatD = (d: Date) =>
 const toISODate = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+const todayISO = () => toISODate(new Date());
+
+const minStartISO = () => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return toISODate(d);
+};
+
+const MONTH_OPTIONS = Array.from({length: 12}, (_, i) => i + 1);
+
+const isLockedStatus = (s: RoundStatus | undefined) => !!s && s !== 'SCHEDULED';
+
+// 이전 회차들을 유지하면서 planMonths 만큼 회차를 빌드
+// - 잠긴(과거/진행) 회차는 그대로 보존
+// - 신규 SCHEDULED 회차는 planStartDate + i개월 기준으로 생성
+const buildRounds = (
+    planStartDate: string,
+    planMonths: number,
+    monthlyCredit: string,
+    prevRounds: CreditRound[],
+): CreditRound[] => {
+    if (!planStartDate || !planMonths) return [];
+    const planStart = new Date(planStartDate);
+    const rounds: CreditRound[] = [];
+
+    for (let i = 0; i < planMonths; i++) {
+        if (i < prevRounds.length) {
+            rounds.push({...prevRounds[i], round: i + 1});
+            continue;
+        }
+        const periodStart = new Date(planStart);
+        periodStart.setMonth(periodStart.getMonth() + i);
+        const periodEnd = new Date(planStart);
+        periodEnd.setMonth(periodEnd.getMonth() + i + 1);
+        periodEnd.setDate(periodEnd.getDate() - 1);
+
+        rounds.push({
+            round: i + 1,
+            period: `${formatD(periodStart)}~${formatD(periodEnd)}`,
+            credit: monthlyCredit || '',
+            periodStartDate: toISODate(periodStart),
+            periodEndDate: toISODate(periodEnd),
+            status: 'SCHEDULED',
+        });
+    }
+    return rounds;
+};
+
 export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
     const {closePopup, addPopup} = usePopupStore();
     const isEdit = !!initialData;
 
-    const [form, setForm] = useState<OverseasPlanFormData>({
-        contractStartDate: initialData?.contractStartDate ?? '',
-        contractEndDate: initialData?.contractEndDate ?? '',
-        contractAmount: initialData?.contractAmount ?? '',
-        contractMethod: initialData?.contractMethod ?? 'GA 계약',
-        managerGA: initialData?.managerGA ?? '',
-        managerTP: initialData?.managerTP ?? '',
-        contractDate: initialData?.contractDate ?? '',
-        creditStartDate: initialData?.creditStartDate ?? '',
-        monthlyCredit: initialData?.monthlyCredit ?? '',
-        credits: initialData?.credits ?? [],
-    });
+    const lockedRoundsCount = useMemo(
+        () => (initialData?.credits ?? []).filter(c => isLockedStatus(c.status)).length,
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [],
+    );
 
-    const updateField = <K extends keyof OverseasPlanFormData>(key: K, value: OverseasPlanFormData[K]) => {
-        setForm(prev => ({...prev, [key]: value}));
-    };
+    const [form, setForm] = useState<OverseasPlanFormData>(() => {
+        const planStartDate = initialData?.planStartDate ?? todayISO();
+        const planMonths = initialData?.planMonths ?? 1;
+        const monthlyCredit = initialData?.monthlyCredit ?? '';
+        const initialCredits = initialData?.credits && initialData.credits.length > 0
+            ? initialData.credits
+            : buildRounds(planStartDate, planMonths, monthlyCredit, []);
+
+        return {
+            planStartDate,
+            planMonths,
+            contractAmount: initialData?.contractAmount ?? '',
+            contractMethod: initialData?.contractMethod ?? 'GA 계약',
+            managerGA: initialData?.managerGA ?? '',
+            managerTP: initialData?.managerTP ?? '',
+            contractDate: initialData?.contractDate ?? '',
+            monthlyCredit,
+            credits: initialCredits,
+        };
+    });
 
     const formatNumberWithComma = (value: string) => {
         const num = value.replace(/[^0-9]/g, '');
         return num.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
 
-    // 이용시작일이 오늘이거나 지났으면 크레딧 설정 잠금
-    const isCreditLocked = useMemo(() => {
-        if (!form.creditStartDate) return false;
-        return toDateOnly(form.creditStartDate) <= getToday();
-    }, [form.creditStartDate]);
-
-    // 회차별 기간이 오늘 기준으로 지났거나 해당되는지 판별
-    const isRoundPast = (round: CreditRound) => {
-        if (!round.periodEndDate) {
-            // period 문자열에서 종료일 파싱 (YYYY.MM.DD ~ YYYY.MM.DD 또는 YYYY.MM.DD~YYYY.MM.DD)
-            const match = round.period.match(/(\d{4})\.(\d{2})\.(\d{2})\s*~\s*(\d{4})\.(\d{2})\.(\d{2})/);
-            if (!match) return false;
-            const endDate = new Date(Number(match[4]), Number(match[5]) - 1, Number(match[6]));
-            endDate.setHours(0, 0, 0, 0);
-            return endDate <= getToday();
-        }
-        return toDateOnly(round.periodEndDate) <= getToday();
+    const updateField = <K extends keyof OverseasPlanFormData>(key: K, value: OverseasPlanFormData[K]) => {
+        setForm(prev => ({...prev, [key]: value}));
     };
 
-    const isRoundCurrent = (round: CreditRound) => {
-        let startDate: Date, endDate: Date;
-        if (round.periodStartDate && round.periodEndDate) {
-            startDate = toDateOnly(round.periodStartDate);
-            endDate = toDateOnly(round.periodEndDate);
-        } else {
-            const match = round.period.match(/(\d{4})\.(\d{2})\.(\d{2})\s*~\s*(\d{4})\.(\d{2})\.(\d{2})/);
-            if (!match) return false;
-            startDate = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-            endDate = new Date(Number(match[4]), Number(match[5]) - 1, Number(match[6]));
-        }
-        const today = getToday();
-        return startDate <= today && today <= endDate;
+    const handlePlanStartDateChange = (value: string) => {
+        if (isEdit) return; // 수정 모드에서는 시작일 잠금
+        setForm(prev => {
+            const valid = !!value && value >= minStartISO();
+            return {
+                ...prev,
+                planStartDate: value,
+                credits: valid ? buildRounds(value, prev.planMonths, prev.monthlyCredit, []) : prev.credits,
+            };
+        });
     };
 
-    const handleRegisterCredits = () => {
-        if (!form.contractStartDate || !form.contractEndDate) {
-            addPopup(<AlertComponent alertType={'error'} infoContent={'계약기간을 먼저 입력해주세요.'}/>);
-            return;
+    const handlePlanStartDateBlur = () => {
+        if (isEdit) return;
+        if (!form.planStartDate || form.planStartDate < minStartISO()) {
+            const forced = minStartISO();
+            addPopup(<AlertComponent alertType={'error'} infoContent={`시작일은 오늘로부터 최대 7일 전까지만 선택할 수 있습니다. ${forced}(으)로 자동 설정됩니다.`}/>);
+            setForm(prev => ({
+                ...prev,
+                planStartDate: forced,
+                credits: buildRounds(forced, prev.planMonths, prev.monthlyCredit, []),
+            }));
         }
-        if (!form.creditStartDate) {
-            addPopup(<AlertComponent alertType={'error'} infoContent={'이용시작일을 입력해주세요.'}/>);
-            return;
-        }
+    };
 
-        const start = new Date(form.contractStartDate);
-        const end = new Date(form.contractEndDate);
-        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+    const handlePlanMonthsChange = (value: number) => {
+        if (isEdit && value < lockedRoundsCount) return; // 잠긴 회차 수 미만 불가
+        setForm(prev => ({
+            ...prev,
+            planMonths: value,
+            credits: buildRounds(prev.planStartDate, value, prev.monthlyCredit, prev.credits),
+        }));
+    };
 
-        if (months <= 0) return;
-
-        const creditStart = new Date(form.creditStartDate);
-        const rounds: CreditRound[] = [];
-        for (let i = 0; i < months; i++) {
-            const periodStart = new Date(creditStart);
-            periodStart.setMonth(periodStart.getMonth() + i);
-            const periodEnd = new Date(creditStart);
-            periodEnd.setMonth(periodEnd.getMonth() + i + 1);
-            periodEnd.setDate(periodEnd.getDate() - 1);
-
-            rounds.push({
-                round: i + 1,
-                period: `${formatD(periodStart)}~${formatD(periodEnd)}`,
-                credit: form.monthlyCredit || '',
-                periodStartDate: toISODate(periodStart),
-                periodEndDate: toISODate(periodEnd),
-            });
-        }
-
-        updateField('credits', rounds);
+    const handleMonthlyCreditChange = (value: string) => {
+        setForm(prev => ({
+            ...prev,
+            monthlyCredit: value,
+            credits: prev.credits.map(r => isLockedStatus(r.status) ? r : {...r, credit: value}),
+        }));
     };
 
     const handleSave = () => {
-        if (!form.contractStartDate || !form.contractEndDate) {
-            addPopup(<AlertComponent alertType={'error'} infoContent={'계약기간을 입력해주세요.'}/>);
+        if (!form.planStartDate) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'플랜 시작일을 입력해주세요.'}/>);
+            return;
+        }
+        if (!form.planMonths || form.planMonths <= 0) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'플랜 개월수를 선택해주세요.'}/>);
             return;
         }
         if (!form.contractAmount) {
@@ -157,6 +184,10 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
         }
         if (!form.contractDate) {
             addPopup(<AlertComponent alertType={'error'} infoContent={'계약일자를 입력해주세요.'}/>);
+            return;
+        }
+        if (!form.monthlyCredit) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'월 크레딧을 입력해주세요.'}/>);
             return;
         }
 
@@ -169,15 +200,23 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
             <div className={'overseas_plan_popup'}>
                 <h4>{isEdit ? '해외영업실행 플랜수정' : '해외영업실행 플랜등록'}</h4>
 
-                {/* 계약기간 */}
+                {/* 플랜기간 */}
                 <div className={'popup_field'}>
-                    <label className={'label_required'}>계약기간 <span className={'required'}>*</span></label>
+                    <label className={'label_required'}>플랜기간 <span className={'required'}>*</span></label>
                     <div className={'date_range'}>
-                        <input type="date" value={form.contractStartDate}
-                               onChange={e => updateField('contractStartDate', e.target.value)}/>
-                        <span className={'tilde'}>-</span>
-                        <input type="date" value={form.contractEndDate}
-                               onChange={e => updateField('contractEndDate', e.target.value)}/>
+                        <input type="date" value={form.planStartDate}
+                               disabled={isEdit}
+                               min={isEdit ? undefined : minStartISO()}
+                               onChange={e => handlePlanStartDateChange(e.target.value)}
+                               onBlur={handlePlanStartDateBlur}/>
+                        <select value={form.planMonths}
+                                onChange={e => handlePlanMonthsChange(Number(e.target.value))}>
+                            {MONTH_OPTIONS.map(m => (
+                                <option key={m} value={m} disabled={isEdit && m < lockedRoundsCount}>
+                                    {m}개월
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 
@@ -221,25 +260,16 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
                            onChange={e => updateField('contractDate', e.target.value)}/>
                 </div>
 
-                {/* 크레딧 설정 */}
+                {/* 월 크레딧 */}
                 <div className={'popup_field'}>
-                    <label className={'label_required'}>크레딧 설정 <span className={'required'}>*</span></label>
+                    <label className={'label_required'}>월 크레딧 <span className={'required'}>*</span></label>
                     <div className={'credit_setting_row'}>
-                        <span>이용시작일</span>
-                        <input type="date" value={form.creditStartDate}
-                               disabled={isCreditLocked}
-                               onChange={e => updateField('creditStartDate', e.target.value)}/>
-                        <span>월크레딧</span>
                         <input type="text" value={form.monthlyCredit} className={'credit_input'}
-                               disabled={isCreditLocked}
-                               onChange={e => updateField('monthlyCredit', formatNumberWithComma(e.target.value))}/>
-                        {!isCreditLocked && (
-                            <button type={'button'} className={'btn_register'} onClick={handleRegisterCredits}>등록</button>
-                        )}
+                               onChange={e => handleMonthlyCreditChange(formatNumberWithComma(e.target.value))}/>
                     </div>
                 </div>
 
-                {/* 크레딧 테이블 */}
+                {/* 크레딧 테이블 (회차 자동 생성) */}
                 <div className={'credit_rounds_table'}>
                     <table>
                         <thead>
@@ -252,19 +282,17 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
                         <tbody>
                         {form.credits.length > 0 ? (
                             form.credits.map(c => {
-                                const past = isRoundPast(c);
-                                const current = isRoundCurrent(c);
-                                const dimmed = past || current;
+                                const locked = isLockedStatus(c.status);
                                 return (
-                                    <tr key={c.round} className={dimmed ? 'round_past' : ''}>
+                                    <tr key={c.round} className={locked ? 'round_past' : ''}>
                                         <td>{c.round}회차</td>
                                         <td>{c.period}</td>
-                                        <td>{c.credit || form.monthlyCredit || ''}</td>
+                                        <td>{c.credit}</td>
                                     </tr>
                                 );
                             })
                         ) : (
-                            Array.from({length: 6}, (_, i) => (
+                            Array.from({length: Math.max(form.planMonths || 1, 1)}, (_, i) => (
                                 <tr key={i}>
                                     <td>{i + 1}회차</td>
                                     <td></td>
