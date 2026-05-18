@@ -11,7 +11,7 @@ interface Props {
     initialPlans: CreditPlan[];
 }
 
-export default function CompanyDetailPage({initialUser, initialPlans}: Props) {
+export default function CompanyDetailPage({id, initialUser, initialPlans}: Props) {
     return (
         <div className={'admin_page company_detail_page'}>
             <div className={'page_start_box'}>
@@ -27,7 +27,7 @@ export default function CompanyDetailPage({initialUser, initialPlans}: Props) {
 
             <div className={'company_detail_layout'}>
                 <AccountInfoSection user={initialUser}/>
-                <PlanSection plans={initialPlans}/>
+                <PlanSection userId={id} initialPlans={initialPlans}/>
             </div>
         </div>
     );

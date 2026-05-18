@@ -73,8 +73,8 @@ export  default  function Sidebar (){
                       className={`lnb_name${isOn('account')}`}>
                     <span className={'admin_icon account'}/>영업계정(개발중)
                 </Link>
-                <Link href={'/company-management'}
-                      className={`lnb_name${isOn('company-management')}`}>
+                <Link href={'/users'}
+                      className={`lnb_name${isOn('users')}`}>
                     <span className={'admin_icon management'}/>가입회원사
                 </Link>
                 <Link href={'/404'}

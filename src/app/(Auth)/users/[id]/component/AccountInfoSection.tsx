@@ -1,24 +1,68 @@
 'use client';
 
 import Link from "next/link";
-import {useState} from "react";
+import React, {useMemo, useState} from "react";
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import {UserType} from "@/types/user/user";
+import callApi from "@/utill/apiRequest";
 
 interface Props {
     user: UserType;
 }
 
+// 영문 대소문자/숫자/범용 특수문자만 허용 (공백·한글 등 비 ASCII 차단)
+const PASSWORD_ALLOWED = /^[!-~]+$/;
+const PASSWORD_PATTERN = /^[!-~]{8,20}$/;
+const stripDisallowed = (s: string) => s.replace(/[^!-~]/g, '');
+
 export default function AccountInfoSection({user}: Props) {
     const {addPopup} = usePopupStore();
-    const [password, setPassword] = useState(user.password || '');
+    const [password, setPassword] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    const isValid = useMemo(() => PASSWORD_PATTERN.test(password), [password]);
+    const hasOnlyAllowed = useMemo(() => password === '' || PASSWORD_ALLOWED.test(password), [password]);
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPassword(stripDisallowed(e.target.value));
+    };
 
     const handleSave = () => {
-        // TODO: API 연동
-        addPopup(<AlertComponent alertType={'alert'} infoContent={'저장되었습니다.'}/>);
+        if (!password) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'비밀번호를 입력해주세요.'}/>);
+            return;
+        }
+        if (!isValid) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'비밀번호는 영문/숫자/특수문자 8~20자로 입력해주세요.'}/>);
+            return;
+        }
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'비밀번호를 변경하시겠습니까?'} callback={async () => {
+            setSaving(true);
+            try {
+                const res = await callApi(`/api/admin/members/users/${user.id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        user: {...user, id: Number(user.id)},
+                        password,
+                    }),
+                });
+                if (res.result) {
+                    setPassword('');
+                    addPopup(<AlertComponent alertType={'alert'} infoContent={'저장되었습니다.'}/>);
+                } else {
+                    addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '저장에 실패했습니다.'}/>);
+                }
+            } finally {
+                setSaving(false);
+            }
+        }}/>);
     };
+
+    const showError = password !== '' && (!hasOnlyAllowed || !isValid);
 
     return (
         <div className={'company_detail_left'}>
@@ -38,7 +82,19 @@ export default function AccountInfoSection({user}: Props) {
                 </li>
                 <li className={'form_item'}>
                     <p className={'form_label'}>패스워드</p>
-                    <input type="text" value={password} onChange={e => setPassword(e.target.value)}/>
+                    <input
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder="영문/숫자/특수문자 8~20자 (한글·공백 불가)"
+                        value={password}
+                        onChange={handlePasswordChange}
+                        maxLength={20}
+                    />
+                    {showError && (
+                        <p className={'form_error'} style={{color: '#E74C3C', fontSize: 12, marginTop: 4}}>
+                            영문/숫자/범용 특수문자 8~20자로 입력해주세요.
+                        </p>
+                    )}
                 </li>
                 <li className={'form_item'}>
                     <p className={'form_label'}>이름</p>
@@ -72,7 +128,7 @@ export default function AccountInfoSection({user}: Props) {
 
             <div className={'btn_wrap'}>
                 <Link href="/users" className={'cancel_btn'}>취소</Link>
-                <button className={'save_btn'} onClick={handleSave}>저장</button>
+                <button type="button" className={'save_btn'} onClick={handleSave} disabled={saving || !isValid}>저장</button>
             </div>
         </div>
     );

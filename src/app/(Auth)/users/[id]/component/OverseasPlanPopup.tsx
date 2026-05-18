@@ -39,6 +39,18 @@ const formatD = (d: Date) =>
 const toISODate = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+// JS Date 의 setMonth 는 대상 월에 해당 일자가 없으면 다음 달로 롤오버됨 (1.31 + 1month → 3.3)
+// 월말 보정: 대상 월의 마지막 날로 클램프 (1.31 + 1month → 2.28)
+const addMonthsClamped = (date: Date, months: number): Date => {
+    const day = date.getDate();
+    const d = new Date(date);
+    d.setDate(1);
+    d.setMonth(d.getMonth() + months);
+    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day, lastDay));
+    return d;
+};
+
 const todayISO = () => toISODate(new Date());
 
 const minStartISO = () => {
@@ -69,10 +81,8 @@ const buildRounds = (
             rounds.push({...prevRounds[i], round: i + 1});
             continue;
         }
-        const periodStart = new Date(planStart);
-        periodStart.setMonth(periodStart.getMonth() + i);
-        const periodEnd = new Date(planStart);
-        periodEnd.setMonth(periodEnd.getMonth() + i + 1);
+        const periodStart = addMonthsClamped(planStart, i);
+        const periodEnd = addMonthsClamped(planStart, i + 1);
         periodEnd.setDate(periodEnd.getDate() - 1);
 
         rounds.push({

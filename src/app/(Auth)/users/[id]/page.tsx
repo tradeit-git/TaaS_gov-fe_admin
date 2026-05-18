@@ -22,6 +22,8 @@ const MOCK_PLANS: CreditPlan[] = [
         contractAmount: 11940000,
         paymentAmount: null,
         paymentDate: null,
+        managerGa: '김GA',
+        managerTp: '박TP',
         createdAt: '2025-12-15T00:00:00',
         rounds: [
             {id: 11, scheduledDate: '2026-01-01', expireAt: '2026-01-31T23:59:59', grantedAmount: 30000, usedAmount: 30000, balance: 0, expiredAmount: 0, creditType: 'PAID', status: 'EXHAUSTED'},
@@ -46,6 +48,8 @@ const MOCK_PLANS: CreditPlan[] = [
         contractAmount: null,
         paymentAmount: 49000,
         paymentDate: '2025-01-18T14:30:00',
+        managerGa: null,
+        managerTp: null,
         createdAt: '2025-01-18T14:30:00',
         rounds: [
             {id: 21, scheduledDate: '2025-01-18', expireAt: '2025-02-17T23:59:59', grantedAmount: 1000, usedAmount: 200, balance: 800, expiredAmount: 800, creditType: 'PAID', status: 'EXPIRED'},
@@ -69,6 +73,8 @@ const MOCK_PLANS: CreditPlan[] = [
         contractAmount: 894000,
         paymentAmount: null,
         paymentDate: null,
+        managerGa: '이GA',
+        managerTp: '최TP',
         createdAt: '2024-06-25T00:00:00',
         rounds: [
             {id: 31, scheduledDate: '2024-07-01', expireAt: '2024-07-31T23:59:59', grantedAmount: 15000, usedAmount: 12000, balance: 3000, expiredAmount: 3000, creditType: 'PAID', status: 'EXPIRED'},
@@ -91,6 +97,8 @@ export default async function Page({params}: Props) {
     const body = res.data as ApiUserDetailResponse;
     const initialUser = UserSchema.parse(body.user);
     const initialPlans = (body.creditPlans as unknown as CreditPlan[] | undefined) ?? MOCK_PLANS;
+
+    console.log(body);
 
     return <CompanyDetailPage id={id} initialUser={initialUser} initialPlans={initialPlans}/>;
 }

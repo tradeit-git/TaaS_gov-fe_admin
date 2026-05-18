@@ -1,89 +1,217 @@
 'use client';
 
-import {useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {usePopupStore} from "@/stores/common/popupStore";
+import callApi from "@/utill/apiRequest";
+import {formatDateTimeDot} from "@/utill/format";
 
-interface UsageDetail {
-    hsCode: string;
-    keyword: string;
-    importer: string;
-    exporter: string;
-    exportCountry: string;
-    importCountry: string;
-    searchPeriod: string;
-    totalCount: string;
-    currentPage: string;
+type TransactionType = 'GRANT' | 'USE' | 'EXPIRE' | 'REVOKE';
+type GrantType = 'SUBSCRIPTION' | 'UPGRADE_DIFF' | 'FREE';
+type ServiceType =
+    | 'BL_SEARCH'
+    | 'BUYER_ENRICH'
+    | 'BUYER_FIT'
+    | 'AI_CORE'
+    | 'APOLLO_ORG_SEARCH'
+    | 'APOLLO_ORG_ENRICH'
+    | 'APOLLO_PEOPLE_ENRICH'
+    | 'APOLLO_PHONE_REVEAL';
+type ExpireType = 'PERIOD_EXPIRED' | 'OVER_LIMIT';
+
+interface TransactionApiRow {
+    id: number;
+    transactionDate: string;
+    transactionType: TransactionType;
+    grantType: GrantType | null;
+    serviceType: ServiceType | null;
+    expireType: ExpireType | null;
+    expiredTargetMonth: string | null;
+    amount: number;
+    balanceAfter: number;
+    walletBalanceAfter: number;
+    referenceType: string | null;
+    referenceId: number | null;
+    eventKey: string | null;
 }
 
-interface UsageRow {
+export interface TransactionsResponse {
+    content: TransactionApiRow[];
+    totalElements: number;
+    totalPages: number;
+    currentPage: number;
+}
+
+interface BlSearchQuery {
     id: number;
-    date: string;
-    type: 'grant' | 'use' | 'expire' | 'revoke';
-    description: string;
-    tag?: string;
-    detail?: UsageDetail;
-    delta: number;
-    balance: number;
+    hash: string;
+    hsCode: string;
+    productKeyword: string;
+    buyerName: string;
+    supplierName: string;
+    originclCountryCode: string;
+    destiCountryCode: string;
+    startDate: string;
+    endDate: string;
+    perPage: number;
+    curPage: number;
+    total: number;
+    rowCount: number;
+    createdAt: string;
+}
+
+interface BlSearchHistoryDetail {
+    id: number;
+    userId: number;
+    createdAt: string;
+    query: BlSearchQuery;
 }
 
 interface Props {
     uId?: string;
+    userId: number | string;
+    planId: number;
+    roundId: number;
+    initialData: TransactionsResponse;
 }
 
-const TYPE_LABEL: Record<string, string> = {
+const TYPE_LABEL: Record<Lowercase<TransactionType>, string> = {
     grant: '지급',
     use: '사용',
     expire: '소멸',
     revoke: '회수',
 };
 
-const TYPE_CLASS: Record<string, string> = {
+const TYPE_CLASS: Record<Lowercase<TransactionType>, string> = {
     grant: 'type_grant',
     use: 'type_use',
     expire: 'type_expire',
     revoke: 'type_revoke',
 };
 
-// 목업 데이터
-const MOCK_USAGE: UsageRow[] = [
-    {id: 9999, date: '2026.05.11 14:41', type: 'expire', description: '기간만료', delta: -8400, balance: 0},
-    {id: 13, date: '2026.05.11 14:41', type: 'revoke', description: '데이터 처리 실패에 따른 반환', delta: 100, balance: 8400},
-    {id: 12, date: '2026.05.11 14:41', type: 'use', description: 'B/L 검색', tag: '검색쿼리', detail: {hsCode: '-', keyword: 'led', importer: 'hcom', exporter: '-', exportCountry: 'KR,CN', importCountry: 'VN', searchPeriod: '2023-05-11 ~ 2026-05-11', totalCount: '7건', currentPage: '1 / 1'}, delta: -100, balance: 8300},
-    {id: 11, date: '2026.05.11 14:41', type: 'use', description: 'Buyer search', delta: -100, balance: 8400},
-    {id: 10, date: '2026.05.11 14:41', type: 'use', description: 'Buyer enrich', delta: -100, balance: 8500},
-    {id: 9, date: '2026.05.11 14:41', type: 'use', description: 'People enrich', delta: -100, balance: 8600},
-    {id: 8, date: '2026.05.11 14:41', type: 'use', description: 'People number', delta: -100, balance: 8700},
-    {id: 7, date: '2026.05.11 14:41', type: 'use', description: 'Buyer Fit', delta: -100, balance: 8800},
-    {id: 6, date: '2026.05.11 14:41', type: 'use', description: 'AI Core', delta: -100, balance: 8900},
-    {id: 5, date: '2026.05.11 14:41', type: 'grant', description: '대구무역협회제휴 가입 계정 혜택 20%', delta: 1000, balance: 9000},
-    {id: 4, date: '2026.05.11 14:41', type: 'grant', description: '해외영업실행 플랜 구독 결제', delta: 3000, balance: 8000},
-    {id: 3, date: '2026.05.11 14:41', type: 'grant', description: '회원가입 무료 지급', delta: 5000, balance: 5000},
-];
+const GRANT_LABEL: Record<GrantType, string> = {
+    SUBSCRIPTION: '플랜 구독 결제',
+    UPGRADE_DIFF: '업그레이드 차액',
+    FREE: '무료 지급',
+};
+
+const SERVICE_LABEL: Record<ServiceType, string> = {
+    BL_SEARCH: 'BL 검색',
+    BUYER_ENRICH: '바이어 Enrichment',
+    BUYER_FIT: '바이어 적합도 분석',
+    AI_CORE: 'AI Core',
+    APOLLO_ORG_SEARCH: 'Apollo 기업 검색',
+    APOLLO_ORG_ENRICH: 'Apollo 기업 상세 조회',
+    APOLLO_PEOPLE_ENRICH: 'Apollo 직원 이메일 조회',
+    APOLLO_PHONE_REVEAL: 'Apollo 직원 전화번호 조회',
+};
+
+const EXPIRE_LABEL: Record<ExpireType, string> = {
+    PERIOD_EXPIRED: '기간만료',
+    OVER_LIMIT: '한도초과',
+};
+
+const buildDescription = (row: TransactionApiRow): string => {
+    switch (row.transactionType) {
+        case 'GRANT':
+            return (row.grantType && GRANT_LABEL[row.grantType]) || '지급';
+        case 'USE':
+            if (!row.serviceType) return '서비스 사용';
+            return SERVICE_LABEL[row.serviceType] ?? row.serviceType;
+        case 'EXPIRE':
+            return (row.expireType && EXPIRE_LABEL[row.expireType]) || '소멸';
+        case 'REVOKE':
+            return '회수';
+        default:
+            return '-';
+    }
+};
 
 const ITEMS_PER_PAGE = 10;
 
-export default function CreditUsagePopup({uId}: Props) {
+export default function CreditUsagePopup({uId, userId, planId, roundId, initialData}: Props) {
     const {closePopup} = usePopupStore();
-    const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['grant', 'use', 'expire', 'revoke']));
-    const [currentPage, setCurrentPage] = useState(0);
-    const [openDetailId, setOpenDetailId] = useState<number | null>(null);
+    const [activeFilters, setActiveFilters] = useState<Set<Lowercase<TransactionType>>>(
+        new Set(['grant', 'use', 'expire', 'revoke'])
+    );
+    const [currentPage, setCurrentPage] = useState(initialData.currentPage ?? 0);
+    const [rows, setRows] = useState<TransactionApiRow[]>(initialData.content);
+    const [totalElements, setTotalElements] = useState(initialData.totalElements);
+    const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
+    const [loading, setLoading] = useState(false);
+    const isInitial = useRef(true);
 
-    const toggleFilter = (type: string) => {
-        setActiveFilters(prev => {
-            const next = new Set(prev);
-            if (next.has(type)) {
-                next.delete(type);
-            } else {
-                next.add(type);
-            }
-            return next;
+    const [openDetailId, setOpenDetailId] = useState<number | null>(null);
+    const [blDetail, setBlDetail] = useState<BlSearchHistoryDetail | null>(null);
+    const [blDetailLoading, setBlDetailLoading] = useState(false);
+    const [blDetailError, setBlDetailError] = useState<string | null>(null);
+
+    const toggleBlDetail = async (rowId: number, referenceId: number) => {
+        if (openDetailId === rowId) {
+            setOpenDetailId(null);
+            setBlDetail(null);
+            setBlDetailError(null);
+            return;
+        }
+        setOpenDetailId(rowId);
+        setBlDetail(null);
+        setBlDetailError(null);
+        setBlDetailLoading(true);
+        const res = await callApi(`/api/admin/bl-search-histories/${referenceId}`, {
+            method: 'GET',
+            credentials: 'include',
         });
-        setCurrentPage(0);
+        setBlDetailLoading(false);
+        if (res.result && res.data) {
+            setBlDetail(res.data as BlSearchHistoryDetail);
+        } else {
+            setBlDetailError(res.message || '조회에 실패했습니다.');
+        }
     };
 
-    const filtered = MOCK_USAGE.filter(r => activeFilters.has(r.type));
-    const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-    const paged = filtered.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+    const fetchTransactions = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.set('page', String(currentPage));
+            params.set('size', String(ITEMS_PER_PAGE));
+            const res = await callApi(
+                `/api/admin/members/users/${userId}/credit-plans/${planId}/rounds/${roundId}/transactions?${params.toString()}`,
+                {method: 'GET', credentials: 'include'},
+            );
+            if (res.result && res.data) {
+                const body = res.data as TransactionsResponse;
+                setRows(body.content);
+                setTotalElements(body.totalElements);
+                setTotalPages(Math.max(1, body.totalPages));
+            } else {
+                setRows([]);
+                setTotalElements(0);
+                setTotalPages(1);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [userId, planId, roundId, currentPage]);
+
+    useEffect(() => {
+        if (isInitial.current) {
+            isInitial.current = false;
+            return;
+        }
+        fetchTransactions();
+    }, [fetchTransactions]);
+
+    const toggleFilter = (type: Lowercase<TransactionType>) => {
+        setActiveFilters(prev => {
+            const next = new Set(prev);
+            if (next.has(type)) next.delete(type);
+            else next.add(type);
+            return next;
+        });
+    };
+
+    // 백엔드는 type 필터를 받지 않음 — 현재 페이지에 대해서만 가시적 필터
+    const visibleRows = rows.filter(r => activeFilters.has(r.transactionType.toLowerCase() as Lowercase<TransactionType>));
 
     const pageGroupSize = 10;
     const displayPage = currentPage + 1;
@@ -97,10 +225,10 @@ export default function CreditUsagePopup({uId}: Props) {
         return `${sign}${delta.toLocaleString()}`;
     };
 
-    const getDeltaClass = (type: string) => {
-        if (type === 'grant' || type === 'revoke') return 'delta_positive';
-        if (type === 'use') return 'delta_negative';
-        if (type === 'expire') return 'delta_expire';
+    const getDeltaClass = (type: TransactionType) => {
+        if (type === 'GRANT' || type === 'REVOKE') return 'delta_positive';
+        if (type === 'USE') return 'delta_negative';
+        if (type === 'EXPIRE') return 'delta_expire';
         return '';
     };
 
@@ -143,57 +271,74 @@ export default function CreditUsagePopup({uId}: Props) {
                         </tr>
                         </thead>
                         <tbody>
-                        {paged.length > 0 ? paged.map((row, i) => {
-                            const rowNum = filtered.length - (currentPage * ITEMS_PER_PAGE) - i;
+                        {visibleRows.length > 0 ? visibleRows.map((row, i) => {
+                            const typeLower = row.transactionType.toLowerCase() as Lowercase<TransactionType>;
+                            const rowNum = totalElements - (currentPage * ITEMS_PER_PAGE) - i;
+                            const hasBlDetail = row.transactionType === 'USE'
+                                && row.serviceType === 'BL_SEARCH'
+                                && row.referenceId != null;
                             return (
-                            <tr key={row.id}>
-                                <td>{rowNum}</td>
-                                <td>{row.date}</td>
-                                <td>
-                                    <span className={`usage_badge ${TYPE_CLASS[row.type]}`}>{TYPE_LABEL[row.type]}</span>
-                                </td>
-                                <td className={'desc_cell'}>
-                                    {row.description}
-                                    {row.detail && (
-                                        <span className={'desc_tag_wrap'}>
-                                            <button type={'button'} className={'desc_tag'}
-                                                    onClick={() => setOpenDetailId(openDetailId === row.id ? null : row.id)}>
-                                                {row.tag}
-                                            </button>
-                                            {openDetailId === row.id && (
-                                                <div className={'detail_popup'}>
-                                                    <div className={'detail_popup_header'}>
-                                                        <strong>BL 검색 쿼리</strong>
-                                                        <button type={'button'} onClick={() => setOpenDetailId(null)}>
-                                                            <span className={'admin_icon'}/>
-                                                        </button>
+                                <tr key={row.id}>
+                                    <td>{rowNum}</td>
+                                    <td>{formatDateTimeDot(row.transactionDate)}</td>
+                                    <td>
+                                        <span className={`usage_badge ${TYPE_CLASS[typeLower]}`}>{TYPE_LABEL[typeLower]}</span>
+                                    </td>
+                                    <td className={'desc_cell'}>
+                                        {buildDescription(row)}
+                                        {hasBlDetail && (
+                                            <span className={'desc_tag_wrap'}>
+                                                <button type={'button'} className={'desc_tag'}
+                                                        onClick={() => toggleBlDetail(row.id, row.referenceId!)}>
+                                                    검색쿼리
+                                                </button>
+                                                {openDetailId === row.id && (
+                                                    <div className={'detail_popup'}>
+                                                        <div className={'detail_popup_header'}>
+                                                            <strong>BL 검색 쿼리</strong>
+                                                            <button type={'button'} onClick={() => { setOpenDetailId(null); setBlDetail(null); setBlDetailError(null); }}>
+                                                                <span className={'admin_icon'}/>
+                                                            </button>
+                                                        </div>
+                                                        {blDetailLoading && <p className={'detail_popup_state'}>불러오는 중...</p>}
+                                                        {blDetailError && <p className={'detail_popup_state error'}>{blDetailError}</p>}
+                                                        {blDetail && (
+                                                            <dl className={'detail_popup_body'}>
+                                                                <dt>HS 코드</dt><dd>{blDetail.query.hsCode || '-'}</dd>
+                                                                <dt>키워드</dt><dd>{blDetail.query.productKeyword || '-'}</dd>
+                                                                <dt>수입자</dt><dd>{blDetail.query.buyerName || '-'}</dd>
+                                                                <dt>수출자</dt><dd>{blDetail.query.supplierName || '-'}</dd>
+                                                                <dt>수출국가</dt><dd>{blDetail.query.originclCountryCode || '-'}</dd>
+                                                                <dt>수입국가</dt><dd>{blDetail.query.destiCountryCode || '-'}</dd>
+                                                                <dt>검색기간</dt><dd>{blDetail.query.startDate} ~ {blDetail.query.endDate}</dd>
+                                                                <dt>총 갯수</dt><dd>{blDetail.query.total.toLocaleString()}건</dd>
+                                                                <dt>현재 페이지</dt><dd>{blDetail.query.curPage} / {Math.max(1, Math.ceil(blDetail.query.total / Math.max(1, blDetail.query.perPage)))}</dd>
+                                                            </dl>
+                                                        )}
                                                     </div>
-                                                    <dl className={'detail_popup_body'}>
-                                                        <dt>HS 코드</dt><dd>{row.detail.hsCode}</dd>
-                                                        <dt>키워드</dt><dd>{row.detail.keyword}</dd>
-                                                        <dt>수입자</dt><dd>{row.detail.importer}</dd>
-                                                        <dt>수출자</dt><dd>{row.detail.exporter}</dd>
-                                                        <dt>수출국가</dt><dd>{row.detail.exportCountry}</dd>
-                                                        <dt>수입국가</dt><dd>{row.detail.importCountry}</dd>
-                                                        <dt>검색기간</dt><dd>{row.detail.searchPeriod}</dd>
-                                                        <dt>총 갯수</dt><dd>{row.detail.totalCount}</dd>
-                                                        <dt>현재 페이지</dt><dd>{row.detail.currentPage}</dd>
-                                                    </dl>
-                                                </div>
-                                            )}
-                                        </span>
-                                    )}
-                                    {row.tag && !row.detail && <span className={'desc_tag'}>{row.tag}</span>}
-                                </td>
-                                <td className={`num ${getDeltaClass(row.type)}`}>{formatDelta(row.delta)}</td>
-                                <td className={'num'}>{row.balance.toLocaleString()}</td>
-                            </tr>
+                                                )}
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className={`num ${getDeltaClass(row.transactionType)}`}>{formatDelta(row.amount)}</td>
+                                    <td className={'num'}>{row.walletBalanceAfter.toLocaleString()}</td>
+                                </tr>
                             );
                         }) : (
                             <tr>
-                                <td colSpan={6} className={'empty'}>데이터가 없습니다.</td>
+                                <td colSpan={6} className={'empty'}>{loading ? '불러오는 중...' : '데이터가 없습니다.'}</td>
                             </tr>
                         )}
+                        {Array.from({length: Math.max(0, ITEMS_PER_PAGE - Math.max(1, visibleRows.length))}).map((_, idx) => (
+                            <tr key={`placeholder-${idx}`} className={'placeholder_row'} aria-hidden>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                        ))}
                         </tbody>
                     </table>
                 </div>
