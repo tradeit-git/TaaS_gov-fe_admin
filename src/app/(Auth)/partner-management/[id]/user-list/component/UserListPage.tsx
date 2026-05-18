@@ -105,8 +105,38 @@ export default function UserListPage({partnerId}: Props) {
         fetchUsers();
     }, [fetchPartner, fetchUsers]);
 
-    const handleExcelDownload = () => {
-        addPopup(<AlertComponent alertType={'alert'} infoContent={'다운로드 기능은 준비 중입니다.'}/>);
+    const handleExcelDownload = async () => {
+        try {
+            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+            const res = await fetch(`${basePath}/api/admin/coalition-keys/excelDownload/${partnerId}`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                addPopup(<AlertComponent alertType={'error'} infoContent={'다운로드에 실패했습니다.'}/>);
+                return;
+            }
+
+            const blob = await res.blob();
+            const disposition = res.headers.get('Content-Disposition');
+            let fileName = '협회제휴관리_가입명단.xlsx';
+            if (disposition) {
+                const match = disposition.match(/filename\*=UTF-8''(.+)/);
+                if (match) fileName = decodeURIComponent(match[1]);
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'다운로드에 실패했습니다.'}/>);
+        }
     };
 
     return (
