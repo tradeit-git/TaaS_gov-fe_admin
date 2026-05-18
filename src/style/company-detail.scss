@@ -117,7 +117,6 @@
 // ── 크레딧 사용내역 팝업 ──
 .credit_usage_popup {
   width: 860px;
-  height: 720px;
   background: #fff;
   border-radius: 16px;
   padding: 24px;
@@ -205,6 +204,14 @@
       tbody {
         tr:not(:last-child) td {
           border-bottom: 1px solid #F0F0F0;
+        }
+
+        tr.placeholder_row {
+          td {
+            color: transparent;
+            user-select: none;
+            pointer-events: none;
+          }
         }
 
         td {
@@ -489,7 +496,14 @@
     justify-content: space-between;
     margin-bottom: 16px;
 
-    .btn_edit {
+    .plan_actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn_edit,
+    .btn_delete {
       flex-shrink: 0;
       width: 32px;
       height: 32px;
@@ -505,6 +519,13 @@
         width: 14px;
         height: 14px;
         background-position: -156px -165px;
+      }
+
+      .icon_trash {
+        display: block;
+        width: 13px;
+        height: 13px;
+        background-position: -92px -95px;
       }
 
       &:hover {
@@ -562,6 +583,11 @@
       color: #fff;
     }
 
+    &.badge_scheduled {
+      background: #E1F2E5;
+      color: #2AA148;
+    }
+
     &.badge_expired {
       background: #4A4A4A;
       color: #fff;
@@ -574,7 +600,7 @@
 
     table {
       width: 100%;
-      max-width: 750px;
+      max-width: 880px;
       border-collapse: separate;
       border-spacing: 0;
       font-size: $font-size-sm;
@@ -656,6 +682,22 @@
 
       &:hover {
         background: #f5f5f5;
+      }
+    }
+
+    .btn_grant {
+      height: 26px;
+      padding: 0 10px;
+      font-size: $font-size-xs;
+      border: 1px solid #2AA148;
+      border-radius: 4px;
+      background: #2AA148;
+      color: #fff;
+      line-height: 24px;
+
+      &:hover {
+        background: #228A3D;
+        border-color: #228A3D;
       }
     }
   }

@@ -1,0 +1,325 @@
+'use client';
+
+import {useMemo, useState} from "react";
+import {usePopupStore} from "@/stores/common/popupStore";
+import AlertComponent from "@/app/(Auth)/components/AlertComponent";
+
+export type RoundStatus = 'SCHEDULED' | 'ACTIVE' | 'EXPIRED' | 'EXHAUSTED';
+
+export interface CreditRound {
+    round: number;
+    period: string;
+    credit: string;
+    periodStartDate?: string;
+    periodEndDate?: string;
+    status?: RoundStatus;
+}
+
+interface Props {
+    uId?: string;
+    initialData?: Partial<OverseasPlanFormData>;
+    onSave?: (data: OverseasPlanFormData) => void;
+}
+
+export interface OverseasPlanFormData {
+    planStartDate: string;
+    planMonths: number;
+    contractAmount: string;
+    contractMethod: string;
+    managerGA: string;
+    managerTP: string;
+    contractDate: string;
+    monthlyCredit: string;
+    credits: CreditRound[];
+}
+
+const formatD = (d: Date) =>
+    `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+
+const toISODate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// JS Date 의 setMonth 는 대상 월에 해당 일자가 없으면 다음 달로 롤오버됨 (1.31 + 1month → 3.3)
+// 월말 보정: 대상 월의 마지막 날로 클램프 (1.31 + 1month → 2.28)
+const addMonthsClamped = (date: Date, months: number): Date => {
+    const day = date.getDate();
+    const d = new Date(date);
+    d.setDate(1);
+    d.setMonth(d.getMonth() + months);
+    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day, lastDay));
+    return d;
+};
+
+const todayISO = () => toISODate(new Date());
+
+const minStartISO = () => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return toISODate(d);
+};
+
+const MONTH_OPTIONS = Array.from({length: 12}, (_, i) => i + 1);
+
+const isLockedStatus = (s: RoundStatus | undefined) => !!s && s !== 'SCHEDULED';
+
+// 이전 회차들을 유지하면서 planMonths 만큼 회차를 빌드
+// - 잠긴(과거/진행) 회차는 그대로 보존
+// - 신규 SCHEDULED 회차는 planStartDate + i개월 기준으로 생성
+const buildRounds = (
+    planStartDate: string,
+    planMonths: number,
+    monthlyCredit: string,
+    prevRounds: CreditRound[],
+): CreditRound[] => {
+    if (!planStartDate || !planMonths) return [];
+    const planStart = new Date(planStartDate);
+    const rounds: CreditRound[] = [];
+
+    for (let i = 0; i < planMonths; i++) {
+        if (i < prevRounds.length) {
+            rounds.push({...prevRounds[i], round: i + 1});
+            continue;
+        }
+        const periodStart = addMonthsClamped(planStart, i);
+        const periodEnd = addMonthsClamped(planStart, i + 1);
+        periodEnd.setDate(periodEnd.getDate() - 1);
+
+        rounds.push({
+            round: i + 1,
+            period: `${formatD(periodStart)}~${formatD(periodEnd)}`,
+            credit: monthlyCredit || '',
+            periodStartDate: toISODate(periodStart),
+            periodEndDate: toISODate(periodEnd),
+            status: 'SCHEDULED',
+        });
+    }
+    return rounds;
+};
+
+export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
+    const {closePopup, addPopup} = usePopupStore();
+    const isEdit = !!initialData;
+
+    const lockedRoundsCount = useMemo(
+        () => (initialData?.credits ?? []).filter(c => isLockedStatus(c.status)).length,
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [],
+    );
+
+    const [form, setForm] = useState<OverseasPlanFormData>(() => {
+        const planStartDate = initialData?.planStartDate ?? todayISO();
+        const planMonths = initialData?.planMonths ?? 1;
+        const monthlyCredit = initialData?.monthlyCredit ?? '';
+        const initialCredits = initialData?.credits && initialData.credits.length > 0
+            ? initialData.credits
+            : buildRounds(planStartDate, planMonths, monthlyCredit, []);
+
+        return {
+            planStartDate,
+            planMonths,
+            contractAmount: initialData?.contractAmount ?? '',
+            contractMethod: initialData?.contractMethod ?? 'GA 계약',
+            managerGA: initialData?.managerGA ?? '',
+            managerTP: initialData?.managerTP ?? '',
+            contractDate: initialData?.contractDate ?? '',
+            monthlyCredit,
+            credits: initialCredits,
+        };
+    });
+
+    const formatNumberWithComma = (value: string) => {
+        const num = value.replace(/[^0-9]/g, '');
+        return num.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    const updateField = <K extends keyof OverseasPlanFormData>(key: K, value: OverseasPlanFormData[K]) => {
+        setForm(prev => ({...prev, [key]: value}));
+    };
+
+    const handlePlanStartDateChange = (value: string) => {
+        if (isEdit) return; // 수정 모드에서는 시작일 잠금
+        setForm(prev => {
+            const valid = !!value && value >= minStartISO();
+            return {
+                ...prev,
+                planStartDate: value,
+                credits: valid ? buildRounds(value, prev.planMonths, prev.monthlyCredit, []) : prev.credits,
+            };
+        });
+    };
+
+    const handlePlanStartDateBlur = () => {
+        if (isEdit) return;
+        if (!form.planStartDate || form.planStartDate < minStartISO()) {
+            const forced = minStartISO();
+            addPopup(<AlertComponent alertType={'error'} infoContent={`시작일은 오늘로부터 최대 7일 전까지만 선택할 수 있습니다. ${forced}(으)로 자동 설정됩니다.`}/>);
+            setForm(prev => ({
+                ...prev,
+                planStartDate: forced,
+                credits: buildRounds(forced, prev.planMonths, prev.monthlyCredit, []),
+            }));
+        }
+    };
+
+    const handlePlanMonthsChange = (value: number) => {
+        if (isEdit && value < lockedRoundsCount) return; // 잠긴 회차 수 미만 불가
+        setForm(prev => ({
+            ...prev,
+            planMonths: value,
+            credits: buildRounds(prev.planStartDate, value, prev.monthlyCredit, prev.credits),
+        }));
+    };
+
+    const handleMonthlyCreditChange = (value: string) => {
+        setForm(prev => ({
+            ...prev,
+            monthlyCredit: value,
+            credits: prev.credits.map(r => isLockedStatus(r.status) ? r : {...r, credit: value}),
+        }));
+    };
+
+    const handleSave = () => {
+        if (!form.planStartDate) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'플랜 시작일을 입력해주세요.'}/>);
+            return;
+        }
+        if (!form.planMonths || form.planMonths <= 0) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'플랜 개월수를 선택해주세요.'}/>);
+            return;
+        }
+        if (!form.contractAmount) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'계약금액을 입력해주세요.'}/>);
+            return;
+        }
+        if (!form.contractDate) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'계약일자를 입력해주세요.'}/>);
+            return;
+        }
+        if (!form.monthlyCredit) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'월 크레딧을 입력해주세요.'}/>);
+            return;
+        }
+
+        onSave?.(form);
+        closePopup(uId ?? '');
+    };
+
+    return (
+        <div className={'alertSection'}>
+            <div className={'overseas_plan_popup'}>
+                <h4>{isEdit ? '해외영업실행 플랜수정' : '해외영업실행 플랜등록'}</h4>
+
+                {/* 플랜기간 */}
+                <div className={'popup_field'}>
+                    <label className={'label_required'}>플랜기간 <span className={'required'}>*</span></label>
+                    <div className={'date_range'}>
+                        <input type="date" value={form.planStartDate}
+                               disabled={isEdit}
+                               min={isEdit ? undefined : minStartISO()}
+                               onChange={e => handlePlanStartDateChange(e.target.value)}
+                               onBlur={handlePlanStartDateBlur}/>
+                        <select value={form.planMonths}
+                                onChange={e => handlePlanMonthsChange(Number(e.target.value))}>
+                            {MONTH_OPTIONS.map(m => (
+                                <option key={m} value={m} disabled={isEdit && m < lockedRoundsCount}>
+                                    {m}개월
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {/* 계약금액 */}
+                <div className={'popup_field'}>
+                    <label className={'label_required'}>계약금액 <span className={'required'}>*</span></label>
+                    <div className={'amount_wrap'}>
+                        <input type="text" value={form.contractAmount}
+                               onChange={e => updateField('contractAmount', formatNumberWithComma(e.target.value))}/>
+                        <span className={'unit'}>원(vat포함)</span>
+                    </div>
+                </div>
+
+                {/* 계약방식 */}
+                <div className={'popup_field'}>
+                    <label className={'label_required'}>계약방식 <span className={'required'}>*</span></label>
+                    <select value={form.contractMethod}
+                            onChange={e => updateField('contractMethod', e.target.value)}>
+                        <option value="GA 계약">GA 계약</option>
+                    </select>
+                </div>
+
+                {/* 담당GA */}
+                <div className={'popup_field'}>
+                    <label className={'label_optional'}>담당GA</label>
+                    <input type="text" value={form.managerGA}
+                           onChange={e => updateField('managerGA', e.target.value)}/>
+                </div>
+
+                {/* 담당TP */}
+                <div className={'popup_field'}>
+                    <label className={'label_optional'}>담당TP</label>
+                    <input type="text" value={form.managerTP}
+                           onChange={e => updateField('managerTP', e.target.value)}/>
+                </div>
+
+                {/* 계약일자 */}
+                <div className={'popup_field'}>
+                    <label className={'label_required'}>계약일자 <span className={'required'}>*</span></label>
+                    <input type="date" value={form.contractDate} className={'date_single'}
+                           onChange={e => updateField('contractDate', e.target.value)}/>
+                </div>
+
+                {/* 월 크레딧 */}
+                <div className={'popup_field'}>
+                    <label className={'label_required'}>월 크레딧 <span className={'required'}>*</span></label>
+                    <div className={'credit_setting_row'}>
+                        <input type="text" value={form.monthlyCredit} className={'credit_input'}
+                               onChange={e => handleMonthlyCreditChange(formatNumberWithComma(e.target.value))}/>
+                    </div>
+                </div>
+
+                {/* 크레딧 테이블 (회차 자동 생성) */}
+                <div className={'credit_rounds_table'}>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>회차</th>
+                            <th>이용기간</th>
+                            <th>지급 크레딧</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {form.credits.length > 0 ? (
+                            form.credits.map(c => {
+                                const locked = isLockedStatus(c.status);
+                                return (
+                                    <tr key={c.round} className={locked ? 'round_past' : ''}>
+                                        <td>{c.round}회차</td>
+                                        <td>{c.period}</td>
+                                        <td>{c.credit}</td>
+                                    </tr>
+                                );
+                            })
+                        ) : (
+                            Array.from({length: Math.max(form.planMonths || 1, 1)}, (_, i) => (
+                                <tr key={i}>
+                                    <td>{i + 1}회차</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            ))
+                        )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* 버튼 */}
+                <div className={'popup_btn_wrap'}>
+                    <button type={'button'} className={'cancel_btn'} onClick={() => closePopup(uId ?? '')}>취소</button>
+                    <button type={'button'} className={'save_btn'} onClick={handleSave}>저장</button>
+                </div>
+            </div>
+        </div>
+    );
+}

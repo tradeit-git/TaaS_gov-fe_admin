@@ -2,22 +2,24 @@
 
 import Link from "next/link";
 import {useCallback, useEffect, useRef, useState} from "react";
-import CompanyManagementTableBody from "@/app/(Auth)/company-management/component/CompanyManagementTableBody";
-// import callApi from "@/utill/apiRequest";
+import CompanyManagementTableBody from "@/app/(Auth)/users/component/CompanyManagementTableBody";
+import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
 
 export interface CompanyRow {
     id: number;
-    companyName: string;
+    companyName: string | null;
     loginId: string;
     name: string;
     department: string | null;
     position: string | null;
-    planName: string | null;
     paymentMethod: string | null;
+    paymentMethodName: string | null;
+    planMonths: number | null;
+    planName: string | null;
+    planSourceType: string | null;
     planStartDate: string | null;
     planEndDate: string | null;
-    affiliationName: string | null;
     createdAt: string;
 }
 
@@ -33,6 +35,7 @@ interface Props {
 }
 
 export default function CompanyManagementPage({initialData}: Props) {
+    console.log(initialData);
     const [data, setData] = useState<CompanyRow[]>(initialData.content);
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
@@ -49,52 +52,22 @@ export default function CompanyManagementPage({initialData}: Props) {
             return;
         }
 
-        // TODO: API 연동 시 아래 주석 해제
-        // const params = new URLSearchParams();
-        // params.set('page', String(currentPage));
-        // params.set('size', String(itemsPerPage));
-        // if (search.trim()) params.set('keyword', search.trim());
-        // if (planFilter) params.set('planName', planFilter);
-        //
-        // const res = await callApi(`/api/admin/members/companies?${params.toString()}`, {
-        //     method: 'GET',
-        //     credentials: 'include',
-        // });
-        // if (res.result && res.data) {
-        //     const body = res.data as CompanyListResponse;
-        //     setData(body.content);
-        //     setTotalElements(body.totalElements);
-        //     setTotalPages(Math.max(1, body.totalPages));
-        // }
+        const params = new URLSearchParams();
+        params.set('page', String(currentPage));
+        params.set('size', String(itemsPerPage));
+        if (search.trim()) params.set('keyword', search.trim());
 
-        // 목업: 클라이언트 필터링
-        let filtered = initialData.content;
-        if (search.trim()) {
-            const kw = search.trim().toLowerCase();
-            filtered = filtered.filter(r =>
-                r.companyName.toLowerCase().includes(kw) ||
-                r.loginId.toLowerCase().includes(kw) ||
-                r.name.toLowerCase().includes(kw)
-            );
+        const res = await callApi(`/api/admin/members/users?${params.toString()}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (res.result && res.data) {
+            const body = res.data as CompanyListResponse;
+            setData(body.content);
+            setTotalElements(body.totalElements);
+            setTotalPages(Math.max(1, body.totalPages));
         }
-        if (planFilter) {
-            filtered = filtered.filter(r => {
-                const plan = (r.planName || '').toLowerCase();
-                const filter = planFilter.toLowerCase();
-                if (filter === 'free') return plan === 'free' || plan.includes('free');
-                if (filter === 'personal') return plan === '개인';
-                if (filter === 'team') return plan === '팀';
-                if (filter === 'enterprise') return plan === '엔터프라이즈';
-                if (filter === 'global_sales') return plan === '해외영업실행';
-                return true;
-            });
-        }
-        const start = currentPage * itemsPerPage;
-        const paged = filtered.slice(start, start + itemsPerPage);
-        setData(paged);
-        setTotalElements(filtered.length);
-        setTotalPages(Math.max(1, Math.ceil(filtered.length / itemsPerPage)));
-    }, [currentPage, itemsPerPage, search, planFilter, initialData.content]);
+    }, [currentPage, itemsPerPage, search]);
 
     useEffect(() => {
         fetchList();
@@ -107,7 +80,9 @@ export default function CompanyManagementPage({initialData}: Props) {
             setSearch(searchInput);
             setCurrentPage(0);
         }, 100);
-        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+        return () => {
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+        };
     }, [searchInput]);
 
     // 10페이지 단위 그룹
@@ -137,7 +112,8 @@ export default function CompanyManagementPage({initialData}: Props) {
             {/* 안내 배너 */}
             <div className={'info_banner'}>
                 <span className={'info_icon'}>ⓘ</span>
-                <p>이용현황은 현재 상태를 기준으로 관련 정보가 구성되며, 플랜 이용기간이 만료된 계정을 <strong>Free 상태로 변경</strong>됩니다. 플랜 이력은 계정별 상세 페이지에서 확인하세요.</p>
+                <p>이용현황은 현재 상태를 기준으로 관련 정보가 구성되며, 플랜 이용기간이 만료된 계정을 <strong>Free 상태로 변경</strong>됩니다. 플랜 이력은 계정별 상세 페이지에서
+                    확인하세요.</p>
             </div>
 
             {/* 검색 / 카운트 영역 */}
@@ -156,8 +132,13 @@ export default function CompanyManagementPage({initialData}: Props) {
                         <option value="GLOBAL_SALES">해외영업실행</option>
                     </select>
                     <div className={'search_input_wrap'}>
-                    <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder={'고객사 검색'}/>
-                        {searchInput && <button type="button" className={'btn_clear'} onClick={() => { setSearchInput(''); setSearch(''); setCurrentPage(0); }}><span className={'admin_icon'}/> </button>}
+                        <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+                               placeholder={'고객사 검색'}/>
+                        {searchInput && <button type="button" className={'btn_clear'} onClick={() => {
+                            setSearchInput('');
+                            setSearch('');
+                            setCurrentPage(0);
+                        }}><span className={'admin_icon'}/></button>}
                     </div>
                     <select value={itemsPerPage} onChange={e => handleItemsPerPageChange(Number(e.target.value))}>
                         <option value={10}>10개씩</option>
@@ -198,7 +179,7 @@ export default function CompanyManagementPage({initialData}: Props) {
                     <tr>
                         <th>플랜</th>
                         <th>결제방식</th>
-                        <th style={{borderRight:"1px solid #EAEBED"}}>이용기간</th>
+                        <th style={{borderRight: "1px solid #EAEBED"}}>이용기간</th>
                     </tr>
                     </thead>
                     <CompanyManagementTableBody
@@ -214,7 +195,8 @@ export default function CompanyManagementPage({initialData}: Props) {
             {/* 페이지네이션 */}
             <div className={'pagination'}>
                 <button type="button" className={'btn_prev'} disabled={currentGroup <= 1}
-                        onClick={() => setCurrentPage(groupStart - pageGroupSize - 1)}><span className={'admin_icon'}/> </button>
+                        onClick={() => setCurrentPage(groupStart - pageGroupSize - 1)}><span className={'admin_icon'}/>
+                </button>
                 {pageNumbers.map(page => (
                     <button key={page} type="button"
                             className={`btn_page ${page === displayPage ? 'on' : ''}`}
