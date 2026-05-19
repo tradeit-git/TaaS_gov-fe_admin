@@ -11,6 +11,13 @@ interface Props {
     formatDate: (date: string | null | undefined) => string;
 }
 
+const ellipsisStyle: React.CSSProperties = {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    maxWidth: 0,
+};
+
 export default function CompanyManagementTableBody({data, totalElements, currentPage, itemsPerPage, formatDate}: Props) {
     const router = useRouter();
 
@@ -56,18 +63,21 @@ export default function CompanyManagementTableBody({data, totalElements, current
         ) : (
             data.map((row, i) => {
                 const rowNum = totalElements - (currentPage * itemsPerPage) - i;
+                const planName = formatPlanName(row);
+                const period = formatPeriod(row);
+                const deptPosition = formatDeptPosition(row);
                 return (
                     <tr key={row.id}>
-                        <td>{rowNum}</td>
-                        <td>{row.companyName || '-'}</td>
-                        <td>{row.loginId}</td>
-                        <td>{row.name}</td>
-                        <td>{formatDeptPosition(row)}</td>
-                        <td>{formatPlanName(row)}</td>
-                        <td>{row.paymentMethodName ?? '-'}</td>
-                        <td>{formatPeriod(row)}</td>
-                        <td>{row.partnerName || '-'}</td>
-                        <td>{formatDate(row.createdAt)}</td>
+                        <td style={ellipsisStyle} title={String(rowNum)}>{rowNum}</td>
+                        <td style={ellipsisStyle} title={row.companyName || '-'}>{row.companyName || '-'}</td>
+                        <td style={ellipsisStyle} title={row.loginId}>{row.loginId}</td>
+                        <td style={ellipsisStyle} title={row.name}>{row.name}</td>
+                        <td style={ellipsisStyle} title={deptPosition}>{deptPosition}</td>
+                        <td style={ellipsisStyle} title={planName}>{planName}</td>
+                        <td style={ellipsisStyle} title={row.paymentMethodName ?? '-'}>{row.paymentMethodName ?? '-'}</td>
+                        <td style={ellipsisStyle} title={period}>{period}</td>
+                        <td style={ellipsisStyle} title={row.partnerName || '-'}>{row.partnerName || '-'}</td>
+                        <td style={ellipsisStyle} title={formatDate(row.createdAt)}>{formatDate(row.createdAt)}</td>
                         <td className={'td_actions'}>
                             <button type="button" className={'btn_detail'}
                                     onClick={() => router.push(`/users/${row.id}`)}>상세</button>
