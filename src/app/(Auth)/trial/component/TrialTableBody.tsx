@@ -26,7 +26,7 @@ export default function TrialTableBody({data, formatDate, onDelete}: Props) {
                     <span className={'trial_key'}>{row.trialKey}</span>
                     {isInOperation(row.startDate, row.endDate) && (
                         <a className={'btn_link'}
-                           href={`https://www.tradeit.co.kr/trial-sign/${row.trialKey}`}
+                           href={`${process.env.NEXT_PUBLIC_FRONT_URL}/trial-sign/${row.trialKey}`}
                            target="_blank" rel="noopener noreferrer"
                            title="체험 가입 페이지 열기">↗</a>
                     )}

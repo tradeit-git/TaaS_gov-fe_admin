@@ -37,7 +37,7 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                         {/*href={`https://www.tradeit.co.kr/partner/${row.partnerKey}`}*/}
                         <span className={'partner_key'}>{row.partnerKey}</span>
                         <a className={'btn_link'}
-                           href={`https://www.tradeit.co.kr/partner/${row.partnerKey}`}
+                           href={`${process.env.NEXT_PUBLIC_FRONT_URL}/${row.partnerKey}`}
                            target="_blank" rel="noopener noreferrer"
                            title="제휴 가입 페이지 열기">↗</a>
                     </td>
