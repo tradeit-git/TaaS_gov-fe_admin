@@ -74,7 +74,7 @@ export default function AccountInfoSection({user}: Props) {
             <ul className={'form_list'}>
                 <li className={'form_item'}>
                     <p className={'form_label'}>제휴가입</p>
-                    <input type="text" readOnly disabled value={'-'}/>
+                    <input type="text" readOnly disabled value={user.partnerName ?? '-'}/>
                 </li>
                 <li className={'form_item'}>
                     <p className={'form_label'}>아이디(e-mail)</p>

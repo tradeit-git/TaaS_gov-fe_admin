@@ -1,6 +1,6 @@
 import {z} from "zod";
 import {UserFileSchema} from "@/types/user/userFile";
-import {AuthStatusTypeEnum, GradeTypeEnum} from "@/types/enums";
+import {AuthStatusTypeEnum} from "@/types/enums";
 
 export const CreditSummarySchema = z.object({
     balance: z.number().default(0),
@@ -25,6 +25,7 @@ export const UserSchema = z.object({
     position: z.string().default(""),
     email: z.string().default(""),
     contact: z.string().default(""),
+    partnerName : z.string().nullable().default(null),
     createdAt: z.string().default(""),
     updatedAt: z.string().nullable().default(null),
     deletedAt: z.string().nullable().default(null),

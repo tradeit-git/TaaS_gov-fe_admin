@@ -66,7 +66,7 @@ export default function CompanyManagementTableBody({data, totalElements, current
                         <td>{formatPlanName(row)}</td>
                         <td>{row.paymentMethodName ?? '-'}</td>
                         <td>{formatPeriod(row)}</td>
-                        <td>None</td>
+                        <td>{row.partnerName || '-'}</td>
                         <td>{formatDate(row.createdAt)}</td>
                         <td className={'td_actions'}>
                             <button type="button" className={'btn_detail'}

@@ -98,7 +98,5 @@ export default async function Page({params}: Props) {
     const initialUser = UserSchema.parse(body.user);
     const initialPlans = (body.creditPlans as unknown as CreditPlan[] | undefined) ?? MOCK_PLANS;
 
-    console.log(body);
-
     return <CompanyDetailPage id={id} initialUser={initialUser} initialPlans={initialPlans}/>;
 }

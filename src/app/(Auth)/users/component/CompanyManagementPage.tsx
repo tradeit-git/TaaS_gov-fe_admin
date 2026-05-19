@@ -20,6 +20,7 @@ export interface CompanyRow {
     planSourceType: string | null;
     planStartDate: string | null;
     planEndDate: string | null;
+    partnerName : string | null;
     createdAt: string;
 }
 
@@ -35,7 +36,6 @@ interface Props {
 }
 
 export default function CompanyManagementPage({initialData}: Props) {
-    console.log(initialData);
     const [data, setData] = useState<CompanyRow[]>(initialData.content);
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
