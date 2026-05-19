@@ -34,7 +34,7 @@ export default function PartnerCreateForm({onCreated}: Props) {
             return;
         }
 
-        const res = await callApi(`/api/admin/coalition-keys/check-duplicate?coalitionKey=${encodeURIComponent(partnerKey.trim())}`, {
+        const res = await callApi(`/api/admin/coalition-keys/check-duplicate?partnerKey=${encodeURIComponent(partnerKey.trim())}`, {
             method: 'GET',
             credentials: 'include',
         });
@@ -71,8 +71,8 @@ export default function PartnerCreateForm({onCreated}: Props) {
             headers: {'Content-Type': 'application/json'},
             credentials: 'include',
             body: JSON.stringify({
-                coalitionKey: partnerKey,
-                coalitionName: partnerName,
+                partnerKey: partnerKey,
+                partnerName: partnerName,
                 bonusCredit: Number(creditAmount),
                 startDate: startDate,
                 endDate: endDate,

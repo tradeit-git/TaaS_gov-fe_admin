@@ -31,8 +31,8 @@ interface CoalitionUserApiRow {
 
 interface CoalitionDetailApiRow {
     id: number;
-    coalitionName: string;
-    coalitionKey: string;
+    partnerName: string;
+    partnerKey: string;
     bonusCredit: number;
     startDate: string;
     endDate: string;
@@ -59,8 +59,8 @@ const mapToPartnerUser = (row: CoalitionUserApiRow): PartnerUser => ({
 });
 
 const mapToPartnerInfo = (row: CoalitionDetailApiRow): PartnerInfo => ({
-    partnerName: row.coalitionName,
-    partnerKey: row.coalitionKey,
+    partnerName: row.partnerName,
+    partnerKey: row.partnerKey,
     creditAmount: row.bonusCredit,
     startDate: row.startDate,
     endDate: row.endDate,

@@ -22,8 +22,8 @@ export interface PartnerRow {
 
 interface CoalitionApiRow {
     id: number;
-    coalitionName: string;
-    coalitionKey: string;
+    partnerName: string;
+    partnerKey: string;
     bonusCredit: number;
     startDate: string;
     endDate: string;
@@ -40,8 +40,8 @@ interface CoalitionListResponse {
 
 const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
     id: row.id,
-    partnerKey: row.coalitionKey,
-    partnerName: row.coalitionName,
+    partnerKey: row.partnerKey,
+    partnerName: row.partnerName,
     startDate: row.startDate,
     endDate: row.endDate,
     creditAmount: row.bonusCredit,
