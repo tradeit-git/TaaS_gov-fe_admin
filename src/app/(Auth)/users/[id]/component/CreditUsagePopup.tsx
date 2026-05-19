@@ -169,11 +169,22 @@ export default function CreditUsagePopup({uId, userId, planId, roundId, initialD
     };
 
     const fetchTransactions = useCallback(async () => {
+        // 필터가 모두 해제됐으면 빈 결과 표시 (호출 생략)
+        if (activeFilters.size === 0) {
+            setRows([]);
+            setTotalElements(0);
+            setTotalPages(1);
+            return;
+        }
         setLoading(true);
         try {
             const params = new URLSearchParams();
             params.set('page', String(currentPage));
             params.set('size', String(ITEMS_PER_PAGE));
+            // 4개 전체 활성이면 types 미전송 (서버 기본 = 전체)
+            if (activeFilters.size < 4) {
+                activeFilters.forEach(t => params.append('types', t.toUpperCase()));
+            }
             const res = await callApi(
                 `/api/admin/members/users/${userId}/credit-plans/${planId}/rounds/${roundId}/transactions?${params.toString()}`,
                 {method: 'GET', credentials: 'include'},
@@ -191,7 +202,7 @@ export default function CreditUsagePopup({uId, userId, planId, roundId, initialD
         } finally {
             setLoading(false);
         }
-    }, [userId, planId, roundId, currentPage]);
+    }, [userId, planId, roundId, currentPage, activeFilters]);
 
     useEffect(() => {
         if (isInitial.current) {
@@ -208,10 +219,11 @@ export default function CreditUsagePopup({uId, userId, planId, roundId, initialD
             else next.add(type);
             return next;
         });
+        setCurrentPage(0);
     };
 
-    // 백엔드는 type 필터를 받지 않음 — 현재 페이지에 대해서만 가시적 필터
-    const visibleRows = rows.filter(r => activeFilters.has(r.transactionType.toLowerCase() as Lowercase<TransactionType>));
+    // 필터/페이징 모두 서버 처리 — rows는 이미 필터·페이징 적용된 결과
+    const visibleRows = rows;
 
     const pageGroupSize = 10;
     const displayPage = currentPage + 1;

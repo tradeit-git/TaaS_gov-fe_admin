@@ -56,6 +56,7 @@ export default function CompanyManagementPage({initialData}: Props) {
         params.set('page', String(currentPage));
         params.set('size', String(itemsPerPage));
         if (search.trim()) params.set('keyword', search.trim());
+        if (planFilter) params.set('planTier', planFilter);
 
         const res = await callApi(`/api/admin/members/users?${params.toString()}`, {
             method: 'GET',
@@ -67,7 +68,7 @@ export default function CompanyManagementPage({initialData}: Props) {
             setTotalElements(body.totalElements);
             setTotalPages(Math.max(1, body.totalPages));
         }
-    }, [currentPage, itemsPerPage, search]);
+    }, [currentPage, itemsPerPage, search, planFilter]);
 
     useEffect(() => {
         fetchList();
@@ -129,7 +130,7 @@ export default function CompanyManagementPage({initialData}: Props) {
                         <option value="PERSONAL">개인</option>
                         <option value="TEAM">팀</option>
                         <option value="ENTERPRISE">엔터프라이즈</option>
-                        <option value="GLOBAL_SALES">해외영업실행</option>
+                        <option value="GA_CONTRACT">해외영업실행</option>
                     </select>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
