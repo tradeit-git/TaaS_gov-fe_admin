@@ -454,18 +454,18 @@
 
       &.expired {
         border-color: $gray02;
-        background-color: #eee;
+        //background-color: #eee;
 
         table {
-          border-color: #fafafa;
+          //border-color: #fafafa;
           thead {
             background-color: unset;
             th {
-              border-color: #fafafa;
+              //border-color: #fafafa;
             }
           }
           tr:not(:last-child) td {
-            border-color: #fafafa;
+            //border-color: #fafafa;
           }
           .row_completed {
             opacity: 1;
