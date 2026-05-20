@@ -30,31 +30,37 @@ interface Props {
 
 const parseAmount = (s: string) => Number((s || '').replace(/,/g, '')) || 0;
 
-const buildCreatePayload = (data: OverseasPlanFormData) => ({
-    planName: data.planType === 'GENERAL' ? data.planName : '해외영업실행',
-    startDate: data.planStartDate,
-    months: data.planMonths,
-    contractAmount: parseAmount(data.contractAmount),
-    paymentMethod: 'GA_CONTRACT',
-    paymentMethodName: data.contractMethod,
-    contractDate: data.contractDate,
-    monthlyCredit: parseAmount(data.monthlyCredit),
-    managerGa: data.managerGA,
-    managerTp: data.managerTP,
-});
+const buildCreatePayload = (data: OverseasPlanFormData) => {
+    const isGeneral = data.planType === 'GENERAL';
+    return {
+        planName: isGeneral ? data.planName : '해외영업실행',
+        startDate: data.planStartDate,
+        months: data.planMonths,
+        contractAmount: parseAmount(data.contractAmount),
+        paymentMethod: isGeneral ? 'BANK_TRANSFER' : 'GA_CONTRACT',
+        paymentMethodName: data.contractMethod,
+        contractDate: data.contractDate,
+        monthlyCredit: parseAmount(data.monthlyCredit),
+        managerGa: isGeneral ? null : data.managerGA,
+        managerTp: isGeneral ? null : data.managerTP,
+    };
+};
 
 // 수정은 startDate 변경 불가 (명세 참조)
-const buildEditPayload = (data: OverseasPlanFormData) => ({
-    planName: data.planType === 'GENERAL' ? data.planName : '해외영업실행',
-    months: data.planMonths,
-    monthlyCredit: parseAmount(data.monthlyCredit),
-    contractAmount: parseAmount(data.contractAmount),
-    paymentMethod: 'GA_CONTRACT',
-    paymentMethodName: data.contractMethod,
-    contractDate: data.contractDate,
-    managerGa: data.managerGA,
-    managerTp: data.managerTP,
-});
+const buildEditPayload = (data: OverseasPlanFormData) => {
+    const isGeneral = data.planType === 'GENERAL';
+    return {
+        planName: isGeneral ? data.planName : '해외영업실행',
+        months: data.planMonths,
+        monthlyCredit: parseAmount(data.monthlyCredit),
+        contractAmount: parseAmount(data.contractAmount),
+        paymentMethod: isGeneral ? 'BANK_TRANSFER' : 'GA_CONTRACT',
+        paymentMethodName: data.contractMethod,
+        contractDate: data.contractDate,
+        managerGa: isGeneral ? null : data.managerGA,
+        managerTp: isGeneral ? null : data.managerTP,
+    };
+};
 
 export default function PlanSection({userId, initialPlans, creditSummary}: Props) {
     const {addPopup} = usePopupStore();
@@ -190,7 +196,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
             case 'GA_CONTRACT':
                 return <ContractPlanCard plan={plan} onUsage={onUsage} onEdit={() => handleEditOverseasPlan(plan)} onDelete={onDelete} onGrant={onGrant}/>;
             case 'BANK_TRANSFER':
-                return <ContractPlanCard plan={plan} onUsage={onUsage} onDelete={onDelete} onGrant={onGrant}/>;
+                return <ContractPlanCard plan={plan} onUsage={onUsage} onEdit={() => handleEditOverseasPlan(plan)} onDelete={onDelete} onGrant={onGrant}/>;
             case 'PG_CARD':
             default:
                 return <PgCardPlanCard plan={plan} onUsage={onUsage}/>;

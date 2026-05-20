@@ -190,6 +190,10 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
             addPopup(<AlertComponent alertType={'error'} infoContent={'플랜명을 입력해주세요.'}/>);
             return;
         }
+        if (form.planType === 'GENERAL' && !form.contractMethod.trim()) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'계약방식을 입력해주세요.'}/>);
+            return;
+        }
         if (!form.planStartDate) {
             addPopup(<AlertComponent alertType={'error'} infoContent={'플랜 시작일을 입력해주세요.'}/>);
             return;
