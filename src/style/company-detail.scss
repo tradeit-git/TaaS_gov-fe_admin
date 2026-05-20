@@ -949,8 +949,17 @@
   border-radius: 16px;
   padding: 25px 30px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  min-height: 741px;
   max-height: 91dvh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .popup_body {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
 
   h4 {
     font-size: 14px;
@@ -978,6 +987,38 @@
 
     &::placeholder {
       color: #bbb;
+    }
+  }
+
+  .radio_group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 30px;
+
+    .radio_label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: $font-size-sm;
+      color: $theme-color;
+      cursor: pointer;
+      flex-shrink: 0;
+
+      input[type="radio"] {
+        margin: 0;
+        accent-color: $theme-color;
+
+        &:disabled {
+          cursor: default;
+        }
+      }
+    }
+
+    .plan_name_input {
+      @extend %field_input;
+      flex: 1;
+      min-width: 0;
     }
   }
 
@@ -1186,7 +1227,8 @@
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 20px;
+    padding-top: 20px;
+    flex-shrink: 0;
 
     .cancel_btn,
     .save_btn {

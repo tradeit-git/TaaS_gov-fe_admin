@@ -21,7 +21,11 @@ interface Props {
     onSave?: (data: OverseasPlanFormData) => void;
 }
 
+export type PlanType = 'OVERSEAS' | 'GENERAL';
+
 export interface OverseasPlanFormData {
+    planType: PlanType;
+    planName: string;
     planStartDate: string;
     planMonths: number;
     contractAmount: string;
@@ -116,6 +120,8 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
             : buildRounds(planStartDate, planMonths, monthlyCredit, []);
 
         return {
+            planType: initialData?.planType ?? 'OVERSEAS',
+            planName: initialData?.planName ?? '',
             planStartDate,
             planMonths,
             contractAmount: initialData?.contractAmount ?? '',
@@ -180,6 +186,10 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
     };
 
     const handleSave = () => {
+        if (form.planType === 'GENERAL' && !form.planName.trim()) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'플랜명을 입력해주세요.'}/>);
+            return;
+        }
         if (!form.planStartDate) {
             addPopup(<AlertComponent alertType={'error'} infoContent={'플랜 시작일을 입력해주세요.'}/>);
             return;
@@ -208,7 +218,34 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
     return (
         <div className={'alertSection'}>
             <div className={'overseas_plan_popup'}>
-                <h4>{isEdit ? '해외영업실행 플랜수정' : '해외영업실행 플랜등록'}</h4>
+                <h4>{isEdit ? '플랜수정' : '플랜등록'}</h4>
+
+                <div className={'popup_body'}>
+                {/* 플랜구분 */}
+                <div className={'popup_field'}>
+                    <label className={'label_required'}>플랜구분 <span className={'required'}>*</span></label>
+                    <div className={'radio_group'}>
+                        <label className={'radio_label'}>
+                            <input type="radio" name="planType" value="OVERSEAS"
+                                   checked={form.planType === 'OVERSEAS'}
+                                   disabled={isEdit}
+                                   onChange={() => setForm(prev => ({...prev, planType: 'OVERSEAS', contractMethod: 'GA 계약'}))}/>
+                            해외영업실행
+                        </label>
+                        <label className={'radio_label'}>
+                            <input type="radio" name="planType" value="GENERAL"
+                                   checked={form.planType === 'GENERAL'}
+                                   disabled={isEdit}
+                                   onChange={() => setForm(prev => ({...prev, planType: 'GENERAL', contractMethod: ''}))}/>
+                            일반플랜
+                        </label>
+                        {form.planType === 'GENERAL' && (
+                            <input type="text" className={'plan_name_input'} value={form.planName}
+                                   placeholder={'플랜명 필수 입력'}
+                                   onChange={e => updateField('planName', e.target.value)}/>
+                        )}
+                    </div>
+                </div>
 
                 {/* 플랜기간 */}
                 <div className={'popup_field'}>
@@ -243,25 +280,32 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
                 {/* 계약방식 */}
                 <div className={'popup_field'}>
                     <label className={'label_required'}>계약방식 <span className={'required'}>*</span></label>
-                    <select value={form.contractMethod}
-                            onChange={e => updateField('contractMethod', e.target.value)}>
-                        <option value="GA 계약">GA 계약</option>
-                    </select>
+                    {form.planType === 'GENERAL' ? (
+                        <input type="text" value={form.contractMethod}
+                               onChange={e => updateField('contractMethod', e.target.value)}/>
+                    ) : (
+                        <select value={form.contractMethod}
+                                onChange={e => updateField('contractMethod', e.target.value)}>
+                            <option value="GA 계약">GA 계약</option>
+                        </select>
+                    )}
                 </div>
 
-                {/* 담당GA */}
-                <div className={'popup_field'}>
-                    <label className={'label_optional'}>담당GA</label>
-                    <input type="text" value={form.managerGA}
-                           onChange={e => updateField('managerGA', e.target.value)}/>
-                </div>
-
-                {/* 담당TP */}
-                <div className={'popup_field'}>
-                    <label className={'label_optional'}>담당TP</label>
-                    <input type="text" value={form.managerTP}
-                           onChange={e => updateField('managerTP', e.target.value)}/>
-                </div>
+                {/* 담당GA / 담당TP (해외영업실행만) */}
+                {form.planType === 'OVERSEAS' && (
+                    <>
+                        <div className={'popup_field'}>
+                            <label className={'label_optional'}>담당GA</label>
+                            <input type="text" value={form.managerGA}
+                                   onChange={e => updateField('managerGA', e.target.value)}/>
+                        </div>
+                        <div className={'popup_field'}>
+                            <label className={'label_optional'}>담당TP</label>
+                            <input type="text" value={form.managerTP}
+                                   onChange={e => updateField('managerTP', e.target.value)}/>
+                        </div>
+                    </>
+                )}
 
                 {/* 계약일자 */}
                 <div className={'popup_field'}>
@@ -312,6 +356,7 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
                         )}
                         </tbody>
                     </table>
+                </div>
                 </div>
 
                 {/* 버튼 */}

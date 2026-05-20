@@ -55,7 +55,7 @@ interface Props {
 const parseAmount = (s: string) => Number((s || '').replace(/,/g, '')) || 0;
 
 const buildCreatePayload = (data: OverseasPlanFormData) => ({
-    planName: '해외영업실행',
+    planName: data.planType === 'GENERAL' ? data.planName : '해외영업실행',
     startDate: data.planStartDate,
     months: data.planMonths,
     contractAmount: parseAmount(data.contractAmount),
@@ -69,7 +69,7 @@ const buildCreatePayload = (data: OverseasPlanFormData) => ({
 
 // 수정은 startDate 변경 불가 (명세 참조)
 const buildEditPayload = (data: OverseasPlanFormData) => ({
-    planName: '해외영업실행',
+    planName: data.planType === 'GENERAL' ? data.planName : '해외영업실행',
     months: data.planMonths,
     monthlyCredit: parseAmount(data.monthlyCredit),
     contractAmount: parseAmount(data.contractAmount),
@@ -385,6 +385,8 @@ export default function PlanSection({userId, initialPlans}: Props) {
         const baseCreditSource = firstScheduled ?? plan.rounds[0];
         addPopup(<OverseasPlanPopup
             initialData={{
+                planType: plan.paymentMethod === 'GA_CONTRACT' ? 'OVERSEAS' : 'GENERAL',
+                planName: plan.planName,
                 planStartDate: plan.startDate,
                 planMonths: plan.months ?? plan.rounds.length ?? 1,
                 contractAmount: plan.contractAmount ? formatNumberWithComma(plan.contractAmount) : '',
@@ -457,7 +459,7 @@ export default function PlanSection({userId, initialPlans}: Props) {
                     <button type={'button'}
                             className={`btn_add_plan${!canRegisterOverseasPlan ? ' disabled' : ''}`}
                             onClick={handleOpenOverseasPlanPopup}>
-                        + 해외영업실행플랜 등록
+                        + 플랜 등록
                     </button>
                 </div>
             </div>
