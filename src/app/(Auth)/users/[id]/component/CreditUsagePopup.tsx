@@ -68,9 +68,8 @@ interface BlSearchHistoryDetail {
 
 interface Props {
     uId?: string;
-    userId: number | string;
-    planId: number;
-    roundId: number;
+    // 거래내역 조회 base URL (쿼리스트링 제외). 회차별/서비스/회원통합 등 호출처에서 결정
+    endpoint: string;
     initialData: TransactionsResponse;
 }
 
@@ -128,7 +127,7 @@ const buildDescription = (row: TransactionApiRow): string => {
 
 const ITEMS_PER_PAGE = 10;
 
-export default function CreditUsagePopup({uId, userId, planId, roundId, initialData}: Props) {
+export default function CreditUsagePopup({uId, endpoint, initialData}: Props) {
     const {closePopup} = usePopupStore();
     const [activeFilters, setActiveFilters] = useState<Set<Lowercase<TransactionType>>>(
         new Set(['grant', 'use', 'expire', 'revoke'])
@@ -186,7 +185,7 @@ export default function CreditUsagePopup({uId, userId, planId, roundId, initialD
                 activeFilters.forEach(t => params.append('types', t.toUpperCase()));
             }
             const res = await callApi(
-                `/api/admin/members/users/${userId}/credit-plans/${planId}/rounds/${roundId}/transactions?${params.toString()}`,
+                `${endpoint}?${params.toString()}`,
                 {method: 'GET', credentials: 'include'},
             );
             if (res.result && res.data) {
@@ -202,7 +201,7 @@ export default function CreditUsagePopup({uId, userId, planId, roundId, initialD
         } finally {
             setLoading(false);
         }
-    }, [userId, planId, roundId, currentPage, activeFilters]);
+    }, [endpoint, currentPage, activeFilters]);
 
     useEffect(() => {
         if (isInitial.current) {

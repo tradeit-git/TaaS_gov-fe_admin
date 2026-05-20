@@ -27,7 +27,7 @@ export default function CompanyDetailPage({id, initialUser, initialPlans}: Props
 
             <div className={'company_detail_layout'}>
                 <AccountInfoSection user={initialUser}/>
-                <PlanSection userId={id} initialPlans={initialPlans}/>
+                <PlanSection userId={id} initialPlans={initialPlans} creditSummary={initialUser.creditSummary}/>
             </div>
         </div>
     );

@@ -3,86 +3,107 @@
 import {useState} from "react";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
-
-export interface ServiceCreditFormData {
-    startDate: string;
-    endDate: string;
-    credit: string;
-}
+import callApi from "@/utill/apiRequest";
 
 interface Props {
     uId?: string;
-    planName: string;
-    initialData?: ServiceCreditFormData;
-    /** 이용기간이 이미 시작된 경우: 시작일/크레딧 수정 불가 */
-    started?: boolean;
-    onSave?: (data: ServiceCreditFormData) => void;
+    userId: number | string;
+    onSuccess?: () => void;
 }
 
+const MAX_CREDIT = 100000;
+
 const formatNumberWithComma = (value: string) => {
-    const num = value.replace(/[^0-9]/g, '');
-    return num.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const num = Math.min(Number(value.replace(/[^0-9]/g, '')) || 0, MAX_CREDIT);
+    if (num === 0) return '';
+    return num.toLocaleString();
 };
 
-export default function ServiceCreditPopup({uId, planName, initialData, started, onSave}: Props) {
+const toISODate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// 디폴트 만료일: 오늘 + 1개월
+const defaultExpireISO = () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return toISODate(d);
+};
+
+// 만료일 최소값: 오늘 + 1일
+const minExpireISO = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return toISODate(d);
+};
+
+export default function ServiceCreditPopup({uId, userId, onSuccess}: Props) {
     const {closePopup, addPopup} = usePopupStore();
-    const isEdit = !!initialData;
 
-    const [form, setForm] = useState<ServiceCreditFormData>(initialData ?? {
-        startDate: '',
-        endDate: '',
-        credit: '',
-    });
+    const [amount, setAmount] = useState('');
+    const [expireDate, setExpireDate] = useState(defaultExpireISO());
+    const [noExpire, setNoExpire] = useState(false);
 
-    const handleSave = () => {
-        if (!form.startDate) {
-            addPopup(<AlertComponent alertType={'error'} infoContent={'이용기간 시작일을 입력해주세요.'}/>);
+    const handleExpireDateChange = (value: string) => {
+        if (value && value < minExpireISO()) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'만료일은 내일 이후로 선택해주세요.'}/>);
             return;
         }
-        if (!form.endDate) {
-            addPopup(<AlertComponent alertType={'error'} infoContent={'이용기간 종료일을 입력해주세요.'}/>);
-            return;
-        }
-        if (form.startDate > form.endDate) {
-            addPopup(<AlertComponent alertType={'error'} infoContent={'종료일은 시작일 이후여야 합니다.'}/>);
-            return;
-        }
-        if (!form.credit) {
+        setExpireDate(value);
+    };
+
+    const handleSave = async () => {
+        if (!amount) {
             addPopup(<AlertComponent alertType={'error'} infoContent={'크레딧을 입력해주세요.'}/>);
             return;
         }
+        if (!noExpire && !expireDate) {
+            addPopup(<AlertComponent alertType={'error'} infoContent={'만료일을 입력해주세요.'}/>);
+            return;
+        }
 
-        onSave?.(form);
-        closePopup(uId ?? '');
+        const payload = {
+            amount: Number(amount.replace(/,/g, '')) || 0,
+            expireDate: noExpire ? null : expireDate,
+        };
+        const res = await callApi(`/api/admin/members/users/${userId}/credits/grant`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify(payload),
+        });
+        if (res.result) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'지급되었습니다.'}/>);
+            onSuccess?.();
+            closePopup(uId ?? '');
+        } else {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '지급에 실패했습니다.'}/>);
+        }
     };
 
     return (
         <div className={'alertSection'}>
             <div className={'overseas_plan_popup service_credit_popup'}>
-                <h4>서비스 크레딧{isEdit ? ' 수정' : ''}</h4>
+                <h4>크레딧 추가 지급</h4>
 
                 <div className={'popup_field'}>
-                    <label className={'label_required'}>플랜구분</label>
-                    <span className={'field_value'}>{planName}</span>
-                </div>
-
-                <div className={'popup_field'}>
-                    <label className={'label_required'}>이용기간</label>
+                    <label className={'label_required'}>만료일 <span className={'required'}>*</span></label>
                     <div className={'date_range'}>
-                        <input type="date" value={form.startDate}
-                               disabled={isEdit && started}
-                               onChange={e => setForm(prev => ({...prev, startDate: e.target.value}))}/>
-                        <span className={'date_separator'}>-</span>
-                        <input type="date" value={form.endDate}
-                               onChange={e => setForm(prev => ({...prev, endDate: e.target.value}))}/>
+                        <input type="date" value={noExpire ? '' : expireDate}
+                               min={minExpireISO()}
+                               disabled={noExpire}
+                               onChange={e => handleExpireDateChange(e.target.value)}/>
+                        <label className={'no_expire_check'}>
+                            <input type="checkbox" checked={noExpire}
+                                   onChange={e => setNoExpire(e.target.checked)}/>
+                            없음
+                        </label>
                     </div>
                 </div>
 
                 <div className={'popup_field'}>
-                    <label className={'label_required'}>크레딧</label>
-                    <input type="text" value={form.credit}
-                           disabled={isEdit && started}
-                           onChange={e => setForm(prev => ({...prev, credit: formatNumberWithComma(e.target.value)}))}/>
+                    <label className={'label_required'}>크레딧 <span className={'required'}>*</span></label>
+                    <input type="text" value={amount}
+                           onChange={e => setAmount(formatNumberWithComma(e.target.value))}/>
                 </div>
 
                 <div className={'popup_btn_wrap'}>
