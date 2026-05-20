@@ -12,7 +12,7 @@
 .company_detail_layout {
   display: flex;
   align-items: flex-start;
-  gap: 60px;
+  gap: 50px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -419,6 +419,28 @@
       margin-bottom: 0;
     }
 
+    .plan_header_buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn_service_credit {
+      height: 32px;
+      padding: 0 16px;
+      font-size: $font-size-sm;
+      background: #fff;
+      color: #333;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      white-space: nowrap;
+      cursor: pointer;
+
+      &:hover {
+        background: #f9fafb;
+      }
+    }
+
     .btn_add_plan {
       height: 32px;
       padding: 0 16px;
@@ -480,10 +502,144 @@
       }
     }
 
+    &.service {
+      border-color: #3B82F6;
+      background-color: #fff;
+
+      &.expired {
+        border-color: $gray02;
+        background-color: #fff;
+      }
+    }
+
     &.expired {
       .credit_summary_row .summary_item {
         &.grant, &.used, &.remain, &.expired {
           color: $theme-color;
+        }
+      }
+    }
+  }
+
+  // ── 서비스 크레딧 카드 ──
+  .service_card_row {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+
+    .service_info_section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+      min-width: 200px;
+      width: 200px;
+
+      &.period {
+        gap: 14px;
+        min-width: 160px;
+        width: 160px;
+      }
+
+      .label {
+        font-size: $font-size-xs;
+        color: #888;
+      }
+
+      .value {
+        font-size: $font-size-sm;
+        color: $theme-color;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        white-space: nowrap;
+      }
+    }
+
+    .service_credit_section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+
+      .label {
+        font-size: $font-size-xs;
+        color: #888;
+      }
+
+      .credit_values {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .credit_item {
+        font-size: $font-size-sm;
+        color: $theme-color;
+        white-space: nowrap;
+        width: 83px;
+
+        .line {
+          display: inline-flex;
+          width: 1px;
+          height: 8px;
+          border-radius: 5px;
+          background-color: #aaa;
+          margin: 0 8px;
+        }
+      }
+
+      .btn_usage {
+        height: 26px;
+        padding: 0 10px;
+        font-size: $font-size-sm;
+        border: 1px solid $gray02;
+        border-radius: 6px;
+        background: #fff;
+        color: $theme-color;
+        white-space: nowrap;
+        flex-shrink: 0;
+
+        &:hover {
+          background: #f5f5f5;
+        }
+      }
+    }
+
+    .service_actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+
+      .btn_edit,
+      .btn_delete {
+        width: 32px;
+        height: 32px;
+        border: 1px solid $gray02;
+        border-radius: 6px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .icon_edit {
+          display: block;
+          width: 14px;
+          height: 14px;
+          background-position: -156px -165px;
+        }
+
+        .icon_trash {
+          display: block;
+          width: 13px;
+          height: 13px;
+          background-position: -92px -95px;
+        }
+
+        &:hover {
+          background: #f5f5f5;
         }
       }
     }
@@ -549,10 +705,17 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-width: 166px;
+    min-width: 200px;
+    width: 200px;
 
     &.period {
-      min-width: 200px;
+      min-width: 160px;
+      width: 160px;
+    }
+
+    &.narrow {
+      min-width: 130px;
+      width: 130px;
     }
 
     .label {
@@ -851,6 +1014,12 @@
       input[type="date"] {
         @extend %field_input;
         flex: 1;
+
+        &:disabled {
+          background-color: #F5F5F5;
+          color: #999;
+          cursor: default;
+        }
       }
 
       .tilde {
@@ -881,6 +1050,12 @@
     // 기본 텍스트 input
     > input[type="text"] {
       @extend %field_input;
+
+      &:disabled {
+        background-color: #F5F5F5;
+        color: #999;
+        cursor: default;
+      }
     }
 
     // select
@@ -1040,6 +1215,20 @@
       &:hover {
         opacity: 0.9;
       }
+    }
+  }
+
+  // ── 서비스 크레딧 팝업 추가 스타일 ──
+  &.service_credit_popup {
+    .field_value {
+      font-size: $font-size-sm;
+      color: $theme-color;
+      font-weight: 500;
+    }
+
+    .date_separator {
+      color: #888;
+      flex-shrink: 0;
     }
   }
 }
