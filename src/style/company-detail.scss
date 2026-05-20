@@ -899,8 +899,8 @@
     .summary_item {
       font-size: $font-size-sm;
       color: $theme-color;
-      width: 100px;
-
+      min-width: 100px;
+      white-space: nowrap;
 
       .line {
         display: inline-flex;
@@ -1275,6 +1275,8 @@
 
   // ── 서비스 크레딧 팝업 추가 스타일 ──
   &.service_credit_popup {
+    min-height: auto;
+
     .field_value {
       font-size: $font-size-sm;
       color: $theme-color;

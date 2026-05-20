@@ -19,7 +19,7 @@ export default function CreditStatusSection({userId, summary}: Props) {
 
     const handleOpenUsagePopup = async () => {
         // 회원 통합 크레딧 거래내역
-        const endpoint = `/api/admin/members/users/${userId}/transactions`;
+        const endpoint = `/api/admin/members/users/${userId}/credits/transactions`;
         const res = await callApi(`${endpoint}?page=0&size=10`, {method: 'GET', credentials: 'include'});
         const initialData: TransactionsResponse = (res.result && res.data)
             ? res.data as TransactionsResponse
