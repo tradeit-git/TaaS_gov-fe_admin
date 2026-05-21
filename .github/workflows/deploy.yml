@@ -1,0 +1,149 @@
+name: Deploy (build -> S3 -> SSM -> PM2)
+
+on:
+  push:
+    branches: [prod]
+  workflow_dispatch:
+
+# 같은 환경 배포가 동시에 겹치지 않도록
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  id-token: write   # OIDC 토큰 발급 (AWS 역할 assume)
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  S3_BUCKET: tradeit-deploy-artifacts        # 배포 산출물 버킷 (다른 레포와 공유)
+  S3_PREFIX: deploy/taas_gov-admin          # 이 레포 전용 경로 (레포별 분리)
+  PM2_APP_NAME: TaaS_gov-admin               # admin 서버 기존 pm2 앱 이름 (재사용해 무중단 교체)
+  APP_ROOT: /home/ubuntu/apps/taas_gov-admin # 새 배포 루트 (앱별 분리, pm2 이름과 일치)
+  DEPLOY_USER: ubuntu                        # 서버에서 앱을 띄우는 유저(pm2 소유자)
+  APP_PORT: 2101                             # 프론트 리슨 포트
+  # SSM 대상 인스턴스 태그 (admin 서버 인스턴스에 직접 달아둘 것)
+  TARGET_TAG_KEY: App
+  TARGET_TAG_VALUE: TaaS-FE-ADMIN
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Slack 배포 시작 알림
+        run: |
+          curl -s -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"🚀 *배포 시작* — \`${{ github.repository }}\` @ \`${{ github.ref_name }}\` (by ${{ github.actor }})\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}" || true
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          # 레포의 .prod.env 를 Next 가 로드하는 .env.production 으로 복사
+          # (NEXT_PUBLIC_* 는 빌드 시 클라이언트 번들에 인라인됨)
+          cp .prod.env .env.production
+          npm run build
+
+      - name: Assemble standalone bundle
+        run: |
+          set -euo pipefail
+          rm -rf deploy && mkdir -p deploy
+          # standalone 서버 + 최소 node_modules
+          cp -r .next/standalone/. deploy/
+          # standalone 에는 static / public 이 안 들어가므로 직접 복사
+          mkdir -p deploy/.next
+          cp -r .next/static deploy/.next/static
+          if [ -d public ]; then cp -r public deploy/public; fi
+          # 런타임 env 동봉 (standalone 서버가 cwd 의 .env.production 을 로드)
+          cp .env.production deploy/.env.production
+
+      - name: Package artifact
+        run: tar -C deploy -czf artifact.tar.gz .
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload to S3
+        run: |
+          set -euo pipefail
+          aws s3 cp artifact.tar.gz "s3://${S3_BUCKET}/${S3_PREFIX}/${GITHUB_SHA}.tar.gz"
+          aws s3 cp scripts/deploy.sh "s3://${S3_BUCKET}/${S3_PREFIX}/${GITHUB_SHA}.deploy.sh"
+
+      - name: Trigger deploy via SSM
+        run: |
+          set -euo pipefail
+          TARBALL="s3://${S3_BUCKET}/${S3_PREFIX}/${GITHUB_SHA}.tar.gz"
+          SCRIPT="s3://${S3_BUCKET}/${S3_PREFIX}/${GITHUB_SHA}.deploy.sh"
+
+          # SSM 으로 보낼 명령(서버는 root 로 실행됨 -> 앱 유저로 전환해서 deploy.sh 실행)
+          jq -n \
+            --arg app_root "$APP_ROOT" \
+            --arg release "$GITHUB_SHA" \
+            --arg tarball "$TARBALL" \
+            --arg script "$SCRIPT" \
+            --arg pm2name "$PM2_APP_NAME" \
+            --arg user "$DEPLOY_USER" \
+            --arg port "$APP_PORT" \
+            '{
+               commands: [
+                 "set -eu",
+                 "aws s3 cp \($script) /tmp/\($release).deploy.sh",
+                 "sudo -iu \($user) bash -s -- \($app_root) \($release) \($tarball) \($pm2name) \($port) < /tmp/\($release).deploy.sh"
+               ]
+             }' > ssm-params.json
+
+          CMD_ID=$(aws ssm send-command \
+            --region "$AWS_REGION" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy ${GITHUB_SHA}" \
+            --targets "Key=tag:${TARGET_TAG_KEY},Values=${TARGET_TAG_VALUE}" \
+            --parameters file://ssm-params.json \
+            --query "Command.CommandId" --output text)
+          echo "SSM CommandId: $CMD_ID"
+
+          # 완료까지 폴링
+          while true; do
+            sleep 5
+            STATUSES=$(aws ssm list-command-invocations --command-id "$CMD_ID" --details \
+              --query 'CommandInvocations[].Status' --output text || true)
+            echo "invocation statuses: ${STATUSES:-<none>}"
+            if [ -z "$STATUSES" ]; then continue; fi
+            if echo "$STATUSES" | grep -qE 'Failed|Cancelled|TimedOut'; then
+              echo "::error::SSM deploy failed"
+              aws ssm list-command-invocations --command-id "$CMD_ID" --details \
+                --query 'CommandInvocations[].CommandPlugins[].Output' --output text
+              exit 1
+            fi
+            # 모든 invocation 이 Success 면 종료
+            if ! echo "$STATUSES" | grep -qvE 'Success'; then
+              echo "SSM deploy succeeded"
+              break
+            fi
+          done
+
+      - name: Slack 배포 성공 알림
+        if: success()
+        run: |
+          curl -s -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"✅ *배포 성공* — \`${{ github.repository }}\` @ \`${{ github.ref_name }}\` (${GITHUB_SHA:0:7})\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}" || true
+
+      - name: Slack 배포 실패 알림
+        if: failure()
+        run: |
+          curl -s -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"❌ *배포 실패* — \`${{ github.repository }}\` @ \`${{ github.ref_name }}\`\n로그 확인: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            "${{ secrets.SLACK_WEBHOOK_URL }}" || true
