@@ -156,10 +156,10 @@ export default function CompanyManagementPage({initialData}: Props) {
                         <col style={{width: '4%'}}/>
                         <col style={{width: '10%'}}/>
                         <col style={{width: '12%'}}/>
-                        <col style={{width: '13%'}}/>
+                        <col style={{width: '11%'}}/>
                         <col style={{width: '10%'}}/>
-                        <col style={{width: '9%'}}/>
-                        <col style={{width: '13%'}}/>
+                        <col style={{width: '14%'}}/>
+                        <col style={{width: '10%'}}/>
                         <col style={{width: '11%'}}/>
                         <col style={{width: '9%'}}/>
                         <col style={{width: '6%'}}/>
