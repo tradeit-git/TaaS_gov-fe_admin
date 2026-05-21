@@ -163,7 +163,7 @@ export default function ClientPage({initialData}: Props) {
                     </div>
                     <select value={itemsPerPage} onChange={e => handleItemsPerPageChange(Number(e.target.value))}>
                         <option value={10}>10개씩</option>
-                        <option value={20}>20개씩</option>
+                        <option value={25}>25개씩</option>
                         <option value={50}>50개씩</option>
                     </select>
                 </div>
