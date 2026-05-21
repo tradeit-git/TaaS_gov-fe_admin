@@ -180,7 +180,7 @@ export default function ClientPage({initialData}: Props) {
                         <th>고객사명</th>
                         <th>사업자번호</th>
                         <th>아이디(e-mail)</th>
-                        <th>패스워드</th>
+                        <th>Password</th>
                         <th>서비스 플랜</th>
                         <th>운영기간</th>
                         <th>남은 크레딧</th>

@@ -65,9 +65,19 @@ const buildEditPayload = (data: OverseasPlanFormData) => {
 export default function PlanSection({userId, initialPlans, creditSummary}: Props) {
     const {addPopup} = usePopupStore();
     const [plans, setPlans] = useState<CreditPlan[]>(initialPlans);
+    const [summary, setSummary] = useState<CreditSummaryType | null>(creditSummary);
     const [visiblePlans] = useState(2);
     const [expanded, setExpanded] = useState(false);
     const planListRef = useRef<HTMLDivElement>(null);
+
+    // 즉시 지급 등으로 크레딧이 변동되면 회원 상세를 다시 받아 크레딧 현황을 동기화한다
+    const refreshSummary = async () => {
+        const res = await callApi(`/api/admin/members/users/${userId}`, {method: 'GET', credentials: 'include'});
+        if (res.result && res.data) {
+            const user = (res.data as {user?: {creditSummary?: CreditSummaryType | null}}).user;
+            setSummary(user?.creditSummary ?? null);
+        }
+    };
 
     // 플랜이 없거나, 가장 최근(createdAt) 플랜이 만료된 경우에만 신규 등록 가능
     const canRegisterOverseasPlan = useMemo(() => {
@@ -96,6 +106,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
         if (res.result && res.data) {
             const created = res.data as CreditPlan;
             setPlans(prev => sortByCreatedDesc([created, ...prev]));
+            await refreshSummary();
             addPopup(<AlertComponent alertType={'alert'} infoContent={'등록되었습니다.'}/>);
         } else {
             addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '등록에 실패했습니다.'}/>);
@@ -123,6 +134,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
             if (res.result && res.data) {
                 const updated = res.data as CreditPlan;
                 setPlans(prev => sortByCreatedDesc(prev.map(p => p.id === updated.id ? updated : p)));
+                await refreshSummary();
                 addPopup(<AlertComponent alertType={'alert'} infoContent={'지급되었습니다.'}/>);
             } else {
                 addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '지급에 실패했습니다.'}/>);
@@ -138,6 +150,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
             });
             if (res.result) {
                 setPlans(prev => prev.filter(p => p.id !== plan.id));
+                await refreshSummary();
                 addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
             } else {
                 addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
@@ -180,6 +193,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
                 if (res.result && res.data) {
                     const updated = res.data as CreditPlan;
                     setPlans(prev => sortByCreatedDesc(prev.map(p => p.id === updated.id ? updated : p)));
+                    await refreshSummary();
                     addPopup(<AlertComponent alertType={'alert'} infoContent={'수정되었습니다.'}/>);
                 } else {
                     addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '수정에 실패했습니다.'}/>);
@@ -211,7 +225,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
 
     return (
         <div className={'company_detail_right'}>
-            <CreditStatusSection userId={userId} summary={creditSummary}/>
+            <CreditStatusSection userId={userId} summary={summary}/>
 
             <div className={'plan_header'}>
                 <div className={'section_title'}>
