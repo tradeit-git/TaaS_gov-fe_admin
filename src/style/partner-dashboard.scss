@@ -1,0 +1,518 @@
+@use './variable' as *;
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+
+
+@font-face {
+  font-family: 'A2z';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-6@1.0/에이투지체-6SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+// -------------------- 제휴 성과 대시보드 (독립 페이지) ----------------------------
+.partner_dashboard {
+  min-height: 100vh;
+  background: #F4F6FB;
+  color: $black01;
+  font-size: $font-size-base;
+
+  $card-radius: 10px;
+  $card-shadow: 0 0 7px rgba(0, 0, 0, 0.07);
+
+  .partner_dashboard_icon {
+    background: url("/admin/static/img/partner_dashboard_icon.svg") no-repeat;
+    display: inline-block;
+  }
+
+  * {
+    font-family: "Pretendard", sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+
+  }
+
+  // 헤더
+  .dashboard_header {
+    padding: 40px 0 30px 0;
+
+    .header_inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    h1 {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      font-size: 24px;
+      font-weight: 600;
+      color: $theme-color;
+      font-family: 'A2z';
+    }
+    .partner_info {
+      font-size: 14px;
+      color: $black01;
+    }
+
+
+  }
+
+  .dashboard_body {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+
+  // 공통 섹션 헤더
+  .section_head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    h2 {
+      font-size:  15px;
+      font-weight: 600;
+      color: $black01;
+    }
+
+    .period_select {
+      position: relative;
+
+      .period {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        background: #fff;
+        font-size: $font-size-sm;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+
+        &.on {
+          border-color: #2B7FFF;
+        }
+
+        .partner_dashboard_icon {
+          width: 16px;
+          height: 16px;
+          background-position: -236px -20px;
+        }
+      }
+
+      .period_dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        z-index: 10;
+        min-width: 120px;
+        padding: 4px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+        li button {
+          width: 100%;
+          padding: 8px 12px;
+          border-radius: 4px;
+          background: transparent;
+          font-size: $font-size-sm;
+          color: $black01;
+          text-align: left;
+          cursor: pointer;
+
+          &:hover {
+            background: #F4F6F8;
+          }
+
+          &.on {
+            color: #2B7FFF;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+
+  // 통계 카드
+  .summary_cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+
+    .card {
+      background: #fff;
+      border-radius: $card-radius;
+      box-shadow: $card-shadow;
+      padding: 20px 24px 10px 24px;
+
+      .card_top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        .label {
+          font-size: 13px;
+          color: $black01;
+          font-weight: 400;
+          b {
+            font-size: 15px;
+            font-weight: 600;
+            color: $black01;
+          }
+        }
+        .icon_box {
+          width: 32px;
+          height: 32px;
+          background: #F4F6F8;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          .partner_dashboard_icon {
+            width: 18px;
+            height: 18px;
+              &.users {
+                background-position: -20px -20px;
+              }
+              &.wallet {
+                background-position: -58px -20px;
+              }
+              &.database {
+                background-position: -96px -20px;
+              }
+          }
+        }
+
+      }
+
+      .card_main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+
+        .value {
+          font-size: 28px;
+          font-weight: 500;
+          color: $black01;
+          line-height: 1.4;
+          margin-bottom: 4px;
+                  }
+        p {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          color: $black02;
+          font-size: $font-size-sm;
+          .trend {
+            width: 14px;
+            height: 14px;
+            &.up {
+              background-position: -168px -20px;
+            }
+
+            &.down {
+              background-position: -202px -20px;
+            }
+          }
+        }
+        .summary_bg {
+          width: 222px;
+          height: 90px;
+          &.bg_01 {
+            background-position: -20px -89px;
+        }
+          &.bg_02 {
+            background-position: -20px -199px;
+        }
+          &.bg_03 {
+            width: 189px;
+            height: 90px;
+            background-position: -20px -309px;
+        }
+        }
+      }
+    }
+  }
+
+  // 차트 행
+  .chart_row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-top: 30px;
+  }
+
+  .chart_card {
+    background: #fff;
+    border-radius: $card-radius;
+    box-shadow: $card-shadow;
+    padding: 20px 26px;
+    &.area_card {
+      grid-column: span 2; // 통계 카드 2개 + gap 폭과 일치
+    }
+    &.donut_card {
+      .total {
+        padding: 0 10px 10px 10px;
+        font-size: 24px;
+        font-weight: 600;
+        color: $black01;
+      }
+      .graph_content {
+        display: grid;
+        grid-template-columns: 1fr 200px;
+        align-items: center;
+        ul {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            .label {
+              color: $black02;
+              font-size: 15px;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              .circle {
+                width: 9px;
+                height: 9px;
+                border-radius: 50%;
+                &.free {
+                  background: #CBD0FE;
+                }
+                &.team {
+                  background: #BBDFB2;
+                }
+                &.personal {
+                  background: #9CCDFC;
+                }
+                &.enter {
+                  background: #F7D4A0;
+                }
+              }
+              span {
+                color: $black01;
+                font-size: 15px;
+              }
+            }
+          }
+        }
+
+      }
+    }
+  }
+
+  // 영역 차트 (recharts)
+  .chart_container {
+    width: 100%;
+    height: 240px;
+    font-size: $font-size-xs;
+
+    // 차트 및 모든 하위 요소 클릭 시 포커스 외곽선 제거
+    *:focus,
+    *:focus-visible {
+      outline: none;
+    }
+  }
+
+  // 플랜별 가입현황 (recharts Pie)
+  .plan_chart_container {
+    width: 100%;
+    height: 220px;
+    font-size: $font-size-xs;
+
+    svg {
+      &:focus,
+      .recharts-sector:focus {
+        outline: none;
+      }
+    }
+  }
+
+  // 회원 명단 테이블
+  .table_card {
+    margin-top: 30px;
+    background: #fff;
+    border-radius: $card-radius;
+    box-shadow: $card-shadow;
+    padding: 20px 26px;
+
+    .search_input_wrap {
+      position: relative;
+      input {
+        width: 290px;
+        height: 34px;
+        padding: 0 12px 0 30px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        outline: none;
+
+        &:focus {
+          border-color: #5B8DEF;
+        }
+      }
+      .partner_dashboard_icon {
+        width: 14px;
+        height: 14px;
+        background-position: -134px -20px;
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+  }
+
+  .table_wrap {
+    overflow-x: auto;
+  }
+
+  .dashboard_table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+
+    th, td {
+      padding: 10px 16px;
+      text-align: center;
+      font-size: $font-size-sm;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+    }
+    td {
+      padding: 14px 16px;
+    }
+
+    thead th {
+      background: #FAFAFC;
+      color: #5D5C63;
+      font-weight: 400;
+      border-bottom: 1px solid #eee;
+    }
+
+    tbody td {
+      color: #4B5563;
+      border-bottom: 1px solid #F2F4F8;
+    }
+
+    tbody tr:hover td {
+      background: #FAFBFE;
+    }
+  }
+
+}
+.mo {
+  display: none;
+}
+@media (max-width: 1440px) {
+  .partner_dashboard .dashboard_header {
+    padding: 40px 26px 30px 26px;
+  }
+  .partner_dashboard .dashboard_body {
+    padding: 0 26px 40px 26px;
+  }
+  .partner_dashboard .summary_cards .card {
+    padding: 20px 26px;
+  }
+
+  // summary_bg를 배경으로 깔고 content를 그 위로 올림
+  .partner_dashboard .summary_cards .card .card_main {
+    position: relative;
+  }
+  .partner_dashboard .summary_cards .card .card_main .content {
+    position: relative;
+    z-index: 1;
+  }
+  .partner_dashboard .summary_cards .card .card_main .summary_bg {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    opacity: 0.5;
+  }
+  .partner_dashboard .chart_card.donut_card .graph_content {
+    grid-template-columns: 1fr;
+  }
+  .partner_dashboard .chart_container {
+    height: 350px;
+  }
+
+  // 제휴 가입사 명단: 가로 스크롤로 내용 전부 노출
+  .partner_dashboard .dashboard_table {
+    table-layout: auto;
+    min-width: 900px;
+  }
+  .partner_dashboard .dashboard_table th,
+  .partner_dashboard .dashboard_table td {
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+@media (max-width: 1024px) {
+  .partner_dashboard .summary_cards {
+    grid-template-columns: 1fr;
+  }
+
+  .partner_dashboard .chart_row {
+    grid-template-columns: 1fr;
+  }
+
+  .partner_dashboard .chart_card.area_card {
+    grid-column: auto; // 1열로 줄어들 때 span 해제
+  }
+
+  .partner_dashboard .chart_card.donut_card .total {
+    text-align: center;
+  }
+}
+@media (max-width: 768px) {
+  .partner_dashboard .dashboard_header {
+    padding: 30px 18px 30px 18px;
+  }
+  .partner_dashboard .dashboard_body {
+    padding: 0 18px 30px 18px;
+  }
+  .partner_dashboard .dashboard_header .header_inner {
+    flex-wrap: wrap;
+  }
+  .partner_dashboard .dashboard_header h1 {
+    font-size: 19px;
+  }
+}
+@media (max-width: 550px) {
+  .mo {
+    display: block;
+  }
+  .partner_dashboard .section_head {
+    flex-direction: column;
+  }
+  .partner_dashboard .table_card .search_input_wrap {
+    padding-top: 10px;
+  }
+  .partner_dashboard .table_card .search_input_wrap input {
+    width: 100%;
+
+  }
+  .partner_dashboard .section_head .period_select .period {
+    margin-top: 10px;
+  }
+  .partner_dashboard .chart_card {
+    padding: 20px 16px;
+  }
+  .partner_dashboard .chart_container {
+    height: 250px;
+  }
+}
