@@ -177,13 +177,14 @@ export default function PartnerPage() {
                     <colgroup>
                         <col style={{width: '4%'}}/>
                         <col style={{width: '6%'}}/>
-                        <col style={{width: '20%'}}/>
-                        <col style={{width: '14%'}}/>
-                        <col style={{width: '10%'}}/>
-                        <col style={{width: '20%'}}/>
-                        <col style={{width: '7%'}}/>
-                        <col style={{width: '10%'}}/>
+                        <col style={{width: '19%'}}/>
+                        <col style={{width: '13%'}}/>
+                        <col style={{width: '9%'}}/>
+                        <col style={{width: '18%'}}/>
                         <col style={{width: '6%'}}/>
+                        <col style={{width: '9%'}}/>
+                        <col style={{width: '9%'}}/>
+                        <col style={{width: '7%'}}/>
                     </colgroup>
                     <thead>
                     <tr>
@@ -195,6 +196,7 @@ export default function PartnerPage() {
                         <th>가입혜택기간</th>
                         <th>가입자수</th>
                         <th>등록일자</th>
+                        <th>성과대시보드</th>
                         <th>관리</th>
                     </tr>
                     </thead>
