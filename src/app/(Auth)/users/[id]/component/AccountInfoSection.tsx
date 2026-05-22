@@ -45,10 +45,7 @@ export default function AccountInfoSection({user}: Props) {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     credentials: 'include',
-                    body: JSON.stringify({
-                        user: {...user, id: Number(user.id)},
-                        password,
-                    }),
+                    body: JSON.stringify({password}),
                 });
                 if (res.result) {
                     setPassword('');
@@ -127,7 +124,7 @@ export default function AccountInfoSection({user}: Props) {
             </ul>
 
             <div className={'btn_wrap'}>
-                <Link href="/account" className={'cancel_btn'}>취소</Link>
+                <Link href="/users" className={'cancel_btn'}>취소</Link>
                 <button type="button" className={'save_btn'} onClick={handleSave} disabled={saving || !isValid}>저장</button>
             </div>
         </div>

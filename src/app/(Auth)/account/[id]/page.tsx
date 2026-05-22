@@ -14,7 +14,7 @@ export default async function Page({params}: Props) {
     const {id} = await params;
 
     const options = await getServerRequestOptions();
-    const res = await callApi(`/api/admin/members/users/${id}`, options);
+    const res = await callApi(`/api/admin/members/demo-users/${id}`, options);
     if (!res.result || !res.data) redirect('/account');
 
     const body = res.data as ApiUserDetailResponse;

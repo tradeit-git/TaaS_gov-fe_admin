@@ -1,12 +1,13 @@
 'use client'
 
 import Link from "next/link";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import AccountCreateForm from "@/app/(Auth)/account/component/AccountCreateForm";
 import AccountTableBody from "@/app/(Auth)/account/component/AccountTableBody";
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
+import callApi from "@/utill/apiRequest";
 
 export interface AccountRow {
     id: number;
@@ -20,29 +21,79 @@ export interface AccountRow {
     createdAt: string;
 }
 
-// 목업 데이터
-const MOCK_DATA: AccountRow[] = [
-    {id: 1, email: 'sales01@tradeit.co.kr', name: '김영업', phone: '010-1234-5678', company: '트레이드잇', department: '영업1팀', position: '팀장', credit: 1500000, createdAt: '2026-05-20'},
-    {id: 2, email: 'sales02@tradeit.co.kr', name: '이판매', phone: '010-2345-6789', company: '트레이드잇', department: '영업1팀', position: '대리', credit: 320000, createdAt: '2026-05-18'},
-    {id: 3, email: 'sales03@tradeit.co.kr', name: '박세일', phone: '010-3456-7890', company: '트레이드잇', department: '영업2팀', position: '사원', credit: 0, createdAt: '2026-05-15'},
-    {id: 4, email: 'sales04@tradeit.co.kr', name: '최거래', phone: '010-4567-8901', company: '트레이드잇', department: '영업2팀', position: '과장', credit: 80000, createdAt: '2026-05-12'},
-    {id: 5, email: 'sales05@tradeit.co.kr', name: '정수익', phone: '010-5678-9012', company: '트레이드잇', department: '영업3팀', position: '차장', credit: 540000, createdAt: '2026-05-10'},
-    {id: 6, email: 'sales06@tradeit.co.kr', name: '강매출', phone: '010-6789-0123', company: '트레이드잇', department: '영업3팀', position: '사원', credit: 12000, createdAt: '2026-05-08'},
-    {id: 7, email: 'sales07@tradeit.co.kr', name: '윤계약', phone: '010-7890-1234', company: '트레이드잇', department: '영업1팀', position: '대리', credit: 250000, createdAt: '2026-05-05'},
-    {id: 8, email: 'sales08@tradeit.co.kr', name: '임고객', phone: '010-8901-2345', company: '트레이드잇', department: '영업2팀', position: '사원', credit: 0, createdAt: '2026-05-03'},
-    {id: 9, email: 'sales09@tradeit.co.kr', name: '한실적', phone: '010-9012-3456', company: '트레이드잇', department: '영업3팀', position: '팀장', credit: 990000, createdAt: '2026-05-01'},
-    {id: 10, email: 'sales10@tradeit.co.kr', name: '오영업', phone: '010-0123-4567', company: '트레이드잇', department: '영업1팀', position: '사원', credit: 45000, createdAt: '2026-04-28'},
-    {id: 11, email: 'sales11@tradeit.co.kr', name: '서판촉', phone: '010-1357-2468', company: '트레이드잇', department: '영업2팀', position: '대리', credit: 178000, createdAt: '2026-04-25'},
-    {id: 12, email: 'sales12@tradeit.co.kr', name: '신거래', phone: '010-2468-1357', company: '트레이드잇', department: '영업3팀', position: '과장', credit: 600000, createdAt: '2026-04-22'},
-];
+// 일반 users 리스트 응답 (account = users 통합 전제)
+export interface AccountApiRow {
+    id: number;
+    loginId: string;
+    email?: string | null;
+    name: string;
+    contact?: string | null;
+    companyName?: string | null;
+    department?: string | null;
+    position?: string | null;
+    creditBalance?: number | null;
+    createdAt: string;
+}
 
-export default function AccountPage() {
+export interface AccountListResponse {
+    content: AccountApiRow[];
+    totalElements: number;
+    totalPages: number;
+    currentPage: number;
+}
+
+const mapRow = (r: AccountApiRow): AccountRow => ({
+    id: r.id,
+    email: r.loginId || r.email || '',
+    name: r.name,
+    phone: r.contact ?? '',
+    company: r.companyName ?? '',
+    department: r.department ?? '',
+    position: r.position ?? '',
+    credit: r.creditBalance ?? 0,
+    createdAt: r.createdAt,
+});
+
+interface Props {
+    initialData: AccountListResponse;
+}
+
+export default function AccountPage({initialData}: Props) {
     const {addPopup} = usePopupStore();
-    const [allData, setAllData] = useState<AccountRow[]>(MOCK_DATA);
+    const [data, setData] = useState<AccountRow[]>(initialData.content.map(mapRow));
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalElements, setTotalElements] = useState(initialData.totalElements);
+    const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
+    const isInitial = useRef(true);
+
+    const loadList = useCallback(async () => {
+        const params = new URLSearchParams();
+        params.set('page', String(currentPage));
+        params.set('size', String(itemsPerPage));
+        if (search.trim()) params.set('keyword', search.trim());
+
+        const res = await callApi(`/api/admin/members/demo-users?${params.toString()}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (res.result && res.data) {
+            const body = res.data as AccountListResponse;
+            setData(body.content.map(mapRow));
+            setTotalElements(body.totalElements);
+            setTotalPages(Math.max(1, body.totalPages));
+        }
+    }, [currentPage, itemsPerPage, search]);
+
+    useEffect(() => {
+        if (isInitial.current) {
+            isInitial.current = false;
+            return;
+        }
+        loadList();
+    }, [loadList]);
 
     // 검색 디바운스
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -57,26 +108,6 @@ export default function AccountPage() {
         };
     }, [searchInput]);
 
-    // 필터링 (목업: 클라이언트 사이드)
-    const filteredData = useMemo(() => {
-        return allData.filter(row => {
-            if (search.trim()) {
-                const keyword = search.trim().toLowerCase();
-                const target = `${row.email} ${row.name} ${row.company} ${row.department}`.toLowerCase();
-                if (!target.includes(keyword)) return false;
-            }
-            return true;
-        });
-    }, [allData, search]);
-
-    const totalElements = filteredData.length;
-    const totalPages = Math.max(1, Math.ceil(totalElements / itemsPerPage));
-
-    const pagedData = useMemo(() => {
-        const start = currentPage * itemsPerPage;
-        return filteredData.slice(start, start + itemsPerPage);
-    }, [filteredData, currentPage, itemsPerPage]);
-
     const displayPage = currentPage + 1;
     const pageGroupSize = 10;
     const currentGroup = Math.ceil(displayPage / pageGroupSize);
@@ -89,44 +120,65 @@ export default function AccountPage() {
         setCurrentPage(0);
     };
 
-    const handleCreated = (account: {email: string; name: string}) => {
-        setAllData(prev => {
-            const nextId = prev.reduce((max, row) => Math.max(max, row.id), 0) + 1;
-            const newRow: AccountRow = {
-                id: nextId,
-                email: account.email,
-                name: account.name,
-                phone: '',
-                company: '',
-                department: '',
-                position: '',
-                credit: 0,
-                createdAt: new Date().toISOString().slice(0, 10),
-            };
-            return [newRow, ...prev];
-        });
+    const handleCreated = () => {
+        // TODO: 계정 생성 API 연동 후 동작. 현재 등록 폼은 목업
         setCurrentPage(0);
+        loadList();
     };
 
+    // 충전 = 크레딧 수동 지급 (유효기간 null = 무기한)
     const handleCharge = (id: number, amount: number) => {
-        setAllData(prev => prev.map(row => row.id === id ? {...row, credit: row.credit + amount} : row));
-        addPopup(<AlertComponent alertType={'alert'} infoContent={`${amount.toLocaleString()} 크레딧이 충전되었습니다.`}/>);
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={`${amount.toLocaleString()} 크레딧을 지급하시겠습니까?`} callback={async () => {
+            const res = await callApi(`/api/admin/members/demo-users/${id}/credits/grant`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify({amount, expireDate: null}),
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'지급되었습니다.'}/>);
+                loadList();
+            } else {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '지급에 실패했습니다.'}/>);
+            }
+        }}/>);
     };
 
+    // 차감 = 관리자 수동 차감 (REVOKE/MANUAL)
     const handleDeduct = (id: number, amount: number) => {
-        const target = allData.find(row => row.id === id);
+        const target = data.find(row => row.id === id);
         if (target && amount > target.credit) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'보유 크레딧보다 많이 차감할 수 없습니다.'}/>);
             return;
         }
-        setAllData(prev => prev.map(row => row.id === id ? {...row, credit: Math.max(0, row.credit - amount)} : row));
-        addPopup(<AlertComponent alertType={'alert'} infoContent={`${amount.toLocaleString()} 크레딧이 차감되었습니다.`}/>);
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={`${amount.toLocaleString()} 크레딧을 차감하시겠습니까?`} callback={async () => {
+            const res = await callApi(`/api/admin/members/demo-users/${id}/credits/deduct`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify({amount}),
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'차감되었습니다.'}/>);
+                loadList();
+            } else {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '차감에 실패했습니다.'}/>);
+            }
+        }}/>);
     };
 
     const handleDelete = (id: number) => {
-        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 계정을 삭제하시겠습니까?'} callback={() => {
-            setAllData(prev => prev.filter(row => row.id !== id));
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 계정을 삭제하시겠습니까?'} callback={async () => {
+            const res = await callApi(`/api/admin/members/demo-users/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+                loadList();
+            } else {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
+            }
         }}/>);
     };
 
@@ -145,7 +197,7 @@ export default function AccountPage() {
 
             {/* 검색 / 카운트 영역 */}
             <div className={'list_header'}>
-                <p className={'result_count'}>Showing {pagedData.length} of {totalElements.toLocaleString()} results</p>
+                <p className={'result_count'}>Showing {data.length} of {totalElements.toLocaleString()} results</p>
                 <div className={'search_area'}>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
@@ -195,7 +247,7 @@ export default function AccountPage() {
                     </tr>
                     </thead>
                     <AccountTableBody
-                        data={pagedData}
+                        data={data}
                         totalElements={totalElements}
                         currentPage={currentPage}
                         itemsPerPage={itemsPerPage}

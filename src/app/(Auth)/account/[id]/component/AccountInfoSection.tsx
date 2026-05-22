@@ -14,7 +14,7 @@ interface Props {
 
 // 영문 대소문자/숫자/범용 특수문자만 허용 (공백·한글 등 비 ASCII 차단)
 const PASSWORD_ALLOWED = /^[!-~]+$/;
-const PASSWORD_PATTERN = /^[!-~]{8,20}$/;
+const PASSWORD_PATTERN = /^[!-~]{4,20}$/;
 const stripDisallowed = (s: string) => s.replace(/[^!-~]/g, '');
 
 export default function AccountInfoSection({user}: Props) {
@@ -40,28 +40,32 @@ export default function AccountInfoSection({user}: Props) {
             return;
         }
         if (password && !isValid) {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'비밀번호는 영문/숫자/특수문자 8~20자로 입력해주세요.'}/>);
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'비밀번호는 영문/숫자/특수문자 4~20자로 입력해주세요.'}/>);
             return;
         }
+
+        // 변경된 필드만 전송 (백엔드: null=미수정, ""=반영)
+        const payload: Record<string, string> = {};
+        if (name.trim() !== (user.name ?? '')) payload.name = name.trim();
+        if (contact.trim() !== (user.contact ?? '')) payload.contact = contact.trim();
+        if (companyName.trim() !== (user.companyName ?? '')) payload.companyName = companyName.trim();
+        if (department.trim() !== (user.department ?? '')) payload.department = department.trim();
+        if (position.trim() !== (user.position ?? '')) payload.position = position.trim();
+        if (password) payload.password = password;
+
+        if (Object.keys(payload).length === 0) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'변경된 내용이 없습니다.'}/>);
+            return;
+        }
+
         addPopup(<AlertComponent alertType={'confirm'} infoContent={'수정하시겠습니까?'} callback={async () => {
             setSaving(true);
             try {
-                const res = await callApi(`/api/admin/members/users/${user.id}`, {
+                const res = await callApi(`/api/admin/members/demo-users/${user.id}`, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     credentials: 'include',
-                    body: JSON.stringify({
-                        user: {
-                            ...user,
-                            id: Number(user.id),
-                            name: name.trim(),
-                            contact: contact.trim(),
-                            companyName: companyName.trim(),
-                            department: department.trim(),
-                            position: position.trim(),
-                        },
-                        ...(password ? {password} : {}),
-                    }),
+                    body: JSON.stringify(payload),
                 });
                 if (res.result) {
                     setPassword('');
@@ -98,14 +102,14 @@ export default function AccountInfoSection({user}: Props) {
                     <input
                         type="password"
                         autoComplete="new-password"
-                        placeholder="영문/숫자/특수문자 8~20자 (한글·공백 불가)"
+                        placeholder="영문/숫자/특수문자 4~20자 (한글·공백 불가)"
                         value={password}
                         onChange={handlePasswordChange}
                         maxLength={20}
                     />
                     {showError && (
                         <p className={'form_error'} style={{color: '#E74C3C', fontSize: 12, marginTop: 4}}>
-                            영문/숫자/범용 특수문자 8~20자로 입력해주세요.
+                            영문/숫자/범용 특수문자 4~20자로 입력해주세요.
                         </p>
                     )}
                 </li>
