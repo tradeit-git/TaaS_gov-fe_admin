@@ -20,6 +20,11 @@ const stripDisallowed = (s: string) => s.replace(/[^!-~]/g, '');
 export default function AccountInfoSection({user}: Props) {
     const {addPopup} = usePopupStore();
     const [password, setPassword] = useState('');
+    const [name, setName] = useState(user.name ?? '');
+    const [contact, setContact] = useState(user.contact ?? '');
+    const [companyName, setCompanyName] = useState(user.companyName ?? '');
+    const [department, setDepartment] = useState(user.department ?? '');
+    const [position, setPosition] = useState(user.position ?? '');
     const [saving, setSaving] = useState(false);
 
     const isValid = useMemo(() => PASSWORD_PATTERN.test(password), [password]);
@@ -30,15 +35,15 @@ export default function AccountInfoSection({user}: Props) {
     };
 
     const handleSave = () => {
-        if (!password) {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'비밀번호를 입력해주세요.'}/>);
+        if (!name.trim()) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'이름을 입력해주세요.'}/>);
             return;
         }
-        if (!isValid) {
+        if (password && !isValid) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'비밀번호는 영문/숫자/특수문자 8~20자로 입력해주세요.'}/>);
             return;
         }
-        addPopup(<AlertComponent alertType={'confirm'} infoContent={'비밀번호를 변경하시겠습니까?'} callback={async () => {
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'수정하시겠습니까?'} callback={async () => {
             setSaving(true);
             try {
                 const res = await callApi(`/api/admin/members/users/${user.id}`, {
@@ -46,8 +51,16 @@ export default function AccountInfoSection({user}: Props) {
                     headers: {'Content-Type': 'application/json'},
                     credentials: 'include',
                     body: JSON.stringify({
-                        user: {...user, id: Number(user.id)},
-                        password,
+                        user: {
+                            ...user,
+                            id: Number(user.id),
+                            name: name.trim(),
+                            contact: contact.trim(),
+                            companyName: companyName.trim(),
+                            department: department.trim(),
+                            position: position.trim(),
+                        },
+                        ...(password ? {password} : {}),
                     }),
                 });
                 if (res.result) {
@@ -98,23 +111,28 @@ export default function AccountInfoSection({user}: Props) {
                 </li>
                 <li className={'form_item'}>
                     <p className={'form_label'}>이름</p>
-                    <input type="text" readOnly disabled value={user.name}/>
+                    <input type="text" value={name} maxLength={20}
+                           onChange={e => setName(e.target.value)}/>
                 </li>
                 <li className={'form_item'}>
                     <p className={'form_label'}>전화번호</p>
-                    <input type="text" readOnly disabled value={user.contact}/>
+                    <input type="text" value={contact}
+                           onChange={e => setContact(e.target.value)}/>
                 </li>
                 <li className={'form_item'}>
                     <p className={'form_label'}>회사명</p>
-                    <input type="text" readOnly disabled value={user.companyName}/>
+                    <input type="text" value={companyName}
+                           onChange={e => setCompanyName(e.target.value)}/>
                 </li>
                 <li className={'form_item'}>
                     <p className={'form_label'}>부서</p>
-                    <input type="text" readOnly disabled value={user.department || '-'}/>
+                    <input type="text" value={department}
+                           onChange={e => setDepartment(e.target.value)}/>
                 </li>
                 <li className={'form_item'}>
                     <p className={'form_label'}>직함</p>
-                    <input type="text" readOnly disabled value={user.position || '-'}/>
+                    <input type="text" value={position}
+                           onChange={e => setPosition(e.target.value)}/>
                 </li>
                 <li className={'form_item'}>
                     <p className={'form_label'}>회원가입일</p>
@@ -128,7 +146,7 @@ export default function AccountInfoSection({user}: Props) {
 
             <div className={'btn_wrap'}>
                 <Link href="/account" className={'cancel_btn'}>취소</Link>
-                <button type="button" className={'save_btn'} onClick={handleSave} disabled={saving || !isValid}>저장</button>
+                <button type="button" className={'save_btn'} onClick={handleSave} disabled={saving}>저장</button>
             </div>
         </div>
     );
