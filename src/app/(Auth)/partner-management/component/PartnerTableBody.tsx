@@ -47,7 +47,7 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                     <td>{formatDate(row.createdAt)}</td>
                     <td>
                         <a className={'btn_link'}
-                           href={`/admin/partner-management/dashboard`}
+                           href={`/admin/partner-management/dashboard?key=${encodeURIComponent(row.partnerKey)}`}
                            target="_blank" rel="noopener noreferrer"
                            title="성과 대시보드 열기">↗</a>
                     </td>

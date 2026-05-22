@@ -2,28 +2,13 @@
 
 import {useEffect, useState} from "react";
 import {Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
+import {DailySignup} from "@/app/(Dashboard)/partner-management/dashboard/types";
 
-interface DailyPoint {
-    name: string; // 일자 ("01" ~ "31")
-    uv: number;   // 가입자수
-}
-
-// 이번 달 일자별 가입자수 목업 데이터 (1~9)
-const buildMockData = (): DailyPoint[] => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const mockCounts = [2, 4, 3, 5, 6, 4, 7, 5, 8, 6, 9, 7, 5, 6, 8, 4, 3, 5, 7, 9, 6, 4, 2, 3, 5, 7, 8, 6, 4, 3, 2];
-
-    return Array.from({length: daysInMonth}).map((_, i) => ({
-        name: String(i + 1).padStart(2, "0"),
-        uv: mockCounts[i] ?? 0,
+export default function DailySignupChart({data}: { data: DailySignup[] }) {
+    const chartData = data.map(d => ({
+        name: String(d.day).padStart(2, "0"),
+        uv: d.count,
     }));
-};
-
-export default function DailySignupChart() {
-    const data = buildMockData();
 
     const tickStyle = {fill: '#6A7075', fontSize: 11};
 
@@ -32,7 +17,6 @@ export default function DailySignupChart() {
     useEffect(() => {
         const update = () => {
             const w = window.innerWidth;
-            // 좁을수록 라벨을 듬성듬성 표시
             setTickInterval(w < 480 ? 5 : w < 768 ? 3 : w < 1024 ? 1 : 0);
         };
         update();
@@ -43,7 +27,7 @@ export default function DailySignupChart() {
     return (
         <div className="chart_container">
             <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data} margin={{top: 20, right: 10, left: -20, bottom: 0}}>
+                <AreaChart data={chartData} margin={{top: 20, right: 10, left: -20, bottom: 0}}>
                     <defs>
                         <linearGradient id="dailyAreaFill" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="#bdd7ff" stopOpacity={1}/>
@@ -52,7 +36,7 @@ export default function DailySignupChart() {
                     </defs>
                     <XAxis dataKey="name" interval={tickInterval} tick={tickStyle} tickLine={false}
                            axisLine={false} minTickGap={4}/>
-                    <YAxis allowDecimals={false} domain={[0, 9]} ticks={[1, 2, 3, 4, 5, 6, 7, 8, 9]} tick={tickStyle}
+                    <YAxis allowDecimals={false} domain={[0, 'auto']} tick={tickStyle}
                            tickLine={false} axisLine={false}/>
                     <Tooltip/>
                     <Area type="monotone" dataKey="uv" name="가입자수" stroke="#2B7FFF" fill="url(#dailyAreaFill)"

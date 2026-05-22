@@ -1,7 +1,7 @@
 # Admin Partner Dashboard API 명세 (제휴 키 대시보드)
 
 **Base URL:** `http://localhost:2001/api/admin/partner-keys`
-**인증:** Admin JWT 토큰 필요 (`Authorization: Bearer {token}`)
+**인증:** **불필요** — 본 명세의 4개 엔드포인트는 토큰 없이 호출 가능 (`AdminSecurityConfig` 에서 `permitAll`, GET 한정).
 
 특정 제휴 키(`{partnerKey}` = `partners.partner_key` 문자열)에 소속된 가입자/결제 데이터를 집계하여 대시보드를 구성한다. 전달된 키로 partner를 조회한 뒤 해당 partner의 PK로 집계하며, 모든 집계는 `users.partner_key_id` 로 필터링되고 삭제된 회원(`deleted_at IS NOT NULL`)은 제외한다.
 
@@ -9,11 +9,12 @@
 
 ## API 요약
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| `GET` | `/api/admin/partner-keys/{partnerKey}/dashboard` | 요약 지표(가입자수·결제건수·결제금액) + 현재 플랜 이용 현황 |
-| `GET` | `/api/admin/partner-keys/{partnerKey}/dashboard/daily-signups` | 월 일별 가입자 수 |
-| `GET` | `/api/admin/partner-keys/{partnerKey}/dashboard/members` | 가입자 명단 (필터 + 페이징) |
+| Method | Endpoint                                                       | 설명 |
+|--------|----------------------------------------------------------------|------|
+| `GET` | `/api/admin/partner-keys/common/{partnerKey}`           | 제휴 키로 제휴 정보 조회 |
+| `GET` | `/api/admin/partner-keys/common/{partnerKey}/dashboard`               | 요약 지표(가입자수·결제건수·결제금액) + 현재 플랜 이용 현황 |
+| `GET` | `/api/admin/partner-keys/common/{partnerKey}/dashboard/daily-signups` | 월 일별 가입자 수 |
+| `GET` | `/api/admin/partner-keys/common/{partnerKey}/dashboard/members`       | 가입자 명단 (필터 + 페이징) |
 
 ### 공통 규칙
 
@@ -28,9 +29,43 @@
 
 ---
 
-## 1. 대시보드 요약
+## 1. 제휴 정보 조회
 
-**`GET /api/admin/partner-keys/{partnerKey}/dashboard`**
+**`GET /api/admin/partner-keys/common/{partnerKey}`**
+
+제휴 키 문자열로 제휴(`partners`) 정보를 조회한다.
+
+### Request
+
+| 구분 | 파라미터 | 타입 | 필수 | 설명 |
+|------|----------|------|------|------|
+| Path | `partnerKey` | String | O | 제휴 키 문자열 (`partners.partner_key`) |
+
+### Response `200 OK`
+
+```json
+{
+  "status": 200,
+  "code": "common.SUCCESS",
+  "data": {
+    "id": 3,
+    "partnerKey": "KITA2026",
+    "partnerName": "한국무역협회",
+    "bonusCredit": 5000,
+    "startDate": "2026-01-01",
+    "endDate": "2026-12-31",
+    "createdAt": "2025-12-20T09:00:00"
+  }
+}
+```
+
+> `data` 는 `PartnerEntity` 전체를 직렬화한 값. 키가 없으면 `404 common.NOT_FOUND`.
+
+---
+
+## 2. 대시보드 요약
+
+**`GET /api/admin/partner-keys/common/{partnerKey}/dashboard`**
 
 총 가입자수 / 총 결제건수 / 누적 결제금액(각 저번주 대비 상승률)과 현재 플랜 이용 현황을 한 번에 반환한다.
 
@@ -74,9 +109,9 @@
 
 ---
 
-## 2. 월 일별 가입자 수
+## 3. 월 일별 가입자 수
 
-**`GET /api/admin/partner-keys/{partnerKey}/dashboard/daily-signups`**
+**`GET /api/admin/partner-keys/common/{partnerKey}/dashboard/daily-signups`**
 
 지정한 연/월의 일별 가입자 수를 반환한다. 가입이 없는 일자도 `count: 0` 으로 채워 해당 월의 전체 일수를 반환한다.
 
@@ -110,9 +145,9 @@
 
 ---
 
-## 3. 가입자 명단
+## 4. 가입자 명단
 
-**`GET /api/admin/partner-keys/{partnerKey}/dashboard/members`**
+**`GET /api/admin/partner-keys/common/{partnerKey}/dashboard/members`**
 
 제휴 키 소속 가입자 명단을 필터 + 페이징하여 반환한다. 모든 필터는 부분 일치(LIKE)이며 AND 조건으로 결합된다. 빈 문자열/공백은 미적용으로 처리된다. 정렬은 가입일 내림차순(`created_at DESC`).
 

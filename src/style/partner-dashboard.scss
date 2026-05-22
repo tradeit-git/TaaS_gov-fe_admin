@@ -413,6 +413,42 @@
     }
   }
 
+  .dashboard_pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 20px;
+
+    button {
+      min-width: 30px;
+      height: 30px;
+      padding: 0 6px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #fff;
+      color: #5D5C63;
+      font-size: $font-size-sm;
+      cursor: pointer;
+
+      &:hover:not(:disabled) {
+        border-color: #5B8DEF;
+        color: #5B8DEF;
+      }
+
+      &.on {
+        background: #5B8DEF;
+        border-color: #5B8DEF;
+        color: #fff;
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+    }
+  }
+
 }
 .mo {
   display: none;
