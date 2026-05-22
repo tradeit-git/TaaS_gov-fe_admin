@@ -67,7 +67,7 @@ export default function PartnerPage() {
         if (statusFilter) params.set('status', statusFilter);
         if (search.trim()) params.set('search', search.trim());
 
-        const res = await callApi(`/api/admin/coalition-keys/list?${params.toString()}`, {
+        const res = await callApi(`/api/admin/partner-keys/list?${params.toString()}`, {
             method: 'GET',
             credentials: 'include',
         });
@@ -114,7 +114,7 @@ export default function PartnerPage() {
 
     const handleDelete = (id: number) => {
         addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 제휴를 삭제하시겠습니까?'} callback={async () => {
-            const res = await callApi(`/api/admin/coalition-keys/${id}`, {
+            const res = await callApi(`/api/admin/partner-keys/${id}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });

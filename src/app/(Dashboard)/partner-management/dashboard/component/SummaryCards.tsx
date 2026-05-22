@@ -1,15 +1,23 @@
-function Sparkline({color = '#5B8DEF', up = true}: { color?: string; up?: boolean }) {
-    const path = up
-        ? 'M0 26 L12 22 L24 24 L36 16 L48 18 L60 10 L72 12 L84 5 L96 7'
-        : 'M0 8 L12 12 L24 9 L36 16 L48 14 L60 20 L72 17 L84 24 L96 22';
+import {DashboardSummary, Metric} from "@/app/(Dashboard)/partner-management/dashboard/types";
+
+function TrendText({metric}: { metric: Metric }) {
+    if (metric.growthRate === null) {
+        return <p className={'trend_new'}>신규</p>;
+    }
+    const up = metric.growthRate >= 0;
     return (
-        <svg className={'sparkline'} viewBox="0 0 96 32" preserveAspectRatio="none" fill="none">
-            <path d={path} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+        <p>
+            <span className={`partner_dashboard_icon trend ${up ? 'up' : 'down'}`}/>
+            {Math.abs(metric.growthRate)}% this week
+        </p>
     );
 }
 
-export default function SummaryCards() {
+interface Props {
+    summary: DashboardSummary;
+}
+
+export default function SummaryCards({summary}: Props) {
     return (
         <section className={'summary_cards'}>
             <div className={'card'}>
@@ -21,11 +29,8 @@ export default function SummaryCards() {
                 </div>
                 <div className={'card_main'}>
                     <div className={'content'}>
-                        <strong className={'value'}>256</strong>
-                        <p>
-                            <span className={'partner_dashboard_icon trend up'}/>
-                            14% this week
-                        </p>
+                        <strong className={'value'}>{summary.signups.value.toLocaleString()}</strong>
+                        <TrendText metric={summary.signups}/>
                     </div>
                     <div className={'partner_dashboard_icon summary_bg bg_01'}/>
                 </div>
@@ -40,11 +45,8 @@ export default function SummaryCards() {
                 </div>
                 <div className={'card_main'}>
                     <div className={'content'}>
-                        <strong className={'value'}>9</strong>
-                        <p>
-                            <span className={'partner_dashboard_icon trend down'}/>
-                            5% this week
-                        </p>
+                        <strong className={'value'}>{summary.payments.value.toLocaleString()}</strong>
+                        <TrendText metric={summary.payments}/>
                     </div>
                     <div className={'partner_dashboard_icon summary_bg bg_02'}/>
                 </div>
@@ -59,11 +61,8 @@ export default function SummaryCards() {
                 </div>
                 <div className={'card_main'}>
                     <div className={'content'}>
-                        <strong className={'value'}>5,000,000원</strong>
-                        <p>
-                            <span className={'partner_dashboard_icon trend down'}/>
-                            21% this week
-                        </p>
+                        <strong className={'value'}>{summary.amount.value.toLocaleString()}원</strong>
+                        <TrendText metric={summary.amount}/>
                     </div>
                     <div className={'partner_dashboard_icon summary_bg bg_03'}/>
                 </div>

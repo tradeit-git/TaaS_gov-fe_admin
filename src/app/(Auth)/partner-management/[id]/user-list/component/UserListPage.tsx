@@ -76,7 +76,7 @@ export default function UserListPage({partnerId}: Props) {
     const [data, setData] = useState<PartnerUser[]>([]);
 
     const fetchPartner = useCallback(async () => {
-        const res = await callApi(`/api/admin/coalition-keys/${partnerId}`, {
+        const res = await callApi(`/api/admin/partner-keys/${partnerId}`, {
             method: 'GET',
             credentials: 'include',
         });
@@ -87,7 +87,7 @@ export default function UserListPage({partnerId}: Props) {
     }, [partnerId]);
 
     const fetchUsers = useCallback(async () => {
-        const res = await callApi(`/api/admin/coalition-keys/${partnerId}/users`, {
+        const res = await callApi(`/api/admin/partner-keys/${partnerId}/users`, {
             method: 'GET',
             credentials: 'include',
         });
@@ -108,7 +108,7 @@ export default function UserListPage({partnerId}: Props) {
     const handleExcelDownload = async () => {
         try {
             const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-            const res = await fetch(`${basePath}/api/admin/coalition-keys/excelDownload/${partnerId}`, {
+            const res = await fetch(`${basePath}/api/admin/partner-keys/excelDownload/${partnerId}`, {
                 method: 'POST',
                 credentials: 'include',
             });
