@@ -10,7 +10,7 @@ import {
     DashboardSummary,
     EMPTY_MEMBERS,
     MembersResponse,
-    PartnerInfo
+    PartnerInfo, PlanUsage
 } from "@/app/(Dashboard)/partner-management/dashboard/types";
 
 interface Props {
@@ -40,6 +40,11 @@ export default async function PartnerDashboardPage({searchParams}: Props) {
 
     const partner = partnerRes.data as PartnerInfo;
     const summary = summaryRes.data as DashboardSummary;
+    const freePlanUsage = {
+        count : summary.planUsage.reduce((count,planUsage)=> { count -= planUsage.count; return count}, summary.signups.value),
+        planName : "Free"
+    }as PlanUsage
+    summary.planUsage = freePlanUsage.count > 0 ? [freePlanUsage ,... summary.planUsage] : summary.planUsage;
     const initialDaily = (dailyRes.result && dailyRes.data ? dailyRes.data : []) as DailySignup[];
     const initialMembers = (membersRes.result && membersRes.data ? membersRes.data : EMPTY_MEMBERS) as MembersResponse;
 
