@@ -45,6 +45,12 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                     <td>{formatDate(row.startDate)} ~ {formatDate(row.endDate)}</td>
                     <td>{row.usedCount.toLocaleString()}</td>
                     <td>{formatDate(row.createdAt)}</td>
+                    <td>
+                        <a className={'btn_link'}
+                           href={`/admin/partner-management/dashboard?key=${encodeURIComponent(row.partnerKey)}`}
+                           target="_blank" rel="noopener noreferrer"
+                           title="성과 대시보드 열기">↗</a>
+                    </td>
                     <td className={'td_actions'}>
                         {row.usedCount === 0 ? (
                             <button type="button" className={'btn_delete_text'}
