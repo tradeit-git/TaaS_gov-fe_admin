@@ -31,10 +31,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Slack 배포 시작 알림
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          AUTHOR: ${{ github.event.head_commit.author.name }}
         run: |
+          TEXT="🚀 *배포 시작* — \`${{ github.repository }}\` @ \`${{ github.ref_name }}\` (by ${AUTHOR:-수동실행})"
           curl -s -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"🚀 *배포 시작* — \`${{ github.repository }}\` @ \`${{ github.ref_name }}\` (by ${{ github.event.head_commit.author.name }})\"}" \
-            "${{ secrets.SLACK_WEBHOOK_URL }}" || true
+            --data "$(jq -n --arg t "$TEXT" '{text:$t}')" \
+            "$SLACK_WEBHOOK_URL" || true
 
       - uses: actions/checkout@v4
 
@@ -136,14 +140,21 @@ jobs:
 
       - name: Slack 배포 성공 알림
         if: success()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
+          TEXT="✅ *배포 성공* — \`${{ github.repository }}\` @ \`${{ github.ref_name }}\` (${GITHUB_SHA:0:7})"
           curl -s -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"✅ *배포 성공* — \`${{ github.repository }}\` @ \`${{ github.ref_name }}\` (${GITHUB_SHA:0:7})\"}" \
-            "${{ secrets.SLACK_WEBHOOK_URL }}" || true
+            --data "$(jq -n --arg t "$TEXT" '{text:$t}')" \
+            "$SLACK_WEBHOOK_URL" || true
 
       - name: Slack 배포 실패 알림
         if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          TEXT="❌ *배포 실패* — \`${{ github.repository }}\` @ \`${{ github.ref_name }}\`"
           curl -s -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"❌ *배포 실패* — \`${{ github.repository }}\` @ \`${{ github.ref_name }}\`\n로그 확인: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
-            "${{ secrets.SLACK_WEBHOOK_URL }}" || true
+            --data "$(jq -n --arg t "$TEXT" --arg u "$RUN_URL" '{text: ($t + "\n로그 확인: " + $u)}')" \
+            "$SLACK_WEBHOOK_URL" || true
