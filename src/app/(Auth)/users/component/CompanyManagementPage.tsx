@@ -5,6 +5,7 @@ import {useCallback, useEffect, useRef, useState} from "react";
 import CompanyManagementTableBody from "@/app/(Auth)/users/component/CompanyManagementTableBody";
 import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
+import {CreditSummaryType} from "@/types/user/user";
 
 export interface CompanyRow {
     id: number;
@@ -21,6 +22,7 @@ export interface CompanyRow {
     planStartDate: string | null;
     planEndDate: string | null;
     partnerName : string | null;
+    creditSummary: CreditSummaryType | null;
     createdAt: string;
 }
 
@@ -154,15 +156,17 @@ export default function CompanyManagementPage({initialData}: Props) {
                 <table className={'client_table company_table'}>
                     <colgroup>
                         <col style={{width: '4%'}}/>
-                        <col style={{width: '10%'}}/>
-                        <col style={{width: '12%'}}/>
-                        <col style={{width: '11%'}}/>
-                        <col style={{width: '10%'}}/>
-                        <col style={{width: '14%'}}/>
-                        <col style={{width: '10%'}}/>
-                        <col style={{width: '11%'}}/>
                         <col style={{width: '9%'}}/>
+                        <col style={{width: '13%'}}/>
                         <col style={{width: '6%'}}/>
+                        <col style={{width: '9%'}}/>
+                        <col style={{width: '9%'}}/>
+                        <col style={{width: '13%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '8%'}}/>
                         <col style={{width: '5%'}}/>
                     </colgroup>
                     <thead>
@@ -172,15 +176,18 @@ export default function CompanyManagementPage({initialData}: Props) {
                         <th rowSpan={2}>ID(e-mail)</th>
                         <th rowSpan={2}>이름</th>
                         <th rowSpan={2}>부서&직함</th>
-                        <th colSpan={3} style={{textAlign: 'center', borderBottom: '1px solid #EAEBED'}}>현재 이용현황</th>
-                        <th rowSpan={2}>제휴가입</th>
+                        <th colSpan={2} style={{textAlign: 'center', borderBottom: '1px solid #EAEBED'}}>현재 이용현황</th>
+                        <th colSpan={4} style={{textAlign: 'center', borderBottom: '1px solid #EAEBED', borderLeft: '1px solid #EAEBED'}}>현재 크레딧 현황</th>
                         <th rowSpan={2}>회원가입일</th>
                         <th rowSpan={2}>관리</th>
                     </tr>
                     <tr>
                         <th>플랜</th>
-                        <th>결제방식</th>
-                        <th style={{borderRight: "1px solid #EAEBED"}}>이용기간</th>
+                        <th>이용기간</th>
+                        <th style={{borderLeft: "1px solid #EAEBED"}}>지급</th>
+                        <th>사용</th>
+                        <th>소멸</th>
+                        <th style={{borderRight: "1px solid #EAEBED"}}>잔여</th>
                     </tr>
                     </thead>
                     <CompanyManagementTableBody

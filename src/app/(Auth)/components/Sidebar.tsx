@@ -69,6 +69,10 @@ export  default  function Sidebar (){
                       className={`lnb_name${isOn('onboarding')}`}>
                     <span className={'admin_icon onboarding'}/>웨비나 온보딩
                 </Link>
+                <Link href={'/news'}
+                      className={`lnb_name${isOn('news')}`}>
+                    <span className={'admin_icon news'}/>보도자료
+                </Link>
                 {/*<Link href={'/user'}*/}
                 {/*      className={`lnb_name${isOn('user')}`}>*/}
                 {/*    <span className={'admin_icon user'}/>가입계정*/}
