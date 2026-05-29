@@ -10,9 +10,10 @@ interface Props {
     formatDate: (date: string | null | undefined) => string;
     onDelete: (id: number) => void;
     onEdit: (row: NewsRow) => void;
+    onTogglePublished: (id: number, next: boolean) => void;
 }
 
-export default function NewsTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onEdit}: Props) {
+export default function NewsTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onEdit, onTogglePublished}: Props) {
     return (
         <tbody>
         {data.map((row, i) => {
@@ -47,7 +48,22 @@ export default function NewsTableBody({data, totalElements, currentPage, itemsPe
                             : '-'}
                     </td>
                     <td>{formatDate(row.createdAt)}</td>
-                    <td>{row.views.toLocaleString()}</td>
+                    <td>{row.viewCount.toLocaleString()}</td>
+                    <td>
+                        <label className={'toggle_switch'}>
+                            <input type="checkbox"
+                                   checked={row.published}
+                                   onChange={() => {}}
+                                   onClick={e => {
+                                       e.preventDefault();
+                                       onTogglePublished(row.id, !row.published);
+                                   }}/>
+                            <span className={'toggle_slider'}/>
+                            <span className={`toggle_label ${row.published ? 'on' : 'off'}`}>
+                                {row.published ? '게시' : '중단'}
+                            </span>
+                        </label>
+                    </td>
                     <td className={'td_actions'}>
                         <div className={'actions_inner'}>
                             <button type="button" className={'btn_detail'}

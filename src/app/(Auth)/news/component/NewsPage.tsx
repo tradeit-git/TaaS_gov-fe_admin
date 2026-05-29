@@ -7,24 +7,16 @@ import NewsFormPopup, {NewsFormData} from "@/app/(Auth)/news/component/NewsFormP
 import {formatDateTimeDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
-
-export const STATUS_MAP: Record<string, string> = {
-    'PUBLISHED': '게시',
-    'DRAFT': '임시저장',
-};
-
-export const NEWS_CATEGORY_OPTIONS = [
-    {value: '공지사항', label: '공지사항'},
-    {value: '보도자료', label: '보도자료'},
-    {value: '이벤트', label: '이벤트'},
-];
+import callApi from "@/utill/apiRequest";
 
 export interface NewsRow {
     id: number;
     title: string;
-    thumbnailUrl: string;
+    thumbnailUrl: string | null;
+    content: string;
     sourceUrl: string;
-    views: number;
+    viewCount: number;
+    published: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -45,28 +37,47 @@ export default function NewsPage({initialData}: Props) {
     const [data, setData] = useState<NewsRow[]>(initialData.content);
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
-    const [currentPage, setCurrentPage] = useState(0);
+    const [currentPage, setCurrentPage] = useState(0); // 0-based UI / API는 1-based
+    const [displayedPage, setDisplayedPage] = useState(Math.max(0, (initialData.currentPage ?? 1) - 1)); // 서버 응답 반영된 페이지
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [totalElements, setTotalElements] = useState(initialData.totalElements);
     const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
-    const [categoryFilter, setCategoryFilter] = useState('');
-    const [isPublishedFilter, setIsPublishedFilter] = useState('');
+    const [publishedFilter, setPublishedFilter] = useState<'' | 'true' | 'false'>('');
+    const [loading, setLoading] = useState(false);
     const isInitial = useRef(true);
+    const reqIdRef = useRef(0);
 
-    const fetchList = useCallback(async () => {
+    const loadList = useCallback(async () => {
+        const myReqId = ++reqIdRef.current;
+        setLoading(true);
+        const params = new URLSearchParams();
+        params.set('page', String(currentPage + 1));
+        params.set('size', String(itemsPerPage));
+        if (search.trim()) params.set('search', search.trim());
+        if (publishedFilter !== '') params.set('published', publishedFilter);
+
+        const res = await callApi(`/api/admin/news/list?${params.toString()}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (myReqId !== reqIdRef.current) return; // 더 최근 요청이 있으면 무시
+        setLoading(false);
+        if (res.result && res.data) {
+            const body = res.data as NewsListResponse;
+            setData(body.content);
+            setTotalElements(body.totalElements);
+            setTotalPages(Math.max(1, body.totalPages));
+            setDisplayedPage(Math.max(0, (body.currentPage ?? currentPage + 1) - 1));
+        }
+    }, [currentPage, itemsPerPage, search, publishedFilter]);
+
+    useEffect(() => {
         if (isInitial.current) {
             isInitial.current = false;
             return;
         }
-        // 목업: 실제 API 연동 시 이 자리에 호출 로직 추가
-        setData(initialData.content);
-        setTotalElements(initialData.totalElements);
-        setTotalPages(Math.max(1, initialData.totalPages));
-    }, [currentPage, itemsPerPage, search, categoryFilter, isPublishedFilter, initialData]);
-
-    useEffect(() => {
-        fetchList();
-    }, [fetchList]);
+        loadList();
+    }, [loadList]);
 
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => {
@@ -74,23 +85,48 @@ export default function NewsPage({initialData}: Props) {
         debounceRef.current = setTimeout(() => {
             setSearch(searchInput);
             setCurrentPage(0);
-        }, 100);
+        }, 300);
         return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
     }, [searchInput]);
 
     const handleDelete = (id: number) => {
         addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 보도자료를 삭제하시겠습니까?'} callback={async () => {
-            // 목업: 실제 API 연동 시 삭제 호출 추가
-            setData(prev => prev.filter(row => row.id !== id));
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+            const res = await callApi(`/api/admin/news/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
+                loadList();
+            } else {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
+            }
         }}/>);
     };
 
     const handleRegister = () => {
-        addPopup(<NewsFormPopup onSave={(formData: NewsFormData) => {
-            // 목업: 실제 API 연동 시 등록 호출 추가
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'등록되었습니다.'}/>);
-            console.log('register', formData);
+        addPopup(<NewsFormPopup onSave={async (formData: NewsFormData) => {
+            const res = await callApi(`/api/admin/news`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify({
+                    title: formData.title.trim(),
+                    thumbnailUrl: formData.thumbnailUrl || null,
+                    content: formData.content,
+                    sourceUrl: formData.sourceUrl.trim(),
+                    published: formData.published,
+                }),
+            });
+            if (res.result) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'등록되었습니다.'}/>);
+                setCurrentPage(0);
+                loadList();
+                return true;
+            } else {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '등록에 실패했습니다.'}/>);
+                return false;
+            }
         }}/>);
     };
 
@@ -99,20 +135,49 @@ export default function NewsPage({initialData}: Props) {
             initialData={{
                 id: row.id,
                 title: row.title,
-                thumbnailUrl: row.thumbnailUrl,
-                content: '',
+                thumbnailUrl: row.thumbnailUrl ?? '',
+                content: row.content ?? '',
                 sourceUrl: row.sourceUrl,
+                published: row.published,
                 createdAt: row.createdAt,
-                views: row.views,
+                viewCount: row.viewCount,
             }}
-            onSave={(formData: NewsFormData) => {
-                // 목업: 실제 API 연동 시 수정 호출 추가
-                addPopup(<AlertComponent alertType={'alert'} infoContent={'수정되었습니다.'}/>);
-                console.log('edit', formData);
+            onSave={async (formData: NewsFormData) => {
+                const res = await callApi(`/api/admin/news/${row.id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        title: formData.title.trim(),
+                        thumbnailUrl: formData.thumbnailUrl || null,
+                        content: formData.content,
+                        sourceUrl: formData.sourceUrl.trim(),
+                        published: formData.published,
+                    }),
+                });
+                if (res.result) {
+                    addPopup(<AlertComponent alertType={'alert'} infoContent={'수정되었습니다.'}/>);
+                    loadList();
+                    return true;
+                } else {
+                    addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '수정에 실패했습니다.'}/>);
+                    return false;
+                }
             }}/>);
     };
 
-    // 10페이지 단위 그룹 (0-based → 1-based 표시)
+    const handleTogglePublished = async (id: number, next: boolean) => {
+        const res = await callApi(`/api/admin/news/${id}/published?published=${next}`, {
+            method: 'PUT',
+            credentials: 'include',
+        });
+        if (res.result) {
+            setData(prev => prev.map(row => row.id === id ? {...row, published: next} : row));
+        } else {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '변경에 실패했습니다.'}/>);
+        }
+    };
+
     const displayPage = currentPage + 1;
     const pageGroupSize = 10;
     const currentGroup = Math.ceil(displayPage / pageGroupSize);
@@ -144,6 +209,11 @@ export default function NewsPage({initialData}: Props) {
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder={'제목 검색'}/>
                         {searchInput && <button type="button" className={'btn_clear'} onClick={() => { setSearchInput(''); setSearch(''); setCurrentPage(0); }}><span className={'admin_icon'}/> </button>}
                     </div>
+                    <select value={publishedFilter} onChange={e => { setPublishedFilter(e.target.value as '' | 'true' | 'false'); setCurrentPage(0); }}>
+                        <option value="">전체</option>
+                        <option value="true">게시</option>
+                        <option value="false">게시중단</option>
+                    </select>
                     <select value={itemsPerPage} onChange={e => handleItemsPerPageChange(Number(e.target.value))}>
                         <option value={10}>10개씩</option>
                         <option value={20}>20개씩</option>
@@ -158,6 +228,16 @@ export default function NewsPage({initialData}: Props) {
             {/* 테이블 */}
             <div className={'table_wrap'}>
                 <table className={'contact_table news_table'}>
+                    <colgroup>
+                        <col style={{width: 60}}/>
+                        <col/>
+                        <col style={{width: 120}}/>
+                        <col/>
+                        <col style={{width: 160}}/>
+                        <col style={{width: 80}}/>
+                        <col style={{width: 100}}/>
+                        <col style={{width: 110}}/>
+                    </colgroup>
                     <thead>
                     <tr>
                         <th>순번</th>
@@ -166,17 +246,19 @@ export default function NewsPage({initialData}: Props) {
                         <th>원문 URL</th>
                         <th>등록일시</th>
                         <th>조회수</th>
+                        <th>게시</th>
                         <th>관리</th>
                     </tr>
                     </thead>
                     <NewsTableBody
                         data={data}
                         totalElements={totalElements}
-                        currentPage={currentPage}
+                        currentPage={displayedPage}
                         itemsPerPage={itemsPerPage}
                         formatDate={formatDateTimeDot}
                         onDelete={handleDelete}
                         onEdit={handleEdit}
+                        onTogglePublished={handleTogglePublished}
                     />
                 </table>
             </div>

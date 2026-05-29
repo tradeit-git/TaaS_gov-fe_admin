@@ -1,25 +1,24 @@
 import '@/style/contact.scss'
-import NewsPage from "@/app/(Auth)/news/component/NewsPage";
-import {NewsListResponse} from "@/app/(Auth)/news/component/NewsPage";
+import NewsPage, {NewsListResponse} from "@/app/(Auth)/news/component/NewsPage";
+import {getServerRequestOptions} from "@/lib/serverRequest";
+import callApi from "@/utill/apiRequest";
 
 export default async function Page() {
-    // 목업 데이터 (퍼블리싱용) - 짝수 index는 썸네일 없음
-    const mockContent = Array.from({length: 10}, (_, i) => ({
-        id: i + 1,
-        title: `보도자료 샘플 제목 ${i + 1} - 트레이드잇 신규 서비스 출시`,
-        thumbnailUrl: i % 2 === 0 ? '' : `https://picsum.photos/seed/news${i + 1}/90/60`,
-        sourceUrl: `https://news.example.com/article/${i + 1}`,
-        views: Math.floor(Math.random() * 1000),
-        createdAt: `2026-05-${String(10 + i).padStart(2, '0')}T10:00:00`,
-        updatedAt: `2026-05-${String(10 + i).padStart(2, '0')}T10:00:00`,
-    }));
-
-    const initialData: NewsListResponse = {
-        content: mockContent,
-        totalElements: mockContent.length,
+    const options = await getServerRequestOptions();
+    let initialData: NewsListResponse = {
+        content: [],
+        totalElements: 0,
         totalPages: 1,
-        currentPage: 0,
+        currentPage: 1,
     };
+    try {
+        const res = await callApi(`/api/admin/news/list?page=1&size=10`, options);
+        if (res.result && res.data) {
+            initialData = res.data as NewsListResponse;
+        }
+    } catch (e) {
+        console.error(e);
+    }
 
-    return <NewsPage initialData={initialData} />;
+    return <NewsPage initialData={initialData}/>;
 }
