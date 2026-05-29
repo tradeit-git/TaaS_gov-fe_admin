@@ -2,6 +2,7 @@
 
 import {useRouter} from "next/navigation";
 import {CompanyRow} from "@/app/(Auth)/users/component/CompanyManagementPage";
+import {formatNum} from "@/app/(Auth)/users/[id]/component/planShared";
 
 interface Props {
     data: CompanyRow[];
@@ -58,7 +59,7 @@ export default function CompanyManagementTableBody({data, totalElements, current
         <tbody>
         {data.length === 0 ? (
             <tr>
-                <td colSpan={11} style={{textAlign: 'center'}}>가입회원사가 없습니다.</td>
+                <td colSpan={13} style={{textAlign: 'center'}}>가입회원사가 없습니다.</td>
             </tr>
         ) : (
             data.map((row, i) => {
@@ -66,6 +67,11 @@ export default function CompanyManagementTableBody({data, totalElements, current
                 const planName = formatPlanName(row);
                 const period = formatPeriod(row);
                 const deptPosition = formatDeptPosition(row);
+                const credit = row.creditSummary;
+                const granted = formatNum(credit?.granted);
+                const used = formatNum(credit?.used);
+                const expired = formatNum(credit?.expired);
+                const balance = formatNum(credit?.balance);
                 return (
                     <tr key={row.id}>
                         <td style={ellipsisStyle} title={String(rowNum)}>{rowNum}</td>
@@ -74,9 +80,11 @@ export default function CompanyManagementTableBody({data, totalElements, current
                         <td style={ellipsisStyle} title={row.name}>{row.name}</td>
                         <td style={ellipsisStyle} title={deptPosition}>{deptPosition}</td>
                         <td style={ellipsisStyle} title={planName}>{planName}</td>
-                        <td style={ellipsisStyle} title={row.paymentMethodName ?? '-'}>{row.paymentMethodName ?? '-'}</td>
                         <td style={ellipsisStyle} title={period}>{period}</td>
-                        <td style={ellipsisStyle} title={row.partnerName || '-'}>{row.partnerName || '-'}</td>
+                        <td style={ellipsisStyle} title={granted}>{granted}</td>
+                        <td style={ellipsisStyle} title={used}>{used}</td>
+                        <td style={ellipsisStyle} title={expired}>{expired}</td>
+                        <td style={ellipsisStyle} title={balance}>{balance}</td>
                         <td style={ellipsisStyle} title={formatDate(row.createdAt)}>{formatDate(row.createdAt)}</td>
                         <td className={'td_actions'}>
                             <button type="button" className={'btn_detail'}
