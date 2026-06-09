@@ -18,6 +18,7 @@ export interface PartnerRow {
     creditAmount: number;
     usedCount: number;
     createdAt: string;
+    logoUrl: string;
 }
 
 interface CoalitionApiRow {
@@ -30,6 +31,7 @@ interface CoalitionApiRow {
     createdAt: string;
     userCount: number;
     status: string;
+    logoUrl?: string;
 }
 
 interface CoalitionListResponse {
@@ -47,6 +49,7 @@ const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
     creditAmount: row.bonusCredit,
     usedCount: row.userCount,
     createdAt: row.createdAt,
+    logoUrl: row.logoUrl ?? '',
 });
 
 export default function PartnerPage() {
@@ -177,26 +180,26 @@ export default function PartnerPage() {
                     <colgroup>
                         <col style={{width: '4%'}}/>
                         <col style={{width: '6%'}}/>
-                        <col style={{width: '19%'}}/>
-                        <col style={{width: '13%'}}/>
-                        <col style={{width: '9%'}}/>
-                        <col style={{width: '18%'}}/>
+                        <col style={{width: '12%'}}/>
+                        <col style={{width: '12%'}}/>
+                        <col style={{width: '10%'}}/>
+                        <col style={{width: '14%'}}/>
+                        <col style={{width: '8%'}}/>
                         <col style={{width: '6%'}}/>
-                        <col style={{width: '9%'}}/>
-                        <col style={{width: '9%'}}/>
-                        <col style={{width: '7%'}}/>
+                        <col style={{width: '8%'}}/>
+                        <col style={{width: '20%'}}/>
                     </colgroup>
                     <thead>
                     <tr>
                         <th style={{textAlign: 'center'}}>순번</th>
                         <th>상태</th>
                         <th>제휴명</th>
-                        <th>제휴가입전용경로</th>
+                        <th>로고</th>
+                        <th>고유식별자</th>
+                        <th>가입유효기간</th>
                         <th>보너스 크레딧</th>
-                        <th>가입혜택기간</th>
                         <th>가입자수</th>
                         <th>등록일자</th>
-                        <th>성과대시보드</th>
                         <th>관리</th>
                     </tr>
                     </thead>

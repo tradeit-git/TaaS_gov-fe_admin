@@ -21,11 +21,13 @@ const getStatus = (startDate: string, endDate: string): { label: string; classNa
 
 export default function PartnerTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete}: Props) {
     const router = useRouter();
+    const frontUrl = process.env.NEXT_PUBLIC_FRONT_URL ?? '';
     return (
         <tbody>
         {data.map((row, i) => {
             const status = getStatus(row.startDate, row.endDate);
             const rowNum = totalElements - (currentPage * itemsPerPage) - i;
+            const partnerBase = `${frontUrl}/partner/${row.partnerKey}`;
             return (
                 <tr key={row.id}>
                     <td style={{textAlign: 'center'}}>{rowNum}</td>
@@ -33,30 +35,33 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                         <span className={`status_badge ${status.className}`}>{status.label}</span>
                     </td>
                     <td>{row.partnerName}</td>
-                    <td>
-                        {/*href={`https://www.tradeit.co.kr/partner/${row.partnerKey}`}*/}
-                        <span className={'partner_key'}>{row.partnerKey}</span>
-                        <a className={'btn_link'}
-                           href={`${process.env.NEXT_PUBLIC_FRONT_URL}/partner/${row.partnerKey}`}
-                           target="_blank" rel="noopener noreferrer"
-                           title="제휴 가입 페이지 열기">↗</a>
+                    <td className={'td_logo'}>
+                        {row.logoUrl
+                            ? <img src={row.logoUrl} alt={row.partnerName} className={'partner_logo'}/>
+                            : <span className={'partner_logo_empty'}>No Image</span>}
                     </td>
-                    <td>+{row.creditAmount}%</td>
+                    <td>
+                        <span className={'partner_key'}>{row.partnerKey}</span>
+                    </td>
                     <td>{formatDate(row.startDate)} ~ {formatDate(row.endDate)}</td>
+                    <td>+{row.creditAmount}%</td>
                     <td>{row.usedCount.toLocaleString()}</td>
                     <td>{formatDate(row.createdAt)}</td>
-                    <td>
-                        <a className={'btn_link'}
-                           href={`/admin/partner-management/dashboard?key=${encodeURIComponent(row.partnerKey)}`}
-                           target="_blank" rel="noopener noreferrer"
-                           title="성과 대시보드 열기">↗</a>
-                    </td>
                     <td className={'td_actions'}>
+                        <a className={'btn_action'} href={partnerBase}
+                           target="_blank" rel="noopener noreferrer"
+                           title="협회제휴 랜딩페이지 열기">랜딩페이지</a>
+                        <a className={'btn_action'} href={`${partnerBase}/join`}
+                           target="_blank" rel="noopener noreferrer"
+                           title="협회제휴 가입페이지 열기">가입페이지</a>
+                        <a className={'btn_action'} href={`${partnerBase}/dashboard`}
+                           target="_blank" rel="noopener noreferrer"
+                           title="협회제휴 대시보드 열기">대시보드</a>
                         {row.usedCount === 0 ? (
                             <button type="button" className={'btn_delete_text'}
                                     onClick={() => onDelete(row.id)}>삭제</button>
                         ) : (
-                            <button type="button" className={'btn_detail'}
+                            <button type="button" className={'btn_action'}
                                     onClick={() => router.push(`/partner-management/${row.id}/user-list`)}>가입명단</button>
                         )}
                     </td>

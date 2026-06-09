@@ -9,11 +9,126 @@
   border-bottom: 1px solid #EAEBED;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  // 왼쪽 로고 영역 (로고는 가로:세로 약 7:1 비율, 한 줄 배치용 컴팩트 박스)
+  .logo_box {
+    flex-shrink: 0;
+    width: 170px;
+
+    // 빈 상태 (업로드 버튼)
+    .logo_empty {
+      width: 100%;
+      height: 48px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px dashed #d1d5db;
+      border-radius: 8px;
+      background: #FAFCFB;
+      cursor: pointer;
+
+      .admin_icon {
+        width: 32px;
+        height: 24px;
+        background-position: -208px -128px;
+      }
+
+      .logo_empty_text {
+        font-size: $font-size-xs;
+        color: #9ca3af;
+      }
+
+      &:hover {
+        background: #F2F6F4;
+        border-color: #b9c0c8;
+      }
+      &:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+    }
+
+    // 업로드 완료 상태
+    .logo_filled {
+      position: relative;
+      width: 100%;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+
+      .logo_img {
+        width: 78%;
+        max-height: 38px;
+        object-fit: contain;
+      }
+
+      .btn_remove_logo {
+        position: absolute;
+        top: 3px;
+        right: 4px;
+        width: 18px;
+        height: 18px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        font-size: 13px;
+        line-height: 1;
+        cursor: pointer;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.65);
+        }
+      }
+
+      .logo_overlay {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        padding: 1px 6px;
+        background: rgba(255, 255, 255, 0.9);
+        border-top-right-radius: 6px;
+
+        .logo_name {
+          display: none;
+        }
+
+        .btn_change_logo {
+          font-size: 11px;
+          color: #677793;
+          background: none;
+          border: none;
+          text-decoration: underline;
+          white-space: nowrap;
+          cursor: pointer;
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: default;
+          }
+        }
+      }
+    }
+  }
+
+  // 오른쪽 입력 영역 (한 줄)
+  .form_right {
+    flex: 1;
+    min-width: 0;
+  }
 
   .form_row {
     display: flex;
-    gap: 20px;
+    gap: 12px 18px;
     flex-wrap: wrap;
     align-items: center;
   }
@@ -57,10 +172,10 @@
 
     // 제휴명
     &.field_name input {
-      width: 200px;
+      width: 170px;
     }
 
-    // 전용경로
+    // 고유식별자
     &.field_path {
       .domain_prefix {
         font-size: $font-size-sm;
@@ -68,7 +183,7 @@
         white-space: nowrap;
       }
       input {
-        width: 180px;
+        width: 150px;
       }
     }
 
@@ -106,10 +221,10 @@
       }
     }
 
-    // 가입혜택기간
+    // 가입유효기간
     &.field_period {
       input[type="date"] {
-        width: 145px;
+        width: 130px;
       }
       .date_tilde {
         margin: 0 4px;
@@ -190,6 +305,12 @@
 .partner_table {
   table-layout: fixed;
 
+  // 로고가 잘 보이도록 행 높이 확보
+  tbody td {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
   td {
     .partner_key {
       vertical-align: middle;
@@ -244,10 +365,42 @@
   }
 
   td:nth-child(3),
-  td:nth-child(4) {
+  td:nth-child(5) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  // 로고 셀 (로고는 가로:세로 약 7:1 비율 → 가로로 긴 영역)
+  .td_logo {
+    text-align: center;
+
+    .partner_logo {
+      display: inline-block;
+      width: 100%;
+      max-width: 160px;
+      height: 44px;
+      object-fit: contain;
+      border: 1px solid #ececec;
+      border-radius: 4px;
+      background: #fff;
+      vertical-align: middle;
+    }
+
+    .partner_logo_empty {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 160px;
+      height: 44px;
+      border: 1px solid #e5e5e5;
+      border-radius: 4px;
+      background: #f5f5f5;
+      color: #aaa;
+      font-size: 11px;
+      vertical-align: middle;
+    }
   }
 }
 
@@ -312,19 +465,42 @@
 }
 
 .partner_page {
-  .td_actions .btn_delete_text {
-    padding: 1px 8px;
-    border: 1px solid #ddd;
-    background: #fff;
-    border-radius: $border-radius;
-    height: 24px;
-    font-size: $font-size-xs;
-    font-weight: 500;
-    color: $black02;
-    width: 100%;
+  .td_actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
 
-    &:hover {
-      background: #f0f0f0;
+    .btn_action,
+    .btn_delete_text {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 24px;
+      padding: 1px 8px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: $border-radius;
+      font-size: $font-size-xs;
+      font-weight: 500;
+      color: $black02;
+      white-space: nowrap;
+      text-decoration: none;
+      cursor: pointer;
+
+      &:hover {
+        background: #f0f0f0;
+      }
+    }
+
+    .btn_delete_text {
+      color: #d14343;
+      border-color: #e7c3c3;
+
+      &:hover {
+        background: #fdf0f0;
+      }
     }
   }
 

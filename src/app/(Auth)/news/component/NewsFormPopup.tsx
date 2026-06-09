@@ -52,13 +52,13 @@ export default function NewsFormPopup({uId, initialData, onSave}: Props) {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // 확장자/MIME 체크 (JPG/PNG만 허용)
-        const allowedMimes = ['image/png', 'image/jpeg'];
-        const allowedExts = ['.png', '.jpg', '.jpeg'];
+        // 확장자/MIME 체크 (JPG/PNG/WebP 허용)
+        const allowedMimes = ['image/png', 'image/jpeg', 'image/webp'];
+        const allowedExts = ['.png', '.jpg', '.jpeg', '.webp'];
         const lowerName = file.name.toLowerCase();
         const extOk = allowedExts.some(ext => lowerName.endsWith(ext));
         if (!allowedMimes.includes(file.type) || !extOk) {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'JPG 또는 PNG 이미지만 업로드 가능합니다.'}/>);
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'JPG, PNG 또는 WebP 이미지만 업로드 가능합니다.'}/>);
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
@@ -155,7 +155,7 @@ export default function NewsFormPopup({uId, initialData, onSave}: Props) {
                     {/* 썸네일 이미지 */}
                     <div className={'popup_field'}>
                         <label className={'label_optional'}>썸네일 이미지</label>
-                        <input ref={fileInputRef} type="file" accept="image/png,image/jpeg"
+                        <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp"
                                style={{display: 'none'}}
                                onChange={handleFileSelect}/>
 
@@ -179,7 +179,7 @@ export default function NewsFormPopup({uId, initialData, onSave}: Props) {
                             <div className={'thumb_uploader'}>
                                 <span className={'admin_icon'}/>
                                 <p className={'upload_title'}>썸네일 이미지를 업로드 해주세요</p>
-                                <p className={'upload_desc'}>JPG/PNG 지원 · 1장만 업로드 가능 · 600 × 400px 권장</p>
+                                <p className={'upload_desc'}>JPG/PNG/WebP 지원 · 1장만 업로드 가능 · 600 × 400px 권장</p>
                                 <button type="button" className={'btn_file_select'}
                                         onClick={handleChangeThumbnail} disabled={uploading}>
                                     {uploading ? '업로드 중...' : '파일 선택'}
