@@ -112,13 +112,52 @@
       }
     }
 
-    > input[type="text"] {
+    > input[type="text"],
+    > input[type="date"] {
       @extend %field_input;
+    }
+
+    .checkbox_wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #2563eb;
+        cursor: pointer;
+        margin: 0;
+      }
+
+      span {
+        font-size: $font-size-sm;
+        color: $theme-color;
+      }
+    }
+
+    > select {
+      @extend %field_input;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 30px;
+      cursor: pointer;
+    }
+
+    .region_select_wrap {
+      display: flex;
+      gap: 8px;
+      > select {
+        flex: 1;
+      }
     }
 
     > textarea {
       width: 100%;
-      height: 92px;
+      height: 160px;
       border: 1px solid #ddd;
       border-radius: 6px;
       padding: 10px 12px;
@@ -295,6 +334,125 @@
   }
 }
 
+// -------------------- 고객사등록 ----------------------------
+.btn_excel_upload {
+  height: 30px;
+  padding: 0 14px;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  background: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #F9FAFB;
+    border-color: #9ca3af;
+  }
+}
+
+// -------------------- 영업파이프라인 등급 배지 ----------------------------
+.grade_badge {
+  display: inline-block;
+  padding: 0 10px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  border-radius: 4px;
+  color: #fff;
+  white-space: nowrap;
+
+  &.grade_potential { background: #9CA3AF; }
+  &.grade_lead { background: #F59E0B; }
+  &.grade_target { background: #3B82F6; }
+  &.grade_client { background: #22C55E; }
+}
+
+// -------------------- 고객사 검색 드롭다운 (영업파이프라인 팝업) ----------------------------
+.customer_search_wrap {
+  position: relative;
+
+  > input[type="text"] {
+    @extend %field_input;
+    padding-right: 30px;
+  }
+
+  .btn_clear_customer {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: #999;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+      color: #333;
+    }
+  }
+
+  .customer_dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: $font-size-sm;
+      border-bottom: 1px solid #f3f4f6;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background: #F3F4F6;
+      }
+
+      strong {
+        color: $theme-color;
+        font-weight: 600;
+      }
+
+      span {
+        color: #999;
+        font-size: $font-size-xs;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
 // -------------------- 고객관리 ----------------------------
 .contact_table {
   td {
@@ -346,8 +504,362 @@
       }
     }
   }
+}
 
+// -------------------- 영업파이프라인 상세 ----------------------------
+.pipeline_detail {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  height: 100vh;
+  min-width: 0;
+  overflow: hidden;
+}
 
+// 좌측: 정보 컬럼
+.pipeline_info_col {
+  background: #e2e8f0;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+.pipeline_crumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 18px 22px 14px;
+  font-size: $font-size-xs;
+  color: #64748b;
+
+  .sep { color: #94a3b8; }
+
+  .pipeline_title {
+    color: $theme-color;
+    font-weight: 700;
+    font-size: $font-size-sm;
+  }
+
+  .pipeline_grade_badge {
+    background: #dbeafe;
+    color: #1d4ed8;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .btn_back {
+    margin-left: auto;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    padding: 6px 12px;
+    font-size: $font-size-xs;
+    color: $theme-color;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    &:hover { background: #f1f5f9; }
+  }
+}
+
+.pipeline_info_section {
+  padding: 6px 22px;
+
+  h3 {
+    font-size: $font-size-xs;
+    color: #64748b;
+    font-weight: 700;
+    margin: 14px 0 12px;
+    letter-spacing: 0.02em;
+  }
+}
+
+.pipeline_field {
+  margin-bottom: 14px;
+
+  .field_label {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 3px;
+  }
+
+  .field_value {
+    font-size: $font-size-sm;
+    color: $theme-color;
+    font-weight: 600;
+  }
+
+  .field_badge {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1d4ed8;
+    padding: 3px 11px;
+    border-radius: 999px;
+    font-size: $font-size-xs;
+    font-weight: 600;
+  }
+
+  .field_input {
+    width: 100%;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: $font-size-sm;
+    color: $theme-color;
+    background: #fff;
+    outline: none;
+
+    &:focus {
+      border-color: #94a3b8;
+    }
+  }
+
+  .field_select {
+    width: 100%;
+    height: 32px;
+    padding: 0 28px 0 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: $font-size-sm;
+    color: $theme-color;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E") no-repeat right 10px center;
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+
+    &:focus {
+      border-color: #94a3b8;
+    }
+  }
+}
+
+.field_btn_wrap {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+
+  .btn_field_save, .btn_field_del {
+    flex: 1;
+    height: 32px;
+    border-radius: 7px;
+    font-size: $font-size-xs;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+  }
+
+  .btn_field_save {
+    border: 1px solid #e5e7eb;
+    color: $theme-color;
+    &:hover { background: #f1f5f9; }
+  }
+
+  .btn_field_del {
+    border: 1px solid #fca5a5;
+    color: #ef4444;
+    &:hover { background: #fef2f2; }
+  }
+}
+
+// 우측: 활동 컬럼
+.pipeline_activity_col {
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.pipeline_activity_head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 18px 24px 14px;
+
+  .activity_total {
+    font-size: 13px;
+    color: $theme-color;
+    b { font-weight: 700; }
+  }
+
+  .activity_sort {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 7px 11px;
+    font-size: $font-size-xs;
+    color: $theme-color;
+    cursor: pointer;
+    background: #fff;
+
+    &:hover { background: #f8fafc; }
+
+    svg { width: 13px; height: 13px; }
+  }
+
+  .activity_filter_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: $font-size-xs;
+    color: $theme-color;
+    cursor: pointer;
+    background: #fff;
+
+    &:hover { background: #f8fafc; }
+    &.active {
+      background: #eff6ff;
+      border-color: #93c5fd;
+      color: #1d4ed8;
+    }
+
+    svg { width: 13px; height: 13px; color: #64748b; }
+  }
+}
+
+.pipeline_add_row {
+  padding: 0 24px 8px;
+
+  .btn_add_activity {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: background 0.15s;
+
+    &:hover { background: #1d4ed8; }
+
+    svg { width: 15px; height: 15px; stroke: #fff; }
+  }
+}
+
+.pipeline_activity_list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 24px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pipeline_activity_item {
+  padding: 18px 2px;
+  border-bottom: 1px solid #e5e7eb;
+
+  &:last-of-type { border-bottom: none; }
+
+  .activity_meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: $font-size-xs;
+    color: #64748b;
+    font-weight: 600;
+
+    .activity_bookmark {
+      margin-left: auto;
+      display: flex;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: #d1d5db;
+        stroke-width: 2;
+        transition: all 0.15s;
+      }
+      &.active svg {
+        fill: #1f2937;
+        stroke: #1f2937;
+      }
+      &:hover svg {
+        stroke: #9ca3af;
+      }
+      &.active:hover svg {
+        fill: #4b5563;
+        stroke: #4b5563;
+      }
+    }
+  }
+
+  .activity_body {
+    font-size: $font-size-sm;
+    color: $theme-color;
+    line-height: 1.55;
+    margin-bottom: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .activity_actions {
+    display: flex;
+    gap: 8px;
+
+    button {
+      border-radius: 7px;
+      padding: 5px 14px;
+      font-size: $font-size-xs;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .btn_activity_edit {
+      border: 1px solid #e5e7eb;
+      color: $theme-color;
+      &:hover { background: #f1f5f9; }
+    }
+
+    .btn_activity_del {
+      border: 1px solid #fca5a5;
+      color: #ef4444;
+      &:hover { background: #fef2f2; }
+    }
+  }
+}
+
+.pipeline_load_more {
+  padding: 16px 0;
+  text-align: center;
+
+  button {
+    width: 100%;
+    padding: 10px 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #64748b;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover { background: #f8fafc; }
+    &:disabled { color: #d1d5db; cursor: default; }
+  }
 }
 
 

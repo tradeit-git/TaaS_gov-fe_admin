@@ -17,7 +17,10 @@ export  default  function Sidebar (){
     const {auth, setAuth } = useAuthStore();
     const [collapsed, setCollapsed] = useState(false); // 접힘 여부
     const topSegment = pathname.split('/')[1] ?? '';
+    const subSegment = pathname.split('/')[2] ?? '';
     const isOn = (seg: string) => topSegment === seg ? ' on' : '';
+    const isDomesticSales = topSegment === 'domestic-sales';
+    const [domesticSalesOpen, setDomesticSalesOpen] = useState(isDomesticSales);
 
     const onClickLogoutBtn = () => {
         Cookies.remove("_TaaS.auth.admin.token")
@@ -73,6 +76,27 @@ export  default  function Sidebar (){
                       className={`lnb_name${isOn('news')}`}>
                     <span className={'admin_icon news'}/>보도자료
                 </Link>
+                <div className={'lnb_group'}>
+                    <button type={'button'}
+                            className={`lnb_parent${isDomesticSales ? ' on' : ''}`}
+                            onClick={() => setDomesticSalesOpen(prev => !prev)}>
+                        <span className={'admin_icon client'}/>
+                        <span className={'lnb_parent_text'}>국내고객사영업</span>
+                        <span className={`lnb_arrow${domesticSalesOpen ? ' open' : ''}`}/>
+                    </button>
+                    {domesticSalesOpen && (
+                        <div className={'lnb_sub'}>
+                            <Link href={'/domestic-sales/client-register'}
+                                  className={`lnb_sub_item${isDomesticSales && subSegment === 'client-register' ? ' on' : ''}`}>
+                                고객사등록
+                            </Link>
+                            <Link href={'/domestic-sales/sales-pipeline'}
+                                  className={`lnb_sub_item${isDomesticSales && subSegment === 'sales-pipeline' ? ' on' : ''}`}>
+                                영업파이프라인
+                            </Link>
+                        </div>
+                    )}
+                </div>
                 {/*<Link href={'/user'}*/}
                 {/*      className={`lnb_name${isOn('user')}`}>*/}
                 {/*    <span className={'admin_icon user'}/>가입계정*/}

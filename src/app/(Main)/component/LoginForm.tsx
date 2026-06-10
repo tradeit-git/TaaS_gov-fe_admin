@@ -3,7 +3,7 @@
 import Image from "next/image";
 import React, {useRef, useState} from "react";
 import {usePopupStore} from "@/stores/common/popupStore";
-import {ADMIN_MAIN, ADMIN_MOBILE_MAIN, APP_URL} from "@/lib/routes";
+import {ADMIN_MAIN, APP_URL} from "@/lib/routes";
 import {AdminSchema} from "@/types/auth/admin";
 import Cookies from "js-cookie";
 import {useRouter} from "next/navigation";
