@@ -519,7 +519,7 @@ input::placeholder {
 
   .lnb_menu {
     overflow: hidden;
-    a {
+    > a {
       padding: 8px 10px;
       margin-bottom: 4px;
       font-size: $font-size-base;
@@ -567,6 +567,88 @@ input::placeholder {
         color: rgba(255,255,255,1);
         .admin_icon {
           opacity: 1;
+        }
+      }
+    }
+
+    .lnb_group {
+      .lnb_parent {
+        width: 100%;
+        background: none;
+        border: none;
+        padding: 8px 10px;
+        margin-bottom: 4px;
+        font-size: $font-size-base;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        border-radius: $spacing-m;
+        font-weight: 400;
+        color: rgba(255,255,255,.5);
+        cursor: pointer;
+
+        .admin_icon {
+          display: block;
+          width: 16px;
+          height: 16px;
+          opacity: .5;
+          flex-shrink: 0;
+          &.client {
+            background-position: -122px -38px;
+          }
+        }
+
+        .lnb_parent_text {
+          flex: 1;
+          text-align: left;
+        }
+
+        .lnb_arrow {
+          display: block;
+          width: 8px;
+          height: 8px;
+          border-right: 1.5px solid rgba(255,255,255,.4);
+          border-bottom: 1.5px solid rgba(255,255,255,.4);
+          transform: rotate(45deg);
+          transition: transform 0.2s;
+          flex-shrink: 0;
+          &.open {
+            transform: rotate(-135deg);
+          }
+        }
+
+        &:hover {
+          background: rgba(255,255,255,.1);
+        }
+
+        &.on {
+          color: rgba(255,255,255,1);
+          .admin_icon { opacity: 1; }
+          .lnb_arrow { border-color: rgba(255,255,255,.8); }
+        }
+      }
+
+      .lnb_sub {
+        padding-left: 34px;
+
+        .lnb_sub_item {
+          display: block;
+          padding: 6px 10px;
+          margin-bottom: 2px;
+          font-size: $font-size-base;
+          color: rgba(255,255,255,.5);
+          border-radius: $spacing-m;
+          font-weight: 400;
+          text-decoration: none;
+
+          &:hover {
+            background: rgba(255,255,255,.1);
+          }
+
+          &.on {
+            background: rgba(255,255,255,.15);
+            color: rgba(255,255,255,1);
+          }
         }
       }
     }
