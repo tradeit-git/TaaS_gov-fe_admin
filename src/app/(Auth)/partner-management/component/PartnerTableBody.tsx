@@ -45,6 +45,8 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                     </td>
                     <td>{formatDate(row.startDate)} ~ {formatDate(row.endDate)}</td>
                     <td>+{row.creditAmount}%</td>
+                    <td>{row.maxMembers === 0 ? '무제한' : `${row.maxMembers.toLocaleString()}명`}</td>
+                    <td>{row.signupCredit.toLocaleString()}</td>
                     <td>{row.usedCount.toLocaleString()}</td>
                     <td>{formatDate(row.createdAt)}</td>
                     <td className={'td_actions'}>

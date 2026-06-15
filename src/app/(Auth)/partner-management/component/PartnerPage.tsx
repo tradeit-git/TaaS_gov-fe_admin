@@ -16,6 +16,8 @@ export interface PartnerRow {
     startDate: string;
     endDate: string;
     creditAmount: number;
+    maxMembers: number;
+    signupCredit: number;
     usedCount: number;
     createdAt: string;
     logoUrl: string;
@@ -26,6 +28,8 @@ interface CoalitionApiRow {
     partnerName: string;
     partnerKey: string;
     bonusCredit: number;
+    maxMembers: number;
+    signupCredit: number;
     startDate: string;
     endDate: string;
     createdAt: string;
@@ -47,6 +51,8 @@ const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
     startDate: row.startDate,
     endDate: row.endDate,
     creditAmount: row.bonusCredit,
+    maxMembers: row.maxMembers ?? 0,
+    signupCredit: row.signupCredit ?? 0,
     usedCount: row.userCount,
     createdAt: row.createdAt,
     logoUrl: row.logoUrl ?? '',
@@ -179,15 +185,17 @@ export default function PartnerPage() {
                 <table className={'client_table partner_table'}>
                     <colgroup>
                         <col style={{width: '4%'}}/>
-                        <col style={{width: '6%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '11%'}}/>
+                        <col style={{width: '9%'}}/>
+                        <col style={{width: '9%'}}/>
                         <col style={{width: '12%'}}/>
-                        <col style={{width: '12%'}}/>
-                        <col style={{width: '10%'}}/>
-                        <col style={{width: '14%'}}/>
-                        <col style={{width: '8%'}}/>
+                        <col style={{width: '7%'}}/>
                         <col style={{width: '6%'}}/>
-                        <col style={{width: '8%'}}/>
-                        <col style={{width: '20%'}}/>
+                        <col style={{width: '7%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '7%'}}/>
+                        <col style={{width: '17%'}}/>
                     </colgroup>
                     <thead>
                     <tr>
@@ -198,6 +206,8 @@ export default function PartnerPage() {
                         <th>고유식별자</th>
                         <th>가입유효기간</th>
                         <th>보너스 크레딧</th>
+                        <th>모집인원</th>
+                        <th>가입크레딧</th>
                         <th>가입자수</th>
                         <th>등록일자</th>
                         <th>관리</th>

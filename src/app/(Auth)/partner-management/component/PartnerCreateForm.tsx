@@ -14,6 +14,8 @@ export default function PartnerCreateForm({onCreated}: Props) {
     const [partnerName, setPartnerName] = useState('');
     const [partnerKey, setPartnerKey] = useState('');
     const [creditAmount, setCreditAmount] = useState('');
+    const [maxMembers, setMaxMembers] = useState('');
+    const [signupCredit, setSignupCredit] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [logoUrl, setLogoUrl] = useState('');
@@ -27,6 +29,8 @@ export default function PartnerCreateForm({onCreated}: Props) {
         setPartnerName('');
         setPartnerKey('');
         setCreditAmount('');
+        setMaxMembers('');
+        setSignupCredit('');
         setStartDate('');
         setEndDate('');
         setLogoUrl('');
@@ -108,7 +112,7 @@ export default function PartnerCreateForm({onCreated}: Props) {
     };
 
     const handleCreate = async () => {
-        if (!partnerName.trim() || !partnerKey.trim() || !creditAmount || !startDate || !endDate) {
+        if (!partnerName.trim() || !partnerKey.trim() || !creditAmount || !signupCredit || !startDate || !endDate) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
             return;
         }
@@ -133,6 +137,8 @@ export default function PartnerCreateForm({onCreated}: Props) {
                 partnerKey: partnerKey,
                 partnerName: partnerName,
                 bonusCredit: Number(creditAmount),
+                maxMembers: Number(maxMembers || 0),
+                signupCredit: Number(signupCredit),
                 startDate: startDate,
                 endDate: endDate,
                 logoUrl: logoUrl || null,
@@ -238,6 +244,25 @@ export default function PartnerCreateForm({onCreated}: Props) {
                                    }}
                                    placeholder={''}/>
                             <span className={'unit'}>%</span>
+                        </div>
+                    </div>
+                    <div className={'form_field field_max_members'}>
+                        <label>모집인원</label>
+                        <div className={'input_wrap'}>
+                            <input type="text" inputMode="numeric" autoComplete="off"
+                                   value={maxMembers}
+                                   onChange={e => setMaxMembers(e.target.value.replace(/[^0-9]/g, ''))}
+                                   placeholder={'0=무제한'}/>
+                            <span className={'unit'}>명</span>
+                        </div>
+                    </div>
+                    <div className={'form_field field_signup_credit'}>
+                        <label>가입크레딧</label>
+                        <div className={'input_wrap'}>
+                            <input type="text" inputMode="numeric" autoComplete="off"
+                                   value={signupCredit}
+                                   onChange={e => setSignupCredit(e.target.value.replace(/[^0-9]/g, ''))}
+                                   placeholder={'가입 시 지급'}/>
                         </div>
                     </div>
                 </div>
