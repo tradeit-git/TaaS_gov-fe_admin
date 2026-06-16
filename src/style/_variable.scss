@@ -5,9 +5,19 @@ $black02: #4a4a4a;
 $gray01: #F6F7FB;
 $gray02: #EAEBED;
 
+// 해외영업관리 상세관리(tracker) 페이지 전용 토큰 (원본 프로젝트에서 이식)
+$main-color : #0E2946;
+$tableBg : #fafafa;
+$tableLine : #ddd;
+$infoBg : #f3f4f9;
+
 
 //버튼색
 
+@mixin mainBtn {
+  background-color: $main-color;
+  color: #fff;
+}
 @mixin blackBtn {
   background-color: $black01;
   color: #fff;

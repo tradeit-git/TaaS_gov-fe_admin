@@ -453,6 +453,249 @@
   }
 }
 
+// -------------------- 관리 사용자 등록 팝업 (검색형 셀렉트) ----------------------------
+.user_select_popup {
+  .search_select {
+    position: relative;
+
+    > input[type="text"] {
+      @extend %field_input;
+    }
+
+    .search_select_list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      list-style: none;
+      margin: 4px 0 0;
+      padding: 0;
+
+      $ss_grid: 1.1fr 0.8fr 1.3fr;
+
+      .search_select_empty {
+        padding: 12px;
+        text-align: center;
+        font-size: $font-size-sm;
+        color: #999;
+      }
+
+      .search_select_head {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: $ss_grid;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #F8F9FA;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: $font-size-xs;
+        font-weight: 600;
+        color: #888;
+      }
+
+      .search_select_item {
+        display: grid;
+        grid-template-columns: $ss_grid;
+        gap: 8px;
+        align-items: center;
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:hover,
+        &.on {
+          background: #F3F4F6;
+        }
+
+        > span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: $font-size-sm;
+        }
+
+        .ss_company {
+          font-weight: 600;
+          color: $theme-color;
+        }
+
+        .ss_name {
+          color: #666;
+        }
+
+        .ss_login {
+          color: #888;
+        }
+      }
+    }
+  }
+
+  .member_info_form {
+    margin: 12px 0 0;
+    padding: 14px 16px;
+    list-style: none;
+    border: 1px solid #eef0f2;
+    border-radius: 8px;
+    background: #FAFCFB;
+
+    .mi_item {
+      display: flex;
+      align-items: flex-start;
+      padding: 6px 0;
+
+      .mi_label {
+        flex-shrink: 0;
+        width: 90px;
+        margin: 0;
+        padding-top: 2px;
+        font-size: $font-size-xs;
+        color: #888;
+      }
+
+      .mi_value {
+        flex: 1;
+        font-size: $font-size-sm;
+        color: $theme-color;
+        word-break: break-all;
+      }
+    }
+
+    .credit_summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 12px;
+
+      .cs_balance {
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// -------------------- 관리 클릭 프로젝트 미니 팝업 ----------------------------
+.project_menu_backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.project_menu_popup {
+  position: fixed;
+  z-index: 1001;
+  width: 240px;
+  background: #fff;
+  border: 1px solid #d5d9dc;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  font-size: $font-size-sm;
+
+  .pm_empty {
+    padding: 16px;
+    text-align: center;
+    color: #999;
+  }
+
+  .pm_list {
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+
+    .pm_item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px;
+      cursor: pointer;
+      border-radius: 6px;
+
+      &:hover {
+        background: #F3F4F6;
+      }
+
+      .pm_star {
+        flex-shrink: 0;
+        color: #f5b301;
+
+        &:not(.on) {
+          color: #c4c8cc;
+        }
+      }
+
+      .pm_name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: $theme-color;
+      }
+    }
+
+    .pm_add {
+      justify-content: center;
+      color: $main-color;
+      font-weight: 600;
+      border-top: 1px solid #f0f0f0;
+      margin-top: 4px;
+    }
+  }
+
+  .pm_create {
+    padding: 14px;
+
+    .pm_create_label {
+      font-size: $font-size-xs;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: $font-size-sm;
+    }
+
+    .pm_create_btns {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      margin-top: 10px;
+
+      button {
+        padding: 7px 14px;
+        border-radius: 6px;
+        font-size: $font-size-sm;
+      }
+
+      .pm_cancel {
+        background: #eef0f2;
+        color: #555;
+      }
+
+      .pm_save {
+        background: $main-color;
+        color: #fff;
+      }
+    }
+  }
+}
+
 // -------------------- 고객관리 ----------------------------
 .contact_table {
   td {

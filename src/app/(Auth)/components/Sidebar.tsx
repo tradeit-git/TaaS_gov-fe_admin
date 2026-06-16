@@ -109,6 +109,10 @@ export  default  function Sidebar (){
                       className={`lnb_name${isOn('users')}`}>
                     <span className={'admin_icon management'}/>가입회원사
                 </Link>
+                <Link href={'/managed-users'}
+                      className={`lnb_name${isOn('managed-users')}`}>
+                    <span className={'admin_icon managed-users'}/>유저프로젝트관리
+                </Link>
                 <Link href={'/partner-management'}
                       className={`lnb_name${isOn('partner-management')}`}>
                     <span className={'admin_icon partner management'}/>협회제휴관리
