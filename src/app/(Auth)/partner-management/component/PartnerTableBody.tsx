@@ -10,6 +10,7 @@ interface Props {
     itemsPerPage: number;
     formatDate: (date: string | null | undefined) => string;
     onDelete: (id: number) => void;
+    onEdit: (row: PartnerRow) => void;
 }
 
 const getStatus = (startDate: string, endDate: string): { label: string; className: string } => {
@@ -19,7 +20,7 @@ const getStatus = (startDate: string, endDate: string): { label: string; classNa
     return {label: '종료', className: 'expired'};
 };
 
-export default function PartnerTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete}: Props) {
+export default function PartnerTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onEdit}: Props) {
     const router = useRouter();
     const frontUrl = process.env.NEXT_PUBLIC_FRONT_URL ?? '';
     return (
@@ -59,6 +60,7 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                         <a className={'btn_action'} href={`${partnerBase}/dashboard`}
                            target="_blank" rel="noopener noreferrer"
                            title="협회제휴 대시보드 열기">대시보드</a>
+                        <button type="button" className={'btn_action'} onClick={() => onEdit(row)}>수정</button>
                         {row.usedCount === 0 ? (
                             <button type="button" className={'btn_delete_text'}
                                     onClick={() => onDelete(row.id)}>삭제</button>

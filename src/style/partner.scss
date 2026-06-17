@@ -626,3 +626,101 @@
     }
   }
 }
+
+// ── 제휴 수정 모달 ──
+.partner_edit_popup {
+  .popupContainer {
+    width: 460px;
+    max-width: 92vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+
+    .pe_head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+
+      h3 { font-size: 18px; font-weight: 700; }
+      .pe_close { border: none; background: none; font-size: 18px; cursor: pointer; color: #64748b; }
+    }
+
+    .pe_body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+
+      .pe_field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        label { font-size: $font-size-sm; color: #555; font-weight: 500; }
+
+        > input[type="text"], > input[type="date"] {
+          height: 38px;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          padding: 0 10px;
+          font-size: $font-size-sm;
+
+          &:disabled { background: #f2f4f6; color: #999; }
+        }
+      }
+
+      .pe_logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .logo_filled { position: relative; }
+        .logo_img { width: 64px; height: 64px; object-fit: contain; border: 1px solid #eee; border-radius: 6px; }
+        .btn_remove_logo {
+          position: absolute; top: -6px; right: -6px;
+          width: 18px; height: 18px; border-radius: 50%; border: none;
+          background: #ef4444; color: #fff; cursor: pointer; line-height: 1;
+        }
+        .logo_empty {
+          width: 64px; height: 64px; border: 1px dashed #ccc; border-radius: 6px;
+          background: #fafafa; cursor: pointer; font-size: $font-size-xs; color: #888;
+        }
+        .btn_change_logo { padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #fff; font-size: $font-size-sm; cursor: pointer; }
+        .logo_name { font-size: $font-size-xs; color: #888; }
+      }
+
+      .pe_period {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        input { flex: 1; height: 38px; border: 1px solid #ccc; border-radius: 6px; padding: 0 10px; font-size: $font-size-sm; }
+      }
+
+      .pe_input_unit {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        input { flex: 1; height: 38px; border: 1px solid #ccc; border-radius: 6px; padding: 0 10px; font-size: $font-size-sm; &:disabled { background: #f2f4f6; color: #999; } }
+        .unit { font-size: $font-size-sm; color: #666; }
+      }
+
+      .pe_notice {
+        font-size: $font-size-xs; color: #c0392b; background: #fdf3f2;
+        border-radius: 6px; padding: 8px 10px; line-height: 1.5;
+      }
+    }
+
+    .pe_actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+
+      button { padding: 9px 20px; border-radius: 8px; font-size: $font-size-sm; cursor: pointer; }
+      .pe_cancel { background: #eef0f2; color: #555; border: 1px solid #ddd; }
+      .pe_save { background: $main-color; color: #fff; border: none; &:disabled { opacity: .5; } }
+    }
+  }
+}

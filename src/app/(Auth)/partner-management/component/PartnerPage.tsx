@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {useCallback, useEffect, useRef, useState} from "react";
 import PartnerCreateForm from "@/app/(Auth)/partner-management/component/PartnerCreateForm";
+import PartnerEditForm from "@/app/(Auth)/partner-management/component/PartnerEditForm";
 import PartnerTableBody from "@/app/(Auth)/partner-management/component/PartnerTableBody";
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
@@ -121,6 +122,10 @@ export default function PartnerPage() {
         fetchList();
     };
 
+    const handleEdit = (row: PartnerRow) => {
+        addPopup(<PartnerEditForm partner={row} onEdited={fetchList}/>);
+    };
+
     const handleDelete = (id: number) => {
         addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 제휴를 삭제하시겠습니까?'} callback={async () => {
             const res = await callApi(`/api/admin/partner-keys/${id}`, {
@@ -220,6 +225,7 @@ export default function PartnerPage() {
                         itemsPerPage={itemsPerPage}
                         formatDate={formatDateDot}
                         onDelete={handleDelete}
+                        onEdit={handleEdit}
                     />
                 </table>
             </div>
