@@ -1,22 +1,17 @@
 import {useEffect, useMemo, useState} from "react";
 import ReportListItems from "@/app/(Auth)/managed-users/[id]/projects/[projectId]/component/sales-log-list/ReportListItems"
-import {usePopupStore} from "@/stores/common/popupStore";
 import {useProjectTrackerStore} from "@/stores/projectTrackerStore";
-import callApi from "@/utill/apiRequest";
 import {BuyerSalesLogSchema, BuyerSalesLogType} from "@/types/buyer/buyerSalesLog";
 import ReportForm from "@/app/(Auth)/managed-users/[id]/projects/[projectId]/component/sales-log-detail/ReportForm";
-import AlertComponent from "@/app/(Auth)/components/AlertComponent";
-import PopupAllView from "@/app/(Auth)/managed-users/[id]/projects/[projectId]/component/sales-log-list/PopupAllView";
 import {safeCompare, sortByKey} from "@/utill/compare";
 import {fetchBuyerSalesLogDetail, fetchBuyerSalesLogs} from "@/app/(Auth)/managed-users/[id]/projects/[projectId]/component/PageComponent";
 
-const tagOptions = ["N/A", "Inquiry", "RFQ", "Quotation"];
+const tagOptions = ["Pre-sales", "Inquiry", "RFQ", "Quotation"];
 type FilterOptionType = {
     tags: string[],
 }
 
 export default function ActivityReportBox() {
-    const {addPopup} = usePopupStore();
     const {selectedProject, selectedBuyerId, buyers} = useProjectTrackerStore();
     const [buyerSalesLogs, setBuyerSalesLogs] = useState<BuyerSalesLogType[]>([]);
 
@@ -79,31 +74,6 @@ export default function ActivityReportBox() {
                 </ul>
                 <div className={'activityReportAll'}>
                     <span>등록수 : {buyerSalesLogs.length}건</span>
-                    {buyerSalesLogs.length > 0 && (
-                        <button className={'view_all'}
-                                onClick={async () => {
-                                    const buyer = buyers.find(item => item.id === selectedBuyerId);
-                                    if (!buyer) {
-                                        addPopup(<AlertComponent alertType={"error"} infoContent={"바이어를 선택해 주세요"}/>);
-                                        return;
-                                    }
-                                    const options: RequestInit = {
-                                        method: 'GET',
-                                        credentials: 'include'
-                                    }
-                                    const apiRes = await callApi(`/api/admin/managed-users/${useProjectTrackerStore.getState().userId}/projects/${selectedProject.id}/buyer/${buyer.id}/salesLogs`, options);
-                                    if (apiRes.result) {
-                                        const apiData = apiRes.data as BuyerSalesLogType[];
-                                        if (apiData === null || apiData.length === 0) {
-                                            addPopup(<AlertComponent alertType={"error"}
-                                                                     infoContent={"등록된 영업일지가 없습니다."}/>);
-                                            return;
-                                        }
-                                        addPopup(<PopupAllView buyer={buyer} buyerSalesLogs={apiData}/>);
-                                    }
-                                }}>View All</button>
-                    )}
-
                 </div>
                 {selectedBuyerId !== 0 && (
                     <button className={'create_btn'} onClick={() => setSelectedBuyerSalesLogId(0)}>+</button>

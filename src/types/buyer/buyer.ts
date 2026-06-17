@@ -32,6 +32,7 @@ export const BuyerSchema = z.object({
     linkedin: z.string().default(""),
     youtube: z.string().default(""),
     isPublic: z.boolean().default(false),
+    source: z.string().nullable().default(null),   // 등록 출처 (예: EXCEL_UPLOAD) — CRM과 동일
     modifiedByUser: UserSchema.nullable().default(null),
     modifiedByAdmin: AdminSchema.nullable().default(null),
     createdAt: z.string().default(""),

@@ -17,6 +17,7 @@
 | 1 | `GET` | `/api/admin/managed-users` | 관리 대상 사용자 목록 |
 | 2 | `GET` | `/api/admin/managed-users/search-users` | 등록용 사용자 검색 (미등록 사용자만) |
 | 2-1 | `GET` | `/api/admin/managed-users/projects/search` | 프로젝트 전역 검색 (빠른이동) |
+| 2-2 | `GET` | `/api/admin/managed-users/projects/bookmarks` | 즐겨찾기 프로젝트 목록 (관리자 개별) |
 | 3 | `POST` | `/api/admin/managed-users` | 관리 대상 사용자 추가 |
 | 4 | `DELETE` | `/api/admin/managed-users/{userId}` | 관리 대상 사용자 제거 (soft delete) |
 | 5 | `GET` | `/api/admin/managed-users/{userId}/projects` | 관리 대상 사용자의 프로젝트 목록 (즐겨찾기 여부 포함) |
@@ -25,7 +26,8 @@
 | 6-1 | `PUT` | `/api/admin/managed-users/{userId}/projects/{projectId}/setBookmark` | 프로젝트 즐겨찾기 추가/제거 (body: `boolean`, 관리자 개별) |
 | 7 | `GET` | `.../buyer/list` | 바이어 목록 |
 | 8 | `GET` | `.../buyer/manager/list` | 바이어 담당자 전체 목록 (엑셀용) |
-| 9 | `POST` | `.../buyer/store` | 바이어 등록/수정 (담당자 포함) |
+| 9 | `POST` | `.../buyer/store` | 바이어 등록/수정 (담당자 포함, **companyName만 필수**) |
+| 9-1 | `POST` | `.../buyer/bulk-create` | 바이어 일괄 신규 생성 (`BuyerDTO[]`, companyName만 필수) |
 | 10 | `POST` | `.../buyer/excel-upload` | 바이어 엑셀 일괄 업로드 (multipart) |
 | 11 | `GET` | `.../buyer/{buyerId}/detail` | 바이어 상세 + 담당자 |
 | 12 | `DELETE` | `.../buyer/{buyerId}` | 바이어 삭제 |
@@ -54,6 +56,7 @@
 {
   "id": 0,
   "userStatus": "ACTIVE",       // AuthStatus
+  "userType": 0,                // 계정 유형 (0:내부 1:고객 2:직접가입 100:체험)
   "companyName": "", "businessNumber": "",
   "loginId": "", "password": "",
   "name": "", "department": "", "position": "", "contract": "",
@@ -177,6 +180,13 @@
 ```
 > `buyerCountPerStep`은 해당 프로젝트에 존재하는 단계만 키로 포함될 수 있음(0인 단계는 생략될 수 있으니 프론트에서 기본 0 처리).
 
+### 2-2. 즐겨찾기 프로젝트 목록
+**`GET /api/admin/managed-users/projects/bookmarks`**
+- **요청한 관리자**가 즐겨찾기(`setBookmark`)한 프로젝트 전체. 페이지네이션 없음(전체 반환).
+- 정렬: **기업명 → 이름 → 프로젝트명**. 삭제된 프로젝트/사용자, 관리 대상에서 빠진 사용자 제외.
+- 응답 항목은 **#2-1 빠른이동 검색과 동일** (`userId`/`projectId` + 기업명/이름/로그인ID/프로젝트명 + `buyerCountPerStep` + `salesLogCount`).
+- **Response `data`:** `ManagedProjectSearchDTO[]` (배열, 래퍼 없음)
+
 ### 3. 관리 대상 사용자 추가
 **`POST /api/admin/managed-users`**
 - `Content-Type: application/json`
@@ -226,16 +236,22 @@
 
 ---
 
-## 바이어/영업일지 (#7~#23, 읽기+쓰기 풀 미러)
+## 바이어/영업일지 (#7~#23, 읽기+쓰기)
 
 > base path: `/api/admin/managed-users/{userId}/projects/{projectId}/buyer`
-> 기존 `ProjectBuyerController`(`/api/admin/project/{projectId}/buyer/...`)와 **요청/응답·동작 완전 동일**. 아래는 요약이며, 상세는 `api_admin_global_sales_tracker.md` #4~#20 참고.
+> admin 바이어/영업일지 엔드포인트는 **이 경로가 유일**합니다. (기존 `/api/admin/project/{projectId}/buyer/...` 컨트롤러는 제거됨)
+> 요청/응답 스키마·동작은 `api_admin_global_sales_tracker.md` #4~#20과 동일.
+>
+> **필수값(등록/수정/일괄생성 공통):** `companyName`(회사명)만 필수. 구글맵 주소(`googleMapAddress`)는 **선택값** — 없거나 지오코딩 실패 시 좌표/시차는 빈값(`""`/`0`)으로 저장 (예외 없음). 미입력 시 `400 buyer.COMPANY_NAME_EMPTY`.
+>
+> **#9-1 `/bulk-create`**: `BuyerDTO[]`를 받아 일괄 신규 생성. 행마다 구글맵 위경도/시차를 **병렬 조회**(10건 단위 호출 권장). 생성 바이어는 `step=DB` / 비공개 / `modifiedByAdmin`로 기록. `companyName` 빈 행은 `400 buyer_excel.INVALID_COMPANY_NAME`(`[n]번 :` 접두). 응답은 생성된 `BuyerDTO[]`.
 
 | # | Method | Path (base 생략) | Req Body / 비고 | Response `data` |
 |---|--------|------------------|------------------|------------------|
 | 7 | `GET` | `/list` | - | `BuyerDTO[]` |
 | 8 | `GET` | `/manager/list` | - | `BuyerManagerDTO[]` |
 | 9 | `POST` | `/store` | `BuyerDetailDTO` (`{buyer, buyerManagers}`) | - |
+| 9-1 | `POST` | `/bulk-create` | `BuyerDTO[]` | `BuyerDTO[]` |
 | 10 | `POST` | `/excel-upload` | `multipart` (`file`) | `BuyerDTO[]` |
 | 11 | `GET` | `/{buyerId}/detail` | - | `BuyerDetailDTO` |
 | 12 | `DELETE` | `/{buyerId}` | - | - |

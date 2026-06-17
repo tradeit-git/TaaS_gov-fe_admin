@@ -7,10 +7,9 @@ import PopupRegister from "@/app/(Auth)/managed-users/[id]/projects/[projectId]/
 import {BuyerStepEnum, BuyerStepType} from "@/types/enums";
 import {safeCompare, sortByKey} from "@/utill/compare";
 import ProjectBuyerItem from "@/app/(Auth)/managed-users/[id]/projects/[projectId]/component/buyer-list/ProjectBuyerItem";
-import {BuyerSchema, BuyerType} from "@/types/buyer/buyer";
-import {useLoadingStore} from "@/stores/common/loadingStore";
-import AlertComponent from "@/app/(Auth)/components/AlertComponent";
-import callApi from "@/utill/apiRequest";
+import BuyerExcelUploadPopup from "@/app/(Auth)/managed-users/[id]/projects/[projectId]/component/buyer-list/BuyerExcelUploadPopup";
+import BuyerExcelDownloadButton from "@/app/(Auth)/managed-users/[id]/projects/[projectId]/component/buyer-list/BuyerExcelDownloadButton";
+import {BuyerSchema} from "@/types/buyer/buyer";
 
 type PageNationOptionType = {
     perPage: number;
@@ -30,13 +29,23 @@ type SortByOptionType =
 
 export default function ProjectBuyer() {
     const {addPopup} = usePopupStore();
-    const {setIsLoading} = useLoadingStore();
-    const {selectedProject,buyers,setBuyers} = useProjectTrackerStore();
+    const {buyers, setBuyers, infoCollapsed} = useProjectTrackerStore();
 
     const [pageNationOption, setPageNationOption] = useState<PageNationOptionType>({
         page: 1,
         perPage: 7,
     });
+
+    // 하단 정보 접힘 → perPage 15, 펼침 → 7. 변경 시 현재 첫 행 기준으로 페이지 역산.
+    useEffect(() => {
+        const newPerPage = infoCollapsed ? 15 : 7;
+        setPageNationOption(prev => {
+            if (prev.perPage === newPerPage) return prev;
+            const firstIdx = prev.perPage * (prev.page - 1);
+            const newPage = Math.max(1, Math.floor(firstIdx / newPerPage) + 1);
+            return {page: newPage, perPage: newPerPage};
+        });
+    }, [infoCollapsed]);
 
     const [filterOption, setFilterOption] = useState<FilterOptionType>({
         searchText: "",
@@ -68,6 +77,13 @@ export default function ProjectBuyer() {
             });
         // 2. 정렬
     }, [buyers, filterOption , sortByOption])
+
+    // 단계별 바이어 수 (셀렉트 옵션 표시용)
+    const stepCounts = useMemo(() => {
+        const counts: Record<string, number> = {DB: 0, List: 0, Lead: 0, Target: 0, Client: 0};
+        (buyers ?? []).forEach(b => { if (counts[b.step] !== undefined) counts[b.step]++; });
+        return counts;
+    }, [buyers]);
 
     const maxPage = useMemo(() => {
         const {perPage} = pageNationOption;
@@ -101,51 +117,16 @@ export default function ProjectBuyer() {
         return result;
     }, [maxPage, pageNationOption]);
 
-    const fileInput = useRef<HTMLInputElement>(null);
-    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files ?? []; // 선택된 파일 목록
-        if (files.length > 0) {
-            const excelExts = ["xlsx","xlsm"];
-            const file = files[0];
-            // input 초기화
-            if (fileInput.current) {
-                fileInput.current.value = '';
-            }
-            const ext = file.name.split('.').pop();
-            if(!excelExts.includes(ext?.toLowerCase() ?? "")){
-                addPopup(<AlertComponent alertType={"error"} infoContent={"엑셀 파일을 선택해주세요"}/>);
-                return false;
-            }
-            const formData = new FormData();
-            formData.append("file", file);
-
-            const options: RequestInit = {
-                method: 'POST',
-                credentials: 'include',
-                body: formData
-            }
-            const apiRes = await callApi(`/api/admin/managed-users/${useProjectTrackerStore.getState().userId}/projects/${selectedProject.id}/buyer/excel-upload`, options);
-            if (apiRes.result) {
-                const apiData = apiRes.data as BuyerType[];
-                setBuyers(apiData);
-                addPopup(<AlertComponent alertType={"confirm"} infoContent={"저장 되었습니다"}/>);
-            } else {
-                if (apiRes.message) {
-                    addPopup(<AlertComponent alertType={"error"} infoContent={apiRes.message}/>);
-                }
-            }
-            setIsLoading(false);
-        }
-    }
     return (
         <section className={'buyer_list_box'}>
-            <div className={`contents_wrap ${buyers.length > 0 ? 'noBackground' : ''}`}>
+            <div className={'contents_wrap noBackground'}>
                 <div className="sorting_wrap">
                     <div className="left_wrap">
                         <div className={'product_count'}>
                             총 바이어수 : <b>{buyers.length}</b>
                         </div>
                     </div>
+                    <BuyerExcelDownloadButton/>
                 </div>
                 <div className={'left_buyer_content'}>
                     <div className={`buyer_table ${!buyers.length ? 'noBackground' : ''}`}>
@@ -157,11 +138,11 @@ export default function ProjectBuyer() {
                                             ...filterOption,
                                             selectedStep: e.target.value as BuyerStepType
                                         })}>
-                                    <option value={BuyerStepEnum.enum.DB}>DB</option>
-                                    <option value={BuyerStepEnum.enum.List}>List</option>
-                                    <option value={BuyerStepEnum.enum.Lead}>Lead</option>
-                                    <option value={BuyerStepEnum.enum.Target}>Target</option>
-                                    <option value={BuyerStepEnum.enum.Client}>Client</option>
+                                    <option value={BuyerStepEnum.enum.DB}>DB ({stepCounts.DB})</option>
+                                    <option value={BuyerStepEnum.enum.List}>List ({stepCounts.List})</option>
+                                    <option value={BuyerStepEnum.enum.Lead}>Lead ({stepCounts.Lead})</option>
+                                    <option value={BuyerStepEnum.enum.Target}>Target ({stepCounts.Target})</option>
+                                    <option value={BuyerStepEnum.enum.Client}>Client ({stepCounts.Client})</option>
                                 </select>
                                 <input className={'search_box'} type="text"
                                        value={filterOption.searchText}
@@ -169,8 +150,7 @@ export default function ProjectBuyer() {
                                        placeholder={'바이어기업 검색'}/>
                             </div>
                             <div className={'btn_box'}>
-                                <input type="file" id="file" ref={fileInput} onChange={handleFileUpload} hidden={true}/>
-                                <label htmlFor="file">엑셀 업로드</label>
+                                <button onClick={() => addPopup(<BuyerExcelUploadPopup/>)}>엑셀 업로드</button>
                                 <button onClick={() => {
                                     addPopup(<PopupRegister buyer={BuyerSchema.parse({})} buyerManagers={[]}/>)
                                 }}>신규등록

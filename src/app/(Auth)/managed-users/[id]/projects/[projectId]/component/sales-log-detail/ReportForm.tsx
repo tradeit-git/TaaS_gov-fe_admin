@@ -184,7 +184,7 @@ export default function ReportForm(props: {
                             onChange={(e) => {
                                 setBuyerSalesLog({...buyerSalesLog, topic: e.target.value});
                             }}>
-                        <option value="N/A">N/A</option>
+                        <option value="Pre-sales">Pre-sales</option>
                         <option value="Inquiry">Inquiry</option>
                         <option value="RFQ">RFQ</option>
                         <option value="Quotation">Quotation</option>

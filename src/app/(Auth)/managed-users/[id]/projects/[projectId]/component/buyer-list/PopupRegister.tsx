@@ -7,7 +7,6 @@ import PopupRegisterNationSearch from "@/app/(Auth)/managed-users/[id]/projects/
 import {BuyerType} from "@/types/buyer/buyer";
 import {useAppConfigStore} from "@/stores/common/appConfigStore";
 import {BuyerManagerType} from "@/types/buyer/buyerManager";
-import PopupRegisterBuyerManagerInfo from "@/app/(Auth)/managed-users/[id]/projects/[projectId]/component/buyer-list/PopupRegisterBuyerManagerInfo";
 import {regExps} from "@/utill/regExps";
 import {useProjectTrackerStore} from "@/stores/projectTrackerStore";
 import callApi from "@/utill/apiRequest";
@@ -52,12 +51,6 @@ export default function PopupRegister(props : {
     }
 
     const [buyer, setBuyer] = useState<BuyerType>(props.buyer);
-    const [buyerManagers, setBuyerManagers]  =useState<Record<number, BuyerManagerType>>(
-        props.buyerManagers.reduce((acc,item,index) => {
-            acc[index] = item;
-            return acc;
-        },{} as Record<number, BuyerManagerType>)
-    );
 
     const companyContacts = useMemo(() => {
         const maxCount = 3;
@@ -80,21 +73,6 @@ export default function PopupRegister(props : {
     }, [buyer.companyEmails])
 
     const title = buyer.id === 0 ? "바이어 신규 등록" : "바이어 정보 수정";
-    const [tab, setTab] = useState(0);
-    const tabTitle = ["담당자1", "담당자2", "담당자3"];
-    const renderTabList = () => (
-        <ul>
-            {tabTitle.map((title, index) => (
-                <li
-                    key={index}
-                    onClick={() => setTab(index)}
-                    className={`tab ${tab === index ? "on" : ""}`}
-                >
-                    {title}
-                </li>
-            ))}
-        </ul>
-    );
 
     const handleStoreBuyerInfo = () => {
         const [valid, updateBuyer, updateBuyerManagers] = validatorBuyer();
@@ -130,21 +108,14 @@ export default function PopupRegister(props : {
             addPopup(<AlertComponent alertType={"error"} infoContent={"바이어 기업명을 입력해주세요"}/>);
             return [false, null, null];
         }
-        newBuyer.geoCode.code =  newBuyer.geoCode.code.trim();
-        if(newBuyer.geoCode.code.trim() === ''){
-            addPopup(<AlertComponent alertType={"error"} infoContent={"바이어의 국가를 선택해주세요"}/>);
-            return [false, null, null];
-        }
+        // 필수값 변경: companyName만 필수. 국가·소재지 주소는 선택값 (백엔드 storeBuyerDetail 변경 반영)
+        newBuyer.geoCode.code = newBuyer.geoCode.code.trim();
         newBuyer.googleMapAddress = newBuyer.googleMapAddress?.trim();
-        if(newBuyer.googleMapAddress === ''){
-            addPopup(<AlertComponent alertType={"error"} infoContent={"바이어 소재지(구글맵 기준)를 입력해주세요"}/>);
-            return [false, null, null];
-        }
 
         newBuyer.homepage = newBuyer.homepage?.trim();
-        if (!regExps.url().test(newBuyer.homepage.trim())){
+        if (newBuyer.homepage && !regExps.url().test(newBuyer.homepage)){
             addPopup(<AlertComponent alertType={"error"}
-                               infoContent={"바이어 기업의 홈페이지를 입력해주세요\nex) http or https://example.com"}/>);
+                               infoContent={"바이어 기업의 홈페이지 형식이 올바르지 않습니다.\nex) http or https://example.com"}/>);
             return [false, null, null];
         }
         const companyContacts = (newBuyer.companyContacts ?? "").split(",").map(contact => contact.trim()).filter(contact => contact);
@@ -189,66 +160,8 @@ export default function PopupRegister(props : {
             return [false, null, null];
         }
 
-        const newBuyerManagers : BuyerManagerType[] = [] ;
-
-        const managerKeys = Object.keys(buyerManagers);
-        for (const key of managerKeys){
-            const i = Number(key);
-            const newBuyerManager = {... buyerManagers[i]};
-            newBuyerManager.name = newBuyerManager.name?.trim()
-            newBuyerManager.position = newBuyerManager.position?.trim()
-            newBuyerManager.contact = newBuyerManager.contact?.trim()
-            newBuyerManager.phone = newBuyerManager.phone?.trim()
-            newBuyerManager.email = newBuyerManager.email?.trim()
-            newBuyerManager.twitter = newBuyerManager.twitter?.trim()
-            newBuyerManager.facebook = newBuyerManager.facebook?.trim()
-            newBuyerManager.linkedin = newBuyerManager.linkedin?.trim()
-            newBuyerManager.instagram = newBuyerManager.instagram?.trim()
-
-            if ( newBuyerManager.contact && !(regExps.contact().test( newBuyerManager.contact) || regExps.globalContact().test( newBuyerManager.contact))){
-                addPopup(<AlertComponent alertType={"error"}
-                                         infoContent={`${i+1}번째 임직원의 유선 번호가 올바르지 않습니다.`}/>);
-                return [false, null, null];
-            }
-
-            if ( newBuyerManager.phone && !(regExps.contact().test( newBuyerManager.phone) || regExps.globalContact().test( newBuyerManager.phone))){
-                addPopup(<AlertComponent alertType={"error"}
-                                         infoContent={`${i+1}번째 임직원의 개인 연락처가 올바르지 않습니다.`}/>);
-                return [false, null, null];
-            }
-
-            if ( newBuyerManager.email && !regExps.email().test(newBuyerManager.email)) {
-                addPopup(<AlertComponent alertType={"error"}
-                                         infoContent={`${i+1}번째 임직원의 이메일이 올바르지 않습니다.`}/>);
-                return [false, null, null];
-            }
-
-            if(newBuyerManager.twitter && !regExps.twitterUrl().test(newBuyerManager.twitter)){
-                addPopup(<AlertComponent alertType={"error"}
-                                         infoContent={`${i+1}번째 임직원의 트위터 주소가 올바르지 않습니다.`}/>);
-                return [false, null, null];
-            }
-
-            if(newBuyerManager.facebook && !regExps.facebookUrl().test(newBuyerManager.facebook)){
-                addPopup(<AlertComponent alertType={"error"}
-                                         infoContent={`${i+1}번째 임직원의 페이스북 주소가 올바르지 않습니다.`}/>);
-                return [false, null, null];
-            }
-
-            if(newBuyerManager.linkedin && !regExps.linkedinUrl().test(newBuyerManager.linkedin)){
-                addPopup(<AlertComponent alertType={"error"}
-                                         infoContent={`${i+1}번째 임직원의 링크드인 주소가 올바르지 않습니다.`}/>);
-                return [false, null, null];
-            }
-
-            if(newBuyerManager.instagram && !regExps.instagramUrl().test(newBuyerManager.instagram)){
-                addPopup(<AlertComponent alertType={"error"}
-                                         infoContent={`${i+1}번째 임직원의 트위터 주소가 올바르지 않습니다.`}/>);
-                return [false, null, null];
-            }
-            newBuyerManagers.push(newBuyerManager);
-        }
-        return [true ,newBuyer,newBuyerManagers];
+        // 담당자(buyer manager) UI 제거 — 기존 담당자는 그대로 유지(passthrough)
+        return [true, newBuyer, props.buyerManagers];
     }
 
 
@@ -275,14 +188,14 @@ export default function PopupRegister(props : {
                                     />
                                 </div>
                                 <div className="input_box nation">
-                                    <p>대륙/세부지역/국가 *</p>
+                                    <p>대륙/세부지역/국가</p>
                                     <PopupRegisterNationSearch buyer={buyer} setBuyer={setBuyer}/>
                                 </div>
                             </div>
                             <div className="input_wrap">
                                 <div className="input_box">
                                 <div className="title_flex">
-                                        <p>바이어 기업의 소재지 주소 *
+                                        <p>바이어 기업의 소재지 주소
                                             <small>
                                                 / Google의 지도 API와 연동을 위해 Google Map 기준으로 유효한 주소 정보를
                                                 입력해주세요.
@@ -302,7 +215,7 @@ export default function PopupRegister(props : {
                             </div>
                             <div className="input_wrap">
                                 <div className="input_box">
-                                    <p>바이어 기업 웹사이트 주소 *</p>
+                                    <p>바이어 기업 웹사이트 주소</p>
                                     <input type="text" placeholder={"구글맵에서 유효한 주소값을 입력하셔야 등록할 수 있습니다."} maxLength={200}
                                            value={buyer.homepage ?? ""}
                                            onChange={(e) => {
@@ -428,10 +341,6 @@ export default function PopupRegister(props : {
                                         onChange={(e) =>
                                             setBuyer({...buyer, youtube: e.target.value.trim()})}/>
                                 </div>
-                            </div>
-                            <div className="tab_wrap">
-                                {renderTabList()}
-                                <PopupRegisterBuyerManagerInfo index={tab} buyerManagers={buyerManagers} setBuyerManagers={setBuyerManagers}/>
                             </div>
                         </div>
                     </div>

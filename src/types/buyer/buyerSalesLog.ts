@@ -14,7 +14,7 @@ export const BuyerSalesLogSchema = z.object({
     id: z.number().int().default(0),
     buyer : BuyerSchema.default(BuyerSchema.parse({})),
     date: z.string().default(getTodayYMD),
-    topic : z.string().default('N/A'),
+    topic : z.string().default('Pre-sales'),
     title: z.string().default(''),
     content: z.string().default(''),
     modifiedByUser: UserSchema.nullable().default(null),

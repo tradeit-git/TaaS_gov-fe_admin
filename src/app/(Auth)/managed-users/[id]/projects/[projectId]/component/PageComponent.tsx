@@ -8,7 +8,6 @@ import {useProjectTrackerStore} from "@/stores/projectTrackerStore";
 import {ProjectSchema, ProjectType} from "@/types/project/project";
 import {BuyerSchema, BuyerType} from "@/types/buyer/buyer";
 import {BuyerManagerType} from "@/types/buyer/buyerManager";
-import {BuyerStepHistoryType} from "@/types/buyer/buyerStepHistory";
 import {BuyerSalesLogSchema, BuyerSalesLogType} from "@/types/buyer/buyerSalesLog";
 
 // managed-users READ base path. userId는 스토어(라우트 파라미터)에서 주입됨.
@@ -45,10 +44,9 @@ export const fetchBuyerDetail = async (projectId: number, buyerId: number) => {
 
     let buyer = BuyerSchema.parse({});
     let buyerManagers = [] as BuyerManagerType[];
-    let buyerStepHistories = [] as BuyerStepHistoryType[];
 
     if (projectId === 0 || buyerId === 0) {
-        return {buyer, buyerManagers, buyerStepHistories}
+        return {buyer, buyerManagers}
     }
 
     const options: RequestInit = {
@@ -63,14 +61,8 @@ export const fetchBuyerDetail = async (projectId: number, buyerId: number) => {
         };
         buyer = buyerDetailApiData.buyer;
         buyerManagers = buyerDetailApiData.buyerManagers
-    } else {
-        return {buyer, buyerManagers, buyerStepHistories}
     }
-    const stepHistoryApiRes = await callApi(`${readBase(projectId)}/buyer/${buyerId}/buyerStepHistories`, options);
-    if (stepHistoryApiRes.result) {
-        buyerStepHistories = stepHistoryApiRes.data as BuyerStepHistoryType[];
-    }
-    return {buyer, buyerManagers, buyerStepHistories}
+    return {buyer, buyerManagers}
 }
 
 export const fetchBuyerSalesLogs = async (projectId: number, buyerId: number) => {

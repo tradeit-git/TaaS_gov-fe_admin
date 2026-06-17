@@ -15,6 +15,9 @@ interface ProjectTrackerStore {
     setBuyers: (buyers: BuyerType[]) => void,
     selectedBuyerId  : number,
     setSelectedBuyerId: (id: number) => void,
+    // 하단 바이어 정보 박스 접힘 여부 (접히면 테이블 페이지당 행 수 ↑)
+    infoCollapsed: boolean,
+    setInfoCollapsed: (v: boolean) => void,
 }
 
 export const useProjectTrackerStore = create<ProjectTrackerStore>((set) => ({
@@ -41,5 +44,9 @@ export const useProjectTrackerStore = create<ProjectTrackerStore>((set) => ({
     selectedBuyerId  : 0,
     setSelectedBuyerId: (id: number) => {
         set((state) => ({...state, selectedBuyerId : id}));
+    },
+    infoCollapsed: false,
+    setInfoCollapsed: (v: boolean) => {
+        set((state) => ({...state, infoCollapsed: v}));
     },
 }));
