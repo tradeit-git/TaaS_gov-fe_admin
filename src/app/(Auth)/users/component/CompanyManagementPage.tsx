@@ -1,10 +1,9 @@
 'use client'
 
 import Link from "next/link";
-import {useCallback, useEffect, useRef, useState} from "react";
-import {useRouter, useSearchParams} from "next/navigation";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
 import CompanyManagementTableBody from "@/app/(Auth)/users/component/CompanyManagementTableBody";
-import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
 import {CreditSummaryType} from "@/types/user/user";
 
@@ -34,80 +33,58 @@ export interface CompanyListResponse {
     currentPage: number;
 }
 
-interface Props {
-    initialData: CompanyListResponse;
+export interface CompanyFilters {
+    planName: string;
+    hasPlan: string;
+    keyword: string;
+    page: number;   // 0-based (서버에서 1-based URL을 변환해 전달)
+    size: number;
 }
 
-export default function CompanyManagementPage({initialData}: Props) {
+interface Props {
+    initialData: CompanyListResponse;
+    filters: CompanyFilters;
+    planNames: string[];   // 플랜명 필터 옵션 (서버 /plan-names)
+}
+
+export default function CompanyManagementPage({initialData, filters, planNames}: Props) {
     const router = useRouter();
-    const searchParams = useSearchParams();
 
-    // URL 쿼리에서 초기 상태 복원 (상세 → 뒤로가기/취소 시 이전 필터·페이지 유지)
-    const initKeyword = searchParams.get('keyword') ?? '';
-    const [data, setData] = useState<CompanyRow[]>(initialData.content);
-    const [searchInput, setSearchInput] = useState(initKeyword);
-    const [search, setSearch] = useState(initKeyword);
-    const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page') ?? '0') || 0);
-    const [itemsPerPage, setItemsPerPage] = useState(Number(searchParams.get('size') ?? '10') || 10);
-    const [totalElements, setTotalElements] = useState(initialData.totalElements);
-    const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
-    const [planFilter, setPlanFilter] = useState(searchParams.get('planTier') ?? '');
-    const [hasPlan, setHasPlan] = useState(searchParams.get('hasPlan') ?? '');   // '' 전체 / 'true' 유효구독 / 'false' 플랜없음
-    // URL에 필터/페이지가 있으면 첫 렌더에서 즉시 fetch (서버 initialData는 기본값이라 불일치)
-    const isInitial = useRef(!(searchParams.get('planTier') || searchParams.get('hasPlan') || searchParams.get('keyword') || searchParams.get('page') || searchParams.get('size')));
+    // 풀 SSR: 표시값은 전부 서버 props에서 파생 (URL = 단일 진실)
+    const data = initialData.content;
+    const totalElements = initialData.totalElements;
+    const totalPages = Math.max(1, initialData.totalPages);
+    const currentPage = filters.page;       // 0-based
+    const itemsPerPage = filters.size;
+    const planFilter = filters.planName;
+    const hasPlan = filters.hasPlan;
 
-    const fetchList = useCallback(async () => {
-        if (isInitial.current) {
-            isInitial.current = false;
-            return;
-        }
+    // 검색어만 입력 중 로컬 상태 (디바운스 후 네비게이션). 네비게이션 완료 시 서버값과 동기화.
+    const [searchInput, setSearchInput] = useState(filters.keyword);
+    useEffect(() => {
+        setSearchInput(filters.keyword);
+    }, [filters.keyword]);
 
+    // 현재 필터 + 변경분으로 URL을 만들어 네비게이션 (router가 basePath/히스토리 정상 처리)
+    const navigate = (next: Partial<CompanyFilters>) => {
+        const f = {planName: planFilter, hasPlan, keyword: filters.keyword, page: currentPage, size: itemsPerPage, ...next};
         const params = new URLSearchParams();
-        params.set('page', String(currentPage));
-        params.set('size', String(itemsPerPage));
-        if (search.trim()) params.set('keyword', search.trim());
-        if (planFilter) params.set('planTier', planFilter);
-        if (hasPlan) params.set('hasPlan', hasPlan);
-
-        const res = await callApi(`/api/admin/members/users?${params.toString()}`, {
-            method: 'GET',
-            credentials: 'include',
-        });
-        if (res.result && res.data) {
-            const body = res.data as CompanyListResponse;
-            setData(body.content);
-            setTotalElements(body.totalElements);
-            setTotalPages(Math.max(1, body.totalPages));
-        }
-    }, [currentPage, itemsPerPage, search, planFilter, hasPlan]);
-
-    useEffect(() => {
-        fetchList();
-    }, [fetchList]);
-
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    useEffect(() => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            setSearch(searchInput);
-            setCurrentPage(0);
-        }, 100);
-        return () => {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-        };
-    }, [searchInput]);
-
-    // 필터/검색/페이지 상태를 URL 쿼리에 동기화 (replace로 히스토리 누적 방지). 상세→뒤로가기 시 복원됨.
-    useEffect(() => {
-        const params = new URLSearchParams();
-        if (planFilter) params.set('planTier', planFilter);
-        if (hasPlan) params.set('hasPlan', hasPlan);
-        if (search.trim()) params.set('keyword', search.trim());
-        if (currentPage) params.set('page', String(currentPage));
-        if (itemsPerPage !== 10) params.set('size', String(itemsPerPage));
+        if (f.planName) params.set('planName', f.planName);
+        if (f.hasPlan) params.set('hasPlan', f.hasPlan);
+        if (f.keyword.trim()) params.set('keyword', f.keyword.trim());
+        if (f.page > 0) params.set('page', String(f.page + 1));   // URL은 1-based(표시 페이지)
+        if (f.size !== 10) params.set('size', String(f.size));
         const qs = params.toString();
-        router.replace(qs ? `/users?${qs}` : '/users', {scroll: false});
-    }, [planFilter, hasPlan, search, currentPage, itemsPerPage, router]);
+        router.replace(qs ? `/users?${qs}` : '/users');
+    };
+
+    // 검색 디바운스 → 네비게이션 (실제로 바뀐 경우만)
+    useEffect(() => {
+        if (searchInput === filters.keyword) return;
+        const t = setTimeout(() => navigate({keyword: searchInput, page: 0}), 400);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchInput]);
 
     // 10페이지 단위 그룹
     const displayPage = currentPage + 1;
@@ -116,11 +93,6 @@ export default function CompanyManagementPage({initialData}: Props) {
     const groupStart = (currentGroup - 1) * pageGroupSize + 1;
     const groupEnd = Math.min(currentGroup * pageGroupSize, totalPages);
     const pageNumbers = Array.from({length: groupEnd - groupStart + 1}, (_, i) => groupStart + i);
-
-    const handleItemsPerPageChange = (value: number) => {
-        setItemsPerPage(value);
-        setCurrentPage(0);
-    };
 
     return (
         <div className={'admin_page'}>
@@ -144,21 +116,11 @@ export default function CompanyManagementPage({initialData}: Props) {
             <div className={'list_header'}>
                 <p className={'result_count'}>Showing {data.length} of {totalElements.toLocaleString()} results</p>
                 <div className={'search_area'}>
-                    <select value={planFilter} onChange={e => {
-                        setPlanFilter(e.target.value);
-                        setCurrentPage(0);
-                    }}>
-                        <option value="">전체</option>
-                        <option value="FREE">Free</option>
-                        <option value="PERSONAL">개인</option>
-                        <option value="TEAM">팀</option>
-                        <option value="ENTERPRISE">엔터프라이즈</option>
-                        <option value="GA_CONTRACT">해외영업실행</option>
+                    <select value={planFilter} onChange={e => navigate({planName: e.target.value, page: 0})}>
+                        <option value="">플랜 전체</option>
+                        {planNames.map(pn => <option key={pn} value={pn}>{pn}</option>)}
                     </select>
-                    <select value={hasPlan} onChange={e => {
-                        setHasPlan(e.target.value);
-                        setCurrentPage(0);
-                    }}>
+                    <select value={hasPlan} onChange={e => navigate({hasPlan: e.target.value, page: 0})}>
                         <option value="">구독여부 전체</option>
                         <option value="true">유효 구독 보유</option>
                         <option value="false">플랜 없음</option>
@@ -168,11 +130,10 @@ export default function CompanyManagementPage({initialData}: Props) {
                                placeholder={'고객사 검색'}/>
                         {searchInput && <button type="button" className={'btn_clear'} onClick={() => {
                             setSearchInput('');
-                            setSearch('');
-                            setCurrentPage(0);
+                            navigate({keyword: '', page: 0});
                         }}><span className={'admin_icon'}/></button>}
                     </div>
-                    <select value={itemsPerPage} onChange={e => handleItemsPerPageChange(Number(e.target.value))}>
+                    <select value={itemsPerPage} onChange={e => navigate({size: Number(e.target.value), page: 0})}>
                         <option value={10}>10개씩</option>
                         <option value={20}>20개씩</option>
                         <option value={50}>50개씩</option>
@@ -232,15 +193,15 @@ export default function CompanyManagementPage({initialData}: Props) {
             {/* 페이지네이션 */}
             <div className={'pagination'}>
                 <button type="button" className={'btn_prev'} disabled={currentGroup <= 1}
-                        onClick={() => setCurrentPage(groupStart - pageGroupSize - 1)}><span className={'admin_icon'}/>
+                        onClick={() => navigate({page: groupStart - pageGroupSize - 1})}><span className={'admin_icon'}/>
                 </button>
                 {pageNumbers.map(page => (
                     <button key={page} type="button"
                             className={`btn_page ${page === displayPage ? 'on' : ''}`}
-                            onClick={() => setCurrentPage(page - 1)}>{page}</button>
+                            onClick={() => navigate({page: page - 1})}>{page}</button>
                 ))}
                 <button type="button" className={'btn_next'} disabled={groupEnd >= totalPages}
-                        onClick={() => setCurrentPage(groupEnd)}><span className={'admin_icon'}/></button>
+                        onClick={() => navigate({page: groupEnd})}><span className={'admin_icon'}/></button>
             </div>
         </div>
     );
