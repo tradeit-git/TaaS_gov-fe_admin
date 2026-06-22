@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {useCallback, useEffect, useRef, useState} from "react";
+import {useRouter, useSearchParams} from "next/navigation";
 import CompanyManagementTableBody from "@/app/(Auth)/users/component/CompanyManagementTableBody";
 import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
@@ -38,16 +39,22 @@ interface Props {
 }
 
 export default function CompanyManagementPage({initialData}: Props) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // URL 쿼리에서 초기 상태 복원 (상세 → 뒤로가기/취소 시 이전 필터·페이지 유지)
+    const initKeyword = searchParams.get('keyword') ?? '';
     const [data, setData] = useState<CompanyRow[]>(initialData.content);
-    const [searchInput, setSearchInput] = useState('');
-    const [search, setSearch] = useState('');
-    const [currentPage, setCurrentPage] = useState(0);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [searchInput, setSearchInput] = useState(initKeyword);
+    const [search, setSearch] = useState(initKeyword);
+    const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page') ?? '0') || 0);
+    const [itemsPerPage, setItemsPerPage] = useState(Number(searchParams.get('size') ?? '10') || 10);
     const [totalElements, setTotalElements] = useState(initialData.totalElements);
     const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
-    const [planFilter, setPlanFilter] = useState('');
-    const [hasPlan, setHasPlan] = useState('');   // 구독 보유 여부 ('' 전체 / 'true' 유효구독 / 'false' 플랜없음)
-    const isInitial = useRef(true);
+    const [planFilter, setPlanFilter] = useState(searchParams.get('planTier') ?? '');
+    const [hasPlan, setHasPlan] = useState(searchParams.get('hasPlan') ?? '');   // '' 전체 / 'true' 유효구독 / 'false' 플랜없음
+    // URL에 필터/페이지가 있으면 첫 렌더에서 즉시 fetch (서버 initialData는 기본값이라 불일치)
+    const isInitial = useRef(!(searchParams.get('planTier') || searchParams.get('hasPlan') || searchParams.get('keyword') || searchParams.get('page') || searchParams.get('size')));
 
     const fetchList = useCallback(async () => {
         if (isInitial.current) {
@@ -89,6 +96,18 @@ export default function CompanyManagementPage({initialData}: Props) {
             if (debounceRef.current) clearTimeout(debounceRef.current);
         };
     }, [searchInput]);
+
+    // 필터/검색/페이지 상태를 URL 쿼리에 동기화 (replace로 히스토리 누적 방지). 상세→뒤로가기 시 복원됨.
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (planFilter) params.set('planTier', planFilter);
+        if (hasPlan) params.set('hasPlan', hasPlan);
+        if (search.trim()) params.set('keyword', search.trim());
+        if (currentPage) params.set('page', String(currentPage));
+        if (itemsPerPage !== 10) params.set('size', String(itemsPerPage));
+        const qs = params.toString();
+        router.replace(qs ? `/users?${qs}` : '/users', {scroll: false});
+    }, [planFilter, hasPlan, search, currentPage, itemsPerPage, router]);
 
     // 10페이지 단위 그룹
     const displayPage = currentPage + 1;

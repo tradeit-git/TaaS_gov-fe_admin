@@ -1,3 +1,4 @@
+import {Suspense} from "react";
 import CompanyManagementPage, {CompanyListResponse} from "@/app/(Auth)/users/component/CompanyManagementPage";
 import {getServerRequestOptions} from "@/lib/serverRequest";
 import callApi from "@/utill/apiRequest";
@@ -19,5 +20,9 @@ export default async function Page() {
         console.error(e);
     }
 
-    return <CompanyManagementPage initialData={initialData} />;
+    return (
+        <Suspense>
+            <CompanyManagementPage initialData={initialData} />
+        </Suspense>
+    );
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import Link from "next/link";
 import React, {useMemo, useState} from "react";
+import {useRouter} from "next/navigation";
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
@@ -19,6 +19,7 @@ const stripDisallowed = (s: string) => s.replace(/[^!-~]/g, '');
 
 export default function AccountInfoSection({user}: Props) {
     const {addPopup} = usePopupStore();
+    const router = useRouter();
     const [password, setPassword] = useState('');
     const [saving, setSaving] = useState(false);
 
@@ -124,7 +125,7 @@ export default function AccountInfoSection({user}: Props) {
             </ul>
 
             <div className={'btn_wrap'}>
-                <Link href="/users" className={'cancel_btn'}>취소</Link>
+                <button type="button" className={'cancel_btn'} onClick={() => router.back()}>취소</button>
                 <button type="button" className={'save_btn'} onClick={handleSave} disabled={saving || !isValid}>저장</button>
             </div>
         </div>
