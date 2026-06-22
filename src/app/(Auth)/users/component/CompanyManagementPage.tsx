@@ -46,6 +46,7 @@ export default function CompanyManagementPage({initialData}: Props) {
     const [totalElements, setTotalElements] = useState(initialData.totalElements);
     const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
     const [planFilter, setPlanFilter] = useState('');
+    const [hasPlan, setHasPlan] = useState('');   // 구독 보유 여부 ('' 전체 / 'true' 유효구독 / 'false' 플랜없음)
     const isInitial = useRef(true);
 
     const fetchList = useCallback(async () => {
@@ -59,6 +60,7 @@ export default function CompanyManagementPage({initialData}: Props) {
         params.set('size', String(itemsPerPage));
         if (search.trim()) params.set('keyword', search.trim());
         if (planFilter) params.set('planTier', planFilter);
+        if (hasPlan) params.set('hasPlan', hasPlan);
 
         const res = await callApi(`/api/admin/members/users?${params.toString()}`, {
             method: 'GET',
@@ -70,7 +72,7 @@ export default function CompanyManagementPage({initialData}: Props) {
             setTotalElements(body.totalElements);
             setTotalPages(Math.max(1, body.totalPages));
         }
-    }, [currentPage, itemsPerPage, search, planFilter]);
+    }, [currentPage, itemsPerPage, search, planFilter, hasPlan]);
 
     useEffect(() => {
         fetchList();
@@ -133,6 +135,14 @@ export default function CompanyManagementPage({initialData}: Props) {
                         <option value="TEAM">팀</option>
                         <option value="ENTERPRISE">엔터프라이즈</option>
                         <option value="GA_CONTRACT">해외영업실행</option>
+                    </select>
+                    <select value={hasPlan} onChange={e => {
+                        setHasPlan(e.target.value);
+                        setCurrentPage(0);
+                    }}>
+                        <option value="">구독여부 전체</option>
+                        <option value="true">유효 구독 보유</option>
+                        <option value="false">플랜 없음</option>
                     </select>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
