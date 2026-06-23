@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {useCallback, useEffect, useState} from "react";
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
@@ -16,6 +17,7 @@ export interface PartnerUser {
     position: string;
     phone: string;
     createdAt: string;
+    isPartnerMember: boolean;
 }
 
 interface CoalitionUserApiRow {
@@ -27,6 +29,7 @@ interface CoalitionUserApiRow {
     position: string;
     contact: string;
     createdAt: string;
+    isPartnerMember: boolean | null;   // 제휴회원사 여부(체크박스로 가입한 실제 제휴사)
 }
 
 interface CoalitionDetailApiRow {
@@ -56,6 +59,7 @@ const mapToPartnerUser = (row: CoalitionUserApiRow): PartnerUser => ({
     position: row.position,
     phone: row.contact,
     createdAt: row.createdAt,
+    isPartnerMember: row.isPartnerMember ?? false,
 });
 
 const mapToPartnerInfo = (row: CoalitionDetailApiRow): PartnerInfo => ({
@@ -71,6 +75,7 @@ interface Props {
 }
 
 export default function UserListPage({partnerId}: Props) {
+    const router = useRouter();
     const {addPopup} = usePopupStore();
     const [partner, setPartner] = useState<PartnerInfo | null>(null);
     const [data, setData] = useState<PartnerUser[]>([]);
@@ -196,34 +201,45 @@ export default function UserListPage({partnerId}: Props) {
                 <table className={'client_table partner_table'}>
                     <colgroup>
                         <col style={{width: '4%'}}/>
+                        <col style={{width: '8%'}}/>
                         <col style={{width: '18%'}}/>
-                        <col style={{width: '22%'}}/>
-                        <col style={{width: '10%'}}/>
                         <col style={{width: '15%'}}/>
-                        <col style={{width: '15%'}}/>
-                        <col style={{width: '15%'}}/>
+                        <col style={{width: '13%'}}/>
+                        <col style={{width: '8%'}}/>
+                        <col style={{width: '12%'}}/>
+                        <col style={{width: '11%'}}/>
+                        <col style={{width: '11%'}}/>
                     </colgroup>
                     <thead>
                     <tr>
                         <th style={{textAlign: 'center'}}>순번</th>
-                        <th>회사명</th>
+                        <th style={{textAlign: 'center'}}>제휴회원사</th>
                         <th>ID(e-mail)</th>
-                        <th>이름</th>
+                        <th>회사명</th>
                         <th>부서&직함</th>
+                        <th>이름</th>
                         <th>전화번호</th>
                         <th>회원가입일</th>
+                        <th>상세보기</th>
                     </tr>
                     </thead>
                     <tbody>
                     {data.map((row, i) => (
                         <tr key={row.id}>
                             <td style={{textAlign: 'center'}}>{data.length - i}</td>
-                            <td>{row.companyName}</td>
+                            <td style={{textAlign: 'center'}}>{row.isPartnerMember ? 'O' : 'X'}</td>
                             <td>{row.loginId}</td>
-                            <td>{row.name}</td>
+                            <td>{row.companyName}</td>
                             <td>{row.department} {row.position}</td>
+                            <td>{row.name}</td>
                             <td>{row.phone}</td>
                             <td>{formatDateDot(row.createdAt)}</td>
+                            <td className={'td_actions'}>
+                                <button type="button" className={'btn_detail'}
+                                        onClick={() => router.push(`/partner-management/${partnerId}/user-list/${row.id}`)}>
+                                    상세보기
+                                </button>
+                            </td>
                         </tr>
                     ))}
                     </tbody>
