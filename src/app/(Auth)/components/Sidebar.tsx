@@ -76,6 +76,10 @@ export  default  function Sidebar (){
                       className={`lnb_name${isOn('news')}`}>
                     <span className={'admin_icon news'}/>보도자료
                 </Link>
+                <Link href={'/video-library'}
+                      className={`lnb_name${isOn('video-library')}`}>
+                    <span className={'admin_icon video-library'}/>영상라이브러리
+                </Link>
                 <div className={'lnb_group'}>
                     <button type={'button'}
                             className={`lnb_parent${isDomesticSales ? ' on' : ''}`}

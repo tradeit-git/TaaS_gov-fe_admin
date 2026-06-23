@@ -699,6 +699,12 @@ input::placeholder {
         &.news {
           background-position: -267px -38px;
         }
+        &.video-library {
+          background-position: -91px -62px;
+        }
+        &.managed-users {
+          background-position: -122px -62px;
+        }
       }
       &.on {
         background: rgba(255,255,255,.2);
