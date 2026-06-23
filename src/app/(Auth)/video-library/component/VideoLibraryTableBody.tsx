@@ -27,14 +27,19 @@ export default function VideoLibraryTableBody({data, totalElements, currentPage,
                         <label className={'toggle_switch'}>
                             <input type="checkbox"
                                    checked={row.pinned}
-                                   onChange={() => onTogglePinned(row.id, !row.pinned)}/>
+                                   onChange={() => {}}
+                                   onClick={e => {
+                                       e.preventDefault();
+                                       onTogglePinned(row.id, !row.pinned);
+                                   }}/>
                             <span className={'toggle_slider'}/>
                             <span className={`toggle_label ${row.pinned ? 'on' : 'off'}`}>
                                 {row.pinned ? '고정' : '고정'}
                             </span>
                         </label>
                     </td>
-                    <td className={'td_title'}>{row.title}</td>
+                    <td className={'td_title'} title={row.title}
+                        style={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{row.title}</td>
                     <td>
                         {row.thumbnailUrl
                             ? <img src={row.thumbnailUrl} alt={row.title} className={'news_thumb'}
@@ -53,7 +58,8 @@ export default function VideoLibraryTableBody({data, totalElements, currentPage,
                                         fontSize: 12,
                                     }}>No Image</span>}
                     </td>
-                    <td>
+                    <td title={row.videoUrl || ''}
+                        style={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
                         {row.videoUrl
                             ? <a href={row.videoUrl} target="_blank" rel="noreferrer">{row.videoUrl}</a>
                             : '-'}
@@ -64,7 +70,11 @@ export default function VideoLibraryTableBody({data, totalElements, currentPage,
                         <label className={'toggle_switch'}>
                             <input type="checkbox"
                                    checked={row.published}
-                                   onChange={() => onTogglePublished(row.id, !row.published)}/>
+                                   onChange={() => {}}
+                                   onClick={e => {
+                                       e.preventDefault();
+                                       onTogglePublished(row.id, !row.published);
+                                   }}/>
                             <span className={'toggle_slider'}/>
                             <span className={`toggle_label ${row.published ? 'on' : 'off'}`}>
                                 {row.published ? '게시' : '중단'}

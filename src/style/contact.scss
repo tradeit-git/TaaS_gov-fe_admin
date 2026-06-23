@@ -379,7 +379,8 @@
 
     .color_select_dropdown {
       position: absolute;
-      top: calc(100% + 4px);
+      bottom: calc(100% + 4px); // popup_body 스크롤에 잘리지 않도록 위로 펼침
+      top: auto;
       left: 0;
       z-index: 200;
       width: 150px;
@@ -1254,6 +1255,21 @@
 
     &:hover { background: #f8fafc; }
     &:disabled { color: #d1d5db; cursor: default; }
+  }
+}
+
+// 영상라이브러리 폼: 필드 수가 많아 세로가 길어 스크롤이 생기므로 여백을 살짝 축소
+.video_form_popup {
+  .popup_field {
+    margin-bottom: 10px;
+  }
+
+  .thumb_uploader {
+    padding: 16px 20px;
+
+    .upload_desc {
+      margin-bottom: 10px;
+    }
   }
 }
 
