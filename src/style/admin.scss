@@ -1109,6 +1109,36 @@ input::placeholder {
     border-radius: 6px;
     margin-right: 10px;
   }
+  // 가입명단 상단 우측 액션 영역 (전체/선택 추가 지급 + 목록으로)
+  .table_title_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .bulk_grant_btn {
+      height: 34px;
+      padding: 0 14px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: $font-size-sm;
+      color: #333;
+      cursor: pointer;
+
+      &:hover {
+        background: #f0f0f0;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+    }
+
+    .list_button {
+      margin-right: 0;
+    }
+  }
   .table_bottom_button_wrap {
     padding-top: 20px;
     width: 100%;

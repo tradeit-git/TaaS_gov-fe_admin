@@ -6,6 +6,7 @@ import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
+import CreditGrantPopup from "@/app/(Auth)/trial/[id]/user-list/component/CreditGrantPopup";
 import {TrialKeyRow} from "@/app/(Auth)/trial/component/TrialPage";
 
 export interface TrialUser {
@@ -39,6 +40,7 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
     const [data, setData] = useState<TrialUser[]>(initialData);
     const [editingIdx, setEditingIdx] = useState<number | null>(null);
     const [editRow, setEditRow] = useState<TrialUser | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
     const fetchList = useCallback(async () => {
         const res = await callApi(`/api/admin/trial-keys/${trialId}/users`, {
@@ -49,6 +51,51 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
             setData(res.data as TrialUser[]);
         }
     }, [trialId]);
+
+    const allChecked = data.length > 0 && selectedIds.size === data.length;
+
+    const toggleAll = () => {
+        setSelectedIds(allChecked ? new Set() : new Set(data.map(d => d.id)));
+    };
+
+    const toggleOne = (id: number) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    // 개별/선택/전체 공통: CreditGrantPopup으로 금액·만료일을 받아 대상별로 수동지급 호출(for 루프)
+    const grantToUsers = (userIds: number[]) => {
+        if (userIds.length === 0) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'지급할 대상을 선택해주세요.'}/>);
+            return;
+        }
+        addPopup(<CreditGrantPopup count={userIds.length} onConfirm={async (amount, expireDate) => {
+            let ok = 0;
+            let fail = 0;
+            for (const userId of userIds) {
+                const res = await callApi(`/api/admin/members/trial-users/${userId}/credits/grant`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({amount, expireDate}),
+                });
+                if (res.result) ok++;
+                else fail++;
+            }
+            addPopup(<AlertComponent alertType={'alert'}
+                                     infoContent={fail === 0 ? `${ok}건 지급되었습니다.` : `${ok}건 지급, ${fail}건 실패했습니다.`}/>);
+            setSelectedIds(new Set());
+            fetchList();
+        }}/>);
+    };
+
+    const handleGrantOne = (userId: number) => grantToUsers([userId]);
+    const handleGrantAll = () => grantToUsers(data.map(d => d.id));
+    const handleGrantSelected = () => grantToUsers([...selectedIds]);
 
     const handleEdit = (idx: number) => {
         setEditingIdx(idx);
@@ -132,12 +179,18 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                                title="체험 가입 페이지 열기">사이트 바로가기 ↗</a>
                         )}
                     </div>
-                    <Link href={'/trial'} className={'list_button'}>목록으로</Link>
+                    <div className={'table_title_actions'}>
+                        <button type="button" className={'bulk_grant_btn'} disabled={editingIdx !== null}
+                                onClick={handleGrantAll}>전체 추가 지급</button>
+                        <button type="button" className={'bulk_grant_btn'} disabled={editingIdx !== null || selectedIds.size === 0}
+                                onClick={handleGrantSelected}>선택 지급{selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}</button>
+                        <Link href={'/trial'} className={'list_button'}>목록으로</Link>
+                    </div>
                 </div>
                 <table className={'client_table user_list_table'}>
                     <colgroup>
+                        <col width={'40px'}/>
                         <col width={'50px'}/>
-                        <col/>
                         <col/>
                         <col/>
                         <col/>
@@ -146,14 +199,17 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                         <col width={'100px'}/>
                         <col width={'100px'}/>
                         <col width={'100px'}/>
-                        <col width={'180px'}/>
+                        <col width={'200px'}/>
                     </colgroup>
                     <thead>
                     <tr>
+                        <th style={{textAlign: 'center'}}>
+                            <input type="checkbox" checked={allChecked} disabled={editingIdx !== null}
+                                   onChange={toggleAll}/>
+                        </th>
                         <th>순번</th>
                         <th style={{textAlign: 'center'}}>체험기업</th>
                         <th style={{textAlign: 'center'}}>아이디</th>
-                        <th style={{textAlign: 'center'}}>비밀번호</th>
                         <th style={{textAlign: 'center'}}>담당자명</th>
                         <th style={{textAlign: 'center'}}>연락처</th>
                         <th>지급크레딧</th>
@@ -169,6 +225,11 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                         const view = isEditing && editRow ? editRow : row;
                         return (
                             <tr key={row.id}>
+                                <td style={{textAlign: 'center'}}>
+                                    <input type="checkbox" checked={selectedIds.has(row.id)}
+                                           disabled={editingIdx !== null}
+                                           onChange={() => toggleOne(row.id)}/>
+                                </td>
                                 <td>{data.length - i}</td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
                                            style={{textAlign: 'center'}}
@@ -178,10 +239,6 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                                            style={{textAlign: 'center'}}
                                            value={view.loginId}
                                            onChange={e => handleChange('loginId', e.target.value)}/></td>
-                                <td><input type="text" className={'cell_input'} readOnly={!isEditing}
-                                           style={{textAlign: 'center'}}
-                                           value={view.password}
-                                           onChange={e => handleChange('password', e.target.value)}/></td>
                                 <td><input type="text" className={'cell_input'} readOnly={!isEditing}
                                            style={{textAlign: 'center'}}
                                            value={view.name}
@@ -210,6 +267,10 @@ export default function UserListPage({trialId, trial, initialData}: Props) {
                                                 <button type="button" className={'btn_detail'}
                                                         disabled={editingIdx !== null}
                                                         onClick={() => handleEdit(i)}>수정
+                                                </button>
+                                                <button type="button" className={'btn_detail'}
+                                                        disabled={editingIdx !== null}
+                                                        onClick={() => handleGrantOne(row.id)}>수동지급
                                                 </button>
                                                 <button type="button" className={'btn_delete'}
                                                         disabled={editingIdx !== null}
