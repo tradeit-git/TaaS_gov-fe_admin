@@ -67,6 +67,7 @@ const buildEditPayload = (data: OverseasPlanFormData) => {
     if (isGeneral) {
         return {
             planName: data.planName,
+            startDate: data.planStartDate,
             endDate: data.planEndDate || null,
             months: 1,
             monthlyCredit: data.totalCredit,
