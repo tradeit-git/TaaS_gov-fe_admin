@@ -70,7 +70,7 @@ function RoundsTable({rounds, onUsage, onGrant}: {
                             </td>
                             <td>
                                 {canGrant && onGrant ? (
-                                    <button type={'button'} className={'btn_grant'} onClick={() => onGrant(round)}>지급</button>
+                                    <button type={'button'} className={'btn_grant'} onClick={() => onGrant(round)}>반영</button>
                                 ) : statusKey === 'SCHEDULED' ? null : (
                                     <button type={'button'} className={'btn_usage'} onClick={() => onUsage(round)}>사용내역</button>
                                 )}
