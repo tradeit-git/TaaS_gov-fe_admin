@@ -242,14 +242,18 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
                     }
                 }
 
+                const putPayload = buildEditPayload(data);
+                console.log('[플랜수정] PUT 요청 payload:', putPayload);
                 const res = await callApi(`/api/admin/members/users/${userId}/credit-plans/${plan.id}`, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     credentials: 'include',
-                    body: JSON.stringify(buildEditPayload(data)),
+                    body: JSON.stringify(putPayload),
                 });
+                console.log('[플랜수정] PUT 응답:', res);
                 if (res.result && res.data) {
                     const updated = res.data as CreditPlan;
+                    console.log('[플랜수정] 라운드 상태:', updated.rounds.map(r => ({id: r.id, status: r.status, scheduledDate: r.scheduledDate})));
                     setPlans(prev => sortByCreatedDesc(prev.map(p => p.id === updated.id ? updated : p)));
                     await refreshSummary();
                     addPopup(<AlertComponent alertType={'alert'} infoContent={'수정되었습니다.'}/>);

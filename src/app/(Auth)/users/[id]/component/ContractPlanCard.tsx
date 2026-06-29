@@ -49,7 +49,8 @@ function RoundsTable({rounds, onUsage, onGrant}: {
                 {rounds.map(round => {
                     const statusKey = round.status ?? 'SCHEDULED';
                     const rowDimmed = statusKey === 'EXPIRED' || statusKey === 'EXHAUSTED';
-                    const canGrant = statusKey === 'SCHEDULED' && round.scheduledDate <= today;
+                    const canGrant = statusKey === 'SCHEDULED' && round.scheduledDate.slice(0, 10) <= today;
+                    console.log('[라운드]', {id: round.id, status: round.status, statusKey, scheduledDate: round.scheduledDate, today, canGrant});
                     return (
                         <tr key={round.id} className={rowDimmed ? 'row_completed' : ''}>
                             <td>

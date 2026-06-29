@@ -100,10 +100,17 @@ export const getPlanStatus = (plan: CreditPlan): PlanStatus => {
         start.setHours(0, 0, 0, 0);
         if (now < start) return 'SCHEDULED';
     }
-    if (!plan.endDate) return 'ACTIVE';
-    const end = new Date(plan.endDate);
-    end.setHours(23, 59, 59, 999);
-    return now > end ? 'EXPIRED' : 'ACTIVE';
+    if (plan.endDate) {
+        const end = new Date(plan.endDate);
+        end.setHours(23, 59, 59, 999);
+        if (now > end) return 'EXPIRED';
+    }
+    const hasGrantedRound = plan.rounds.some(r => r.status !== null && r.status !== 'SCHEDULED');
+    return hasGrantedRound ? 'ACTIVE' : 'SCHEDULED';
+    // if(!plan.endDate) return 'ACTIVE';
+    // const end = new Date(plan.endDate);
+    // end.setHours(23,59,59,999);
+    // return now > end ? 'EXPIRED' : 'ACTIVE';
 };
 
 export const sortByCreatedDesc = (list: CreditPlan[]) =>
