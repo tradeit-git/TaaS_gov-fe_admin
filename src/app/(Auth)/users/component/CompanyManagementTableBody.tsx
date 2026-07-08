@@ -59,7 +59,7 @@ export default function CompanyManagementTableBody({data, totalElements, current
         <tbody>
         {data.length === 0 ? (
             <tr>
-                <td colSpan={13} style={{textAlign: 'center'}}>가입회원사가 없습니다.</td>
+                <td colSpan={12} style={{textAlign: 'center'}}>가입회원사가 없습니다.</td>
             </tr>
         ) : (
             data.map((row, i) => {
@@ -89,10 +89,6 @@ export default function CompanyManagementTableBody({data, totalElements, current
                         <td className={'td_actions'}>
                             <button type="button" className={'btn_detail'}
                                     onClick={() => router.push(`/users/${row.id}`)}>상세</button>
-                        </td>
-                        <td className={'td_actions'} style={{display: 'table-cell', verticalAlign: 'middle', textAlign: 'center'}}>
-                            <button type="button" className={'btn_detail'}
-                                    onClick={() => router.push(`/users/component/${row.id}`)}>작성</button>
                         </td>
                     </tr>
                 );
