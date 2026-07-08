@@ -147,17 +147,18 @@ export default function CompanyManagementPage({initialData, filters, planNames}:
                     <colgroup>
                         <col style={{width: '4%'}}/>
                         <col style={{width: '9%'}}/>
-                        <col style={{width: '13%'}}/>
-                        <col style={{width: '6%'}}/>
-                        <col style={{width: '9%'}}/>
-                        <col style={{width: '9%'}}/>
-                        <col style={{width: '13%'}}/>
-                        <col style={{width: '6%'}}/>
-                        <col style={{width: '6%'}}/>
-                        <col style={{width: '6%'}}/>
+                        <col style={{width: '11%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '8%'}}/>
+                        <col style={{width: '9%'}}/>
+                        <col style={{width: '11%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '7%'}}/>
                         <col style={{width: '5%'}}/>
+                        <col style={{width: '6%'}}/>
                     </colgroup>
                     <thead>
                     <tr>
@@ -170,6 +171,7 @@ export default function CompanyManagementPage({initialData, filters, planNames}:
                         <th colSpan={4} style={{textAlign: 'center', borderBottom: '1px solid #EAEBED', borderLeft: '1px solid #EAEBED'}}>현재 크레딧 현황</th>
                         <th rowSpan={2}>회원가입일</th>
                         <th rowSpan={2}>관리</th>
+                        <th rowSpan={2}>기업전략분석</th>
                     </tr>
                     <tr>
                         <th>플랜</th>

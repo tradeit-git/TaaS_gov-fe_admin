@@ -90,6 +90,10 @@ export default function CompanyManagementTableBody({data, totalElements, current
                             <button type="button" className={'btn_detail'}
                                     onClick={() => router.push(`/users/${row.id}`)}>상세</button>
                         </td>
+                        <td className={'td_actions'} style={{display: 'table-cell', verticalAlign: 'middle', textAlign: 'center'}}>
+                            <button type="button" className={'btn_detail'}
+                                    onClick={() => router.push(`/users/component/${row.id}`)}>작성</button>
+                        </td>
                     </tr>
                 );
             })

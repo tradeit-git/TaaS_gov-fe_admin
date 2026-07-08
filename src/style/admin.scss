@@ -3449,3 +3449,225 @@ input::placeholder {
     }
   }
 }
+
+// 기업전략분석 - 분석입력
+.analysis {
+  padding: 20px 30px;
+
+  .page_start_box {
+    margin-bottom: 10px;
+  }
+
+  .contents_wrap {
+    display: grid;
+    grid-template-columns: 446px 1fr;
+
+    .company_name_box {
+      border-top: 1px solid $main-color;
+      grid-column: span 2;
+      padding: 10px;
+    }
+
+    .analysis_list_box {
+      .list_box {
+        li {
+          width: 100%;
+          box-sizing: border-box;
+          border: 2px solid #ddd;
+          background-color: #ddd;
+          margin-bottom: 10px;
+          padding: 11.5px 10px;
+          cursor: pointer;
+
+          &.done {
+            background-color: $tableLine;
+            border: 2px solid $tableLine;
+            color: #777;
+          }
+
+          &.on {
+            background-color: #F4F9FE;
+            border: 2px solid $main-color;
+          }
+        }
+      }
+
+      .analysis_status {
+        margin-top: 20px;
+        box-sizing: border-box;
+
+        p {
+          margin-bottom: 10px;
+        }
+
+        li {
+          margin-left: 10px;
+          margin-bottom: 2px;
+
+          input {
+            margin-right: 10px;
+            transform: translateY(1px);
+          }
+        }
+      }
+    }
+
+    .txt_area_box {
+      height: calc(100vh - 148px);
+      .content {
+        width: 100%;
+        height: 100%;
+        border: 1px solid $tableLine;
+        border-radius: 4px;
+        position: relative;
+        box-sizing: border-box;
+        padding: 20px;
+
+        span {
+          position: absolute;
+          top: -8px;
+          left: 10px;
+          background-color: #fff;
+          padding: 0 10px;
+          font-size: $font-size-xs;
+          color: #777;
+        }
+
+        textarea {
+          width: 100%;
+          height: 100%;
+          border: none;
+
+          &:focus {
+            outline: none;
+          }
+        }
+      }
+
+      .btn_wrap {
+        width: 100%;
+        margin-top: 10px;
+
+        button {
+          width: 99px;
+          height: 35px;
+          @include whiteBtn;
+        }
+      }
+    }
+
+    & > div {
+      box-sizing: border-box;
+      padding: 20px;
+    }
+  }
+
+  .btn_wrap {
+    width: 100%;
+    justify-content: flex-end;
+    display: flex;
+    gap: 10px;
+    margin-top: 0;
+    padding-right: 20px;
+    .save_btn {
+      @include mainBtn;
+      width: 99px;
+      height: 35px;
+    }
+
+    .white_btn {
+      @include whiteBtn;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 99px;
+      height: 35px;
+    }
+  }
+}
+
+// 기업전략분석 - 미리보기
+.prev_popup {
+  .popupContainer {
+    width: 756px;
+
+    .info_box {
+      width: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+      background-color: #F9F9F9;
+
+      li {
+        margin-bottom: 10px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    .tab_wrap {
+      padding: 20px 10px;
+      box-sizing: border-box;
+
+      li {
+        cursor: pointer;
+        display: inline-block;
+        font-size: $font-size-sm;
+
+        &.on {
+          font-weight: bold;
+        }
+
+        &:nth-child(1) {
+          margin-bottom: 12px;
+        }
+      }
+
+      .line {
+        width: 2px;
+        height: 12px;
+        background-color: $tableLine;
+        display: inline-block;
+        margin: 0 12px;
+      }
+    }
+
+    .text_box {
+      border: 1px solid $tableLine;
+      border-radius: 4px;
+      height: 340px;
+      box-sizing: border-box;
+      padding: 10px;
+      overflow-y: scroll;
+
+      textarea {
+        width: 100%;
+        height: 100%;
+        border: none;
+
+        &:focus {
+          outline: none;
+        }
+      }
+    }
+
+    .btn_wrap {
+      width: 100%;
+
+      button {
+        width: 99px;
+        height: 35px;
+
+        &.close_btn {
+          @include whiteBtn;
+          margin-right: 10px;
+        }
+
+        &.save_btn {
+          @include mainBtn;
+        }
+      }
+    }
+  }
+}
