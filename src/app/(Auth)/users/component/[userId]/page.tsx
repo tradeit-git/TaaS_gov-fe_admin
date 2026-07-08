@@ -1,6 +1,6 @@
 import Link from "next/link";
 import React from "react";
-import PageContent from "@/app/(Auth)/users/component/[userId]/component/PageContents";
+import PageContent, {CompanyAnalysisData} from "@/app/(Auth)/users/component/[userId]/component/PageContents";
 import callApi from "@/utill/apiRequest";
 import {getServerRequestOptions} from "@/lib/serverRequest";
 
@@ -23,7 +23,7 @@ export default async function Page (props : {params : paramType}){
         companyName = body.user?.companyName || '';
     }
     if (analysisApiRes.result && analysisApiRes.data) {
-        initialAnalysis = analysisApiRes.data;
+        initialAnalysis = analysisApiRes.data as CompanyAnalysisData;
     }
 
     return (

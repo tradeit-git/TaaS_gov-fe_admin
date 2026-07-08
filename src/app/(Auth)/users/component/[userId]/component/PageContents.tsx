@@ -28,7 +28,7 @@ interface EntryData {
     content: string;
 }
 
-interface CompanyAnalysisData {
+export interface CompanyAnalysisData {
     id?: number;
     status: CompanyAnalysisStatus;
     companyAnalysisEntries: EntryData[];
