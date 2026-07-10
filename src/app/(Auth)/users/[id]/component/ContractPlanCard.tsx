@@ -49,7 +49,8 @@ function RoundsTable({rounds, onUsage, onGrant}: {
                 {rounds.map(round => {
                     const statusKey = round.status ?? 'SCHEDULED';
                     const rowDimmed = statusKey === 'EXPIRED' || statusKey === 'EXHAUSTED';
-                    const canGrant = statusKey === 'SCHEDULED' && round.scheduledDate <= today;
+                    const canGrant = statusKey === 'SCHEDULED' && round.scheduledDate.slice(0, 10) <= today;
+                    console.log('[라운드]', {id: round.id, status: round.status, statusKey, scheduledDate: round.scheduledDate, today, canGrant});
                     return (
                         <tr key={round.id} className={rowDimmed ? 'row_completed' : ''}>
                             <td>
@@ -70,7 +71,7 @@ function RoundsTable({rounds, onUsage, onGrant}: {
                             </td>
                             <td>
                                 {canGrant && onGrant ? (
-                                    <button type={'button'} className={'btn_grant'} onClick={() => onGrant(round)}>지급</button>
+                                    <button type={'button'} className={'btn_grant'} onClick={() => onGrant(round)}>반영</button>
                                 ) : statusKey === 'SCHEDULED' ? null : (
                                     <button type={'button'} className={'btn_usage'} onClick={() => onUsage(round)}>사용내역</button>
                                 )}

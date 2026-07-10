@@ -1,6 +1,7 @@
 'use client'
 
 import {useState} from "react";
+import {useRouter} from "next/navigation";
 import {createPortal} from "react-dom";
 import {UserProjectRow} from "@/app/(Auth)/managed-users/component/UserProjectManagementPage";
 import {accountTypeLabel} from "@/utill/accountType";
@@ -26,6 +27,7 @@ const ellipsisStyle: React.CSSProperties = {
 };
 
 export default function UserProjectManagementTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDeleted}: Props) {
+    const router = useRouter();
     const {addPopup} = usePopupStore();
     const [menu, setMenu] = useState<{userId: number; top: number; right: number} | null>(null);
 
@@ -62,7 +64,7 @@ export default function UserProjectManagementTableBody({data, totalElements, cur
         <tbody>
         {data.length === 0 ? (
             <tr>
-                <td colSpan={12} style={{textAlign: 'center'}}>관리 중인 사용자가 없습니다.</td>
+                <td colSpan={13} style={{textAlign: 'center'}}>관리 중인 사용자가 없습니다.</td>
             </tr>
         ) : (
             data.map((row, i) => {
@@ -88,6 +90,10 @@ export default function UserProjectManagementTableBody({data, totalElements, cur
                         </td>
                         <td className={'td_actions'}>
                             <button type="button" className={'btn_delete'} onClick={() => handleDelete(row.id, row.name)}>삭제</button>
+                        </td>
+                        <td className={'td_actions'} style={{display: 'table-cell', verticalAlign: 'middle', textAlign: 'center'}}>
+                            <button type="button" className={'btn_detail'}
+                                    onClick={() => router.push(`/managed-users/${row.id}/company-analysis`)}>작성</button>
                         </td>
                     </tr>
                 );

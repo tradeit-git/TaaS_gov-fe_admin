@@ -32,33 +32,63 @@ const parseAmount = (s: string) => Number((s || '').replace(/,/g, '')) || 0;
 
 const buildCreatePayload = (data: OverseasPlanFormData) => {
     const isGeneral = data.planType === 'GENERAL';
+    if (isGeneral) {
+        return {
+            planName: data.planName,
+            startDate: data.planStartDate,
+            endDate: data.planEndDate || null,
+            months: 1,
+            contractAmount: parseAmount(data.contractAmount) || null,
+            paymentMethod: 'BANK_TRANSFER',
+            paymentMethodName: data.contractMethod || null,
+            contractDate: data.contractDate || null,
+            monthlyCredit: data.totalCredit,
+            managerGa: null,
+            managerTp: null,
+        };
+    }
     return {
-        planName: isGeneral ? data.planName : '해외영업실행',
+        planName: '해외영업실행',
         startDate: data.planStartDate,
         months: data.planMonths,
         contractAmount: parseAmount(data.contractAmount),
-        paymentMethod: isGeneral ? 'BANK_TRANSFER' : 'GA_CONTRACT',
+        paymentMethod: 'GA_CONTRACT',
         paymentMethodName: data.contractMethod,
         contractDate: data.contractDate,
         monthlyCredit: parseAmount(data.monthlyCredit),
-        managerGa: isGeneral ? null : data.managerGA,
-        managerTp: isGeneral ? null : data.managerTP,
+        managerGa: data.managerGA,
+        managerTp: data.managerTP,
     };
 };
 
 // 수정은 startDate 변경 불가 (명세 참조)
 const buildEditPayload = (data: OverseasPlanFormData) => {
     const isGeneral = data.planType === 'GENERAL';
+    if (isGeneral) {
+        return {
+            planName: data.planName,
+            startDate: data.planStartDate,
+            endDate: data.planEndDate || null,
+            months: 1,
+            monthlyCredit: data.totalCredit,
+            contractAmount: parseAmount(data.contractAmount) || null,
+            paymentMethod: 'BANK_TRANSFER',
+            paymentMethodName: data.contractMethod || null,
+            contractDate: data.contractDate || null,
+            managerGa: null,
+            managerTp: null,
+        };
+    }
     return {
-        planName: isGeneral ? data.planName : '해외영업실행',
+        planName: '해외영업실행',
         months: data.planMonths,
         monthlyCredit: parseAmount(data.monthlyCredit),
         contractAmount: parseAmount(data.contractAmount),
-        paymentMethod: isGeneral ? 'BANK_TRANSFER' : 'GA_CONTRACT',
+        paymentMethod: 'GA_CONTRACT',
         paymentMethodName: data.contractMethod,
         contractDate: data.contractDate,
-        managerGa: isGeneral ? null : data.managerGA,
-        managerTp: isGeneral ? null : data.managerTP,
+        managerGa: data.managerGA,
+        managerTp: data.managerTP,
     };
 };
 
@@ -163,13 +193,17 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
         const firstScheduled = plan.rounds.find(r => (r.status ?? 'SCHEDULED') === 'SCHEDULED');
         const baseCreditSource = firstScheduled ?? plan.rounds[0];
         addPopup(<OverseasPlanPopup
+            userId={userId}
+            onCreditChange={refreshSummary}
             initialData={{
                 planType: plan.paymentMethod === 'GA_CONTRACT' ? 'OVERSEAS' : 'GENERAL',
                 planName: plan.planName,
                 planStartDate: plan.startDate,
+                planEndDate: plan.endDate ?? '',
                 planMonths: plan.months ?? plan.rounds.length ?? 1,
+                totalCredit: plan.rounds.reduce((sum, r) => sum + (r.grantedAmount ?? 0), 0),
                 contractAmount: plan.contractAmount ? formatNumberWithComma(plan.contractAmount) : '',
-                contractMethod: plan.paymentMethodName || 'GA 계약',
+                contractMethod: plan.paymentMethodName ?? (plan.paymentMethod === 'GA_CONTRACT' ? 'GA 계약' : ''),
                 managerGA: plan.managerGa ?? '',
                 managerTP: plan.managerTp ?? '',
                 contractDate: plan.contractDate ?? '',
@@ -184,14 +218,42 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
                 })),
             }}
             onSave={async (data) => {
+                const isGeneral = data.planType === 'GENERAL';
+                const originalCredit = plan.rounds.reduce((sum, r) => sum + (r.grantedAmount ?? 0), 0);
+                const diff = data.totalCredit - originalCredit;
+
+                // 커스텀 플랜: 크레딧 차이가 있으면 grant/deduct API 먼저 호출
+                if (isGeneral && diff !== 0) {
+                    const creditEndpoint = diff > 0
+                        ? `/api/admin/members/users/${userId}/credits/grant`
+                        : `/api/admin/members/users/${userId}/credits/deduct`;
+                    const creditBody = diff > 0
+                        ? {amount: diff, expireDate: null}
+                        : {amount: Math.abs(diff)};
+                    const creditRes = await callApi(creditEndpoint, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        credentials: 'include',
+                        body: JSON.stringify(creditBody),
+                    });
+                    if (!creditRes.result) {
+                        addPopup(<AlertComponent alertType={'alert'} infoContent={creditRes.message || '크레딧 변경에 실패했습니다.'}/>);
+                        return;
+                    }
+                }
+
+                const putPayload = buildEditPayload(data);
+                console.log('[플랜수정] PUT 요청 payload:', putPayload);
                 const res = await callApi(`/api/admin/members/users/${userId}/credit-plans/${plan.id}`, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     credentials: 'include',
-                    body: JSON.stringify(buildEditPayload(data)),
+                    body: JSON.stringify(putPayload),
                 });
+                console.log('[플랜수정] PUT 응답:', res);
                 if (res.result && res.data) {
                     const updated = res.data as CreditPlan;
+                    console.log('[플랜수정] 라운드 상태:', updated.rounds.map(r => ({id: r.id, status: r.status, scheduledDate: r.scheduledDate})));
                     setPlans(prev => sortByCreatedDesc(prev.map(p => p.id === updated.id ? updated : p)));
                     await refreshSummary();
                     addPopup(<AlertComponent alertType={'alert'} infoContent={'수정되었습니다.'}/>);

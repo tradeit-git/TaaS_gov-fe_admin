@@ -462,6 +462,7 @@ export default function VideoLibraryFormPopup({uId, initialData, onSave}: Props)
                                     ? `URL 확인 완료 · 영상 길이 ${formatDuration(form.duration)}`
                                     : '[체크] 버튼으로 URL 확인 및 영상 길이를 가져와주세요. (필수)')}
                         </p>
+
                     </div>
 
                     {/* 썸네일 이미지 */}
@@ -485,7 +486,8 @@ export default function VideoLibraryFormPopup({uId, initialData, onSave}: Props)
                                     </button>
                                 </div>
                                 <button type="button" className={'btn_remove_thumb'}
-                                        onClick={handleRemoveThumbnail}>×</button>
+                                        onClick={handleRemoveThumbnail}>×
+                                </button>
                             </div>
                         ) : (
                             <div className={'thumb_uploader'}>
@@ -502,10 +504,14 @@ export default function VideoLibraryFormPopup({uId, initialData, onSave}: Props)
 
                     {/* 제목 */}
                     <div className={'popup_field'}>
+                        {/*<label className={'label_required'}>제목 <span className={'required'}>*</span></label>*/}
+                        {/*<input type="text" value={form.title}*/}
+                        {/*       onChange={e => updateField('title', e.target.value)}/>*/}
                         <label className={'label_required'}>제목 <span className={'required'}>*</span></label>
-                        <input type="text" value={form.title}
-                               onChange={e => updateField('title', e.target.value)}/>
+                        <textarea value={form.title} rows={1} style={{height: 80, resize: 'none'}}
+                                  onChange={e => updateField('title', e.target.value)}/>
                     </div>
+
 
                     {/* 상세내용 */}
                     <div className={'popup_field'}>
@@ -522,14 +528,18 @@ export default function VideoLibraryFormPopup({uId, initialData, onSave}: Props)
                                 <button type="button" className={'color_select_trigger'}
                                         onClick={() => setColorDropdownOpen(prev => !prev)}>
                                     {tagColor
-                                        ? <><span className={'color_dot'} style={{backgroundColor: tagColor}}/>{TAG_COLORS.find(c => c.value === tagColor)?.label}</>
+                                        ? <><span className={'color_dot'}
+                                                  style={{backgroundColor: tagColor}}/>{TAG_COLORS.find(c => c.value === tagColor)?.label}</>
                                         : '컬러 선택'}
                                     <span className={'color_select_arrow'}/>
                                 </button>
                                 {colorDropdownOpen && (
                                     <ul className={'color_select_dropdown'}>
                                         {TAG_COLORS.map(c => (
-                                            <li key={c.value} style={{color: c.value}} onClick={() => { setTagColor(c.value); setColorDropdownOpen(false); }}>
+                                            <li key={c.value} style={{color: c.value}} onClick={() => {
+                                                setTagColor(c.value);
+                                                setColorDropdownOpen(false);
+                                            }}>
                                                 <span className={'color_dot'} style={{backgroundColor: c.value}}/>
                                                 {c.label}
                                             </li>
@@ -539,7 +549,12 @@ export default function VideoLibraryFormPopup({uId, initialData, onSave}: Props)
                             </div>
                             <input type="text" value={tagName} placeholder={'태그명 입력'}
                                    onChange={e => setTagName(e.target.value)}
-                                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}/>
+                                   onKeyDown={e => {
+                                       if (e.key === 'Enter') {
+                                           e.preventDefault();
+                                           handleAddTag();
+                                       }
+                                   }}/>
                             <button type="button" className={'btn_tag_add'} onClick={handleAddTag}>+ 추가</button>
                         </div>
                         {form.tags.length > 0 && (
@@ -571,7 +586,8 @@ export default function VideoLibraryFormPopup({uId, initialData, onSave}: Props)
                 {/* 버튼 */}
                 <div className={'popup_btn_wrap'}>
                     <button type={'button'} className={'cancel_btn'} disabled={saving}
-                            onClick={() => closePopup(uId ?? '')}>취소</button>
+                            onClick={() => closePopup(uId ?? '')}>취소
+                    </button>
                     <button type={'button'} className={'save_btn'} disabled={saving || uploading || fetchingDuration} onClick={handleSave}>
                         {saving ? '저장 중...' : '저장'}
                     </button>

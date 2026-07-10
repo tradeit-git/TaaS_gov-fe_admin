@@ -146,18 +146,18 @@ export default function CompanyManagementPage({initialData, filters, planNames}:
                 <table className={'client_table company_table'}>
                     <colgroup>
                         <col style={{width: '4%'}}/>
-                        <col style={{width: '9%'}}/>
-                        <col style={{width: '13%'}}/>
+                        <col style={{width: '10%'}}/>
+                        <col style={{width: '12%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '9%'}}/>
                         <col style={{width: '9%'}}/>
-                        <col style={{width: '13%'}}/>
+                        <col style={{width: '12%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '8%'}}/>
-                        <col style={{width: '5%'}}/>
+                        <col style={{width: '6%'}}/>
                     </colgroup>
                     <thead>
                     <tr>
