@@ -22,6 +22,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
     const [creditAmount, setCreditAmount] = useState(String(partner.creditAmount ?? ''));
     const [maxMembers, setMaxMembers] = useState(String(partner.maxMembers ?? ''));
     const [signupCredit, setSignupCredit] = useState(String(partner.signupCredit ?? ''));
+    const [requiresApproval, setRequiresApproval] = useState(partner.requiresApproval ?? false);
     const [startDate, setStartDate] = useState((partner.startDate ?? '').slice(0, 10));
     const [endDate, setEndDate] = useState((partner.endDate ?? '').slice(0, 10));
     const [logoUrl, setLogoUrl] = useState(partner.logoUrl ?? '');
@@ -106,6 +107,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                 bonusCredit: Number(creditAmount),
                 maxMembers: max,
                 signupCredit: Number(signupCredit),
+                requiresApproval: requiresApproval,
                 startDate: startDate,
                 endDate: endDate,
                 logoUrl: logoUrl || null,
@@ -206,6 +208,15 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                                disabled={hasMembers}
                                onChange={e => setSignupCredit(e.target.value.replace(/[^0-9]/g, ''))}
                                placeholder={'가입 시 지급'}/>
+                    </div>
+
+                    <div className={'pe_field'}>
+                        <label>승인심사</label>
+                        <label style={{display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer'}}>
+                            <input type="checkbox" checked={requiresApproval}
+                                   onChange={e => setRequiresApproval(e.target.checked)}/>
+                            <span>가입 승인 필요</span>
+                        </label>
                     </div>
 
                     {hasMembers && (

@@ -16,6 +16,7 @@ export default function PartnerCreateForm({onCreated}: Props) {
     const [creditAmount, setCreditAmount] = useState('');
     const [maxMembers, setMaxMembers] = useState('');
     const [signupCredit, setSignupCredit] = useState('');
+    const [requiresApproval, setRequiresApproval] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [logoUrl, setLogoUrl] = useState('');
@@ -31,6 +32,7 @@ export default function PartnerCreateForm({onCreated}: Props) {
         setCreditAmount('');
         setMaxMembers('');
         setSignupCredit('');
+        setRequiresApproval(false);
         setStartDate('');
         setEndDate('');
         setLogoUrl('');
@@ -139,6 +141,7 @@ export default function PartnerCreateForm({onCreated}: Props) {
                 bonusCredit: Number(creditAmount),
                 maxMembers: Number(maxMembers || 0),
                 signupCredit: Number(signupCredit),
+                requiresApproval: requiresApproval,
                 startDate: startDate,
                 endDate: endDate,
                 logoUrl: logoUrl || null,
@@ -263,6 +266,16 @@ export default function PartnerCreateForm({onCreated}: Props) {
                                    value={signupCredit}
                                    onChange={e => setSignupCredit(e.target.value.replace(/[^0-9]/g, ''))}
                                    placeholder={'가입 시 지급'}/>
+                        </div>
+                    </div>
+                    <div className={'form_field field_approval'}>
+                        <label>승인심사</label>
+                        <div className={'input_wrap'}>
+                            <label style={{display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer'}}>
+                                <input type="checkbox" checked={requiresApproval}
+                                       onChange={e => setRequiresApproval(e.target.checked)}/>
+                                <span>가입 승인 필요</span>
+                            </label>
                         </div>
                     </div>
                 </div>

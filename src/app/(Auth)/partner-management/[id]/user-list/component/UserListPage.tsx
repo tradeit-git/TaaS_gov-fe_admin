@@ -18,6 +18,7 @@ export interface PartnerUser {
     phone: string;
     createdAt: string;
     isPartnerMember: boolean;
+    status: string;                    // 회원 상태 (PENDING_APPROVAL=승인대기 / ACTIVE=승인완료 등)
 }
 
 interface CoalitionUserApiRow {
@@ -30,6 +31,7 @@ interface CoalitionUserApiRow {
     contact: string;
     createdAt: string;
     isPartnerMember: boolean | null;   // 제휴회원사 여부(체크박스로 가입한 실제 제휴사)
+    status: string;
 }
 
 interface CoalitionDetailApiRow {
@@ -40,6 +42,7 @@ interface CoalitionDetailApiRow {
     startDate: string;
     endDate: string;
     createdAt: string;
+    requiresApproval?: boolean;
 }
 
 interface PartnerInfo {
@@ -48,6 +51,7 @@ interface PartnerInfo {
     creditAmount: number;
     startDate: string;
     endDate: string;
+    requiresApproval: boolean;
 }
 
 const mapToPartnerUser = (row: CoalitionUserApiRow): PartnerUser => ({
@@ -60,6 +64,7 @@ const mapToPartnerUser = (row: CoalitionUserApiRow): PartnerUser => ({
     phone: row.contact,
     createdAt: row.createdAt,
     isPartnerMember: row.isPartnerMember ?? false,
+    status: row.status,
 });
 
 const mapToPartnerInfo = (row: CoalitionDetailApiRow): PartnerInfo => ({
@@ -68,7 +73,11 @@ const mapToPartnerInfo = (row: CoalitionDetailApiRow): PartnerInfo => ({
     creditAmount: row.bonusCredit,
     startDate: row.startDate,
     endDate: row.endDate,
+    requiresApproval: row.requiresApproval ?? false,
 });
+
+const statusLabel = (status: string) =>
+    status === 'PENDING_APPROVAL' ? '승인대기' : status === 'ACTIVE' ? '승인완료' : status;
 
 interface Props {
     partnerId: string;
@@ -79,6 +88,7 @@ export default function UserListPage({partnerId}: Props) {
     const {addPopup} = usePopupStore();
     const [partner, setPartner] = useState<PartnerInfo | null>(null);
     const [data, setData] = useState<PartnerUser[]>([]);
+    const [pendingOnly, setPendingOnly] = useState(false);
 
     const fetchPartner = useCallback(async () => {
         const res = await callApi(`/api/admin/partner-keys/${partnerId}`, {
@@ -109,6 +119,34 @@ export default function UserListPage({partnerId}: Props) {
         fetchPartner();
         fetchUsers();
     }, [fetchPartner, fetchUsers]);
+
+    // 승인 / 승인취소 (확인 팝업 → PATCH → 목록 갱신)
+    const handleApproval = (user: PartnerUser, approve: boolean) => {
+        const action = approve ? 'approve' : 'cancel-approval';
+        const label = approve ? '승인' : '승인취소';
+        addPopup(
+            <AlertComponent
+                alertType={'confirm'}
+                infoContent={`${user.name || user.loginId} 님을 ${label} 처리하시겠습니까?`}
+                callback={async () => {
+                    const res = await callApi(`/api/admin/partner-keys/members/${user.id}/${action}`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                    });
+                    if (res.result) {
+                        addPopup(<AlertComponent alertType={'alert'} infoContent={`${label} 처리되었습니다.`}/>);
+                        fetchUsers();
+                    } else {
+                        addPopup(<AlertComponent alertType={'error'} infoContent={res.message || `${label} 처리에 실패했습니다.`}/>);
+                    }
+                }}
+            />
+        );
+    };
+
+    const showApproval = partner?.requiresApproval ?? false;
+    const visibleData = pendingOnly ? data.filter(u => u.status === 'PENDING_APPROVAL') : data;
+    const pendingCount = data.filter(u => u.status === 'PENDING_APPROVAL').length;
 
     const handleExcelDownload = async () => {
         try {
@@ -188,8 +226,14 @@ export default function UserListPage({partnerId}: Props) {
 
             {/* 검색 / 카운트 영역 */}
             <div className={'list_header'}>
-                <p className={'result_count'}>Showing {data.length} of {data.length} results</p>
+                <p className={'result_count'}>Showing {visibleData.length} of {data.length} results</p>
                 <div className={'search_area'}>
+                    {showApproval && (
+                        <label style={{display: 'inline-flex', alignItems: 'center', gap: '6px', marginRight: '12px', cursor: 'pointer'}}>
+                            <input type="checkbox" checked={pendingOnly} onChange={e => setPendingOnly(e.target.checked)}/>
+                            <span>승인대기만{pendingCount > 0 ? ` (${pendingCount})` : ''}</span>
+                        </label>
+                    )}
                     <button type="button" className={'btn_excel_download'} onClick={handleExcelDownload}>
                         명단 다운로드
                     </button>
@@ -199,17 +243,32 @@ export default function UserListPage({partnerId}: Props) {
             {/* 테이블 */}
             <div className={'table_wrap'}>
                 <table className={'client_table partner_table'}>
-                    <colgroup>
-                        <col style={{width: '4%'}}/>
-                        <col style={{width: '8%'}}/>
-                        <col style={{width: '18%'}}/>
-                        <col style={{width: '15%'}}/>
-                        <col style={{width: '13%'}}/>
-                        <col style={{width: '8%'}}/>
-                        <col style={{width: '12%'}}/>
-                        <col style={{width: '11%'}}/>
-                        <col style={{width: '11%'}}/>
-                    </colgroup>
+                    {showApproval ? (
+                        <colgroup>
+                            <col style={{width: '4%'}}/>
+                            <col style={{width: '7%'}}/>
+                            <col style={{width: '16%'}}/>
+                            <col style={{width: '12%'}}/>
+                            <col style={{width: '12%'}}/>
+                            <col style={{width: '7%'}}/>
+                            <col style={{width: '11%'}}/>
+                            <col style={{width: '9%'}}/>
+                            <col style={{width: '9%'}}/>
+                            <col style={{width: '13%'}}/>
+                        </colgroup>
+                    ) : (
+                        <colgroup>
+                            <col style={{width: '4%'}}/>
+                            <col style={{width: '8%'}}/>
+                            <col style={{width: '18%'}}/>
+                            <col style={{width: '15%'}}/>
+                            <col style={{width: '13%'}}/>
+                            <col style={{width: '8%'}}/>
+                            <col style={{width: '12%'}}/>
+                            <col style={{width: '11%'}}/>
+                            <col style={{width: '11%'}}/>
+                        </colgroup>
+                    )}
                     <thead>
                     <tr>
                         <th style={{textAlign: 'center'}}>순번</th>
@@ -220,13 +279,14 @@ export default function UserListPage({partnerId}: Props) {
                         <th>이름</th>
                         <th>전화번호</th>
                         <th>회원가입일</th>
+                        {showApproval && <th style={{textAlign: 'center'}}>승인상태</th>}
                         <th>상세보기</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {data.map((row, i) => (
+                    {visibleData.map((row, i) => (
                         <tr key={row.id}>
-                            <td style={{textAlign: 'center'}}>{data.length - i}</td>
+                            <td style={{textAlign: 'center'}}>{visibleData.length - i}</td>
                             <td style={{textAlign: 'center'}}>{row.isPartnerMember ? 'O' : 'X'}</td>
                             <td>{row.loginId}</td>
                             <td>{row.companyName}</td>
@@ -234,7 +294,34 @@ export default function UserListPage({partnerId}: Props) {
                             <td>{row.name}</td>
                             <td>{row.phone}</td>
                             <td>{formatDateDot(row.createdAt)}</td>
+                            {showApproval && (
+                                <td style={{textAlign: 'center'}}>
+                                    <span style={{
+                                        display: 'inline-block',
+                                        padding: '3px 10px',
+                                        borderRadius: '12px',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        color: row.status === 'PENDING_APPROVAL' ? '#B45309' : '#15803D',
+                                        background: row.status === 'PENDING_APPROVAL' ? '#FEF3C7' : '#DCFCE7',
+                                    }}>
+                                        {statusLabel(row.status)}
+                                    </span>
+                                </td>
+                            )}
                             <td className={'td_actions'}>
+                                {showApproval && row.status === 'PENDING_APPROVAL' && (
+                                    <button type="button" className={'btn_detail'}
+                                            onClick={() => handleApproval(row, true)}>
+                                        승인
+                                    </button>
+                                )}
+                                {showApproval && row.status === 'ACTIVE' && (
+                                    <button type="button" className={'btn_detail'}
+                                            onClick={() => handleApproval(row, false)}>
+                                        승인취소
+                                    </button>
+                                )}
                                 <button type="button" className={'btn_detail'}
                                         onClick={() => router.push(`/partner-management/${partnerId}/user-list/${row.id}`)}>
                                     상세보기

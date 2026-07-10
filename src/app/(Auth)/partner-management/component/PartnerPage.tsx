@@ -22,6 +22,7 @@ export interface PartnerRow {
     usedCount: number;
     createdAt: string;
     logoUrl: string;
+    requiresApproval: boolean;
 }
 
 interface CoalitionApiRow {
@@ -37,6 +38,7 @@ interface CoalitionApiRow {
     userCount: number;
     status: string;
     logoUrl?: string;
+    requiresApproval?: boolean;
 }
 
 interface CoalitionListResponse {
@@ -57,6 +59,7 @@ const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
     usedCount: row.userCount,
     createdAt: row.createdAt,
     logoUrl: row.logoUrl ?? '',
+    requiresApproval: row.requiresApproval ?? false,
 });
 
 export default function PartnerPage() {
