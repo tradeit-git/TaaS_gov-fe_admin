@@ -59,7 +59,7 @@ export default function CompanyManagementTableBody({data, totalElements, current
         <tbody>
         {data.length === 0 ? (
             <tr>
-                <td colSpan={12} style={{textAlign: 'center'}}>가입회원사가 없습니다.</td>
+                <td colSpan={13} style={{textAlign: 'center'}}>가입회원사가 없습니다.</td>
             </tr>
         ) : (
             data.map((row, i) => {
