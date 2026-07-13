@@ -20,9 +20,11 @@ export interface PartnerRow {
     maxMembers: number;
     signupCredit: number;
     usedCount: number;
+    approvedCount: number;
     createdAt: string;
     logoUrl: string;
     requiresApproval: boolean;
+    dashboardCode: string;
 }
 
 interface CoalitionApiRow {
@@ -36,9 +38,11 @@ interface CoalitionApiRow {
     endDate: string;
     createdAt: string;
     userCount: number;
+    approvedCount?: number;
     status: string;
     logoUrl?: string;
     requiresApproval?: boolean;
+    dashboardCode?: string;
 }
 
 interface CoalitionListResponse {
@@ -57,9 +61,11 @@ const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
     maxMembers: row.maxMembers ?? 0,
     signupCredit: row.signupCredit ?? 0,
     usedCount: row.userCount,
+    approvedCount: row.approvedCount ?? 0,
     createdAt: row.createdAt,
     logoUrl: row.logoUrl ?? '',
     requiresApproval: row.requiresApproval ?? false,
+    dashboardCode: row.dashboardCode ?? '',
 });
 
 export default function PartnerPage() {
@@ -68,7 +74,7 @@ export default function PartnerPage() {
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [itemsPerPage, setItemsPerPage] = useState(15);
     const [totalElements, setTotalElements] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState('');
@@ -121,8 +127,15 @@ export default function PartnerPage() {
         setCurrentPage(0);
     };
 
-    const handleCreated = () => {
-        fetchList();
+    const handleOpenCreatePopup = () => {
+        addPopup(<PartnerCreateForm onCreated={fetchList}/>);
+    };
+
+    const handleReset = () => {
+        setSearchInput('');
+        setSearch('');
+        setStatusFilter('');
+        setCurrentPage(0);
     };
 
     const handleEdit = (row: PartnerRow) => {
@@ -151,28 +164,28 @@ export default function PartnerPage() {
                 <ul className={'breadcrumb'}>
                     <li>홈</li>
                     <li><span className={'admin_icon icon_next'}/></li>
-                    <li><Link href={'/partner-management'}>협회제휴관리</Link></li>
+                    <li>AP</li>
+                    <li><span className={'admin_icon icon_next'}/></li>
+                    <li><Link href={'/partner-management'}>정산관리</Link></li>
                 </ul>
             </div>
 
-            <PartnerCreateForm onCreated={handleCreated}/>
-
             {/* 검색 / 카운트 영역 */}
             <div className={'list_header'}>
-                <p className={'result_count'}>Showing {data.length} of {totalElements.toLocaleString()} results</p>
+                <p className={'result_count'}>{totalElements.toLocaleString()} records founds</p>
                 <div className={'search_area'}>
                     <select value={statusFilter} onChange={e => {
                         setStatusFilter(e.target.value);
                         setCurrentPage(0);
                     }}>
-                        <option value="">전체</option>
+                        <option value="">상태 전체</option>
                         <option value="예정">예정</option>
                         <option value="진행">진행</option>
                         <option value="종료">종료</option>
                     </select>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-                               placeholder={'고객사 검색'}/>
+                               placeholder={'제휴명 검색'}/>
                         {searchInput && <button type="button" className={'btn_clear'}
                                                 onClick={() => {
                                                     setSearchInput('');
@@ -181,10 +194,12 @@ export default function PartnerPage() {
                                                 }}><span className={'admin_icon'}/></button>}
                     </div>
                     <select value={itemsPerPage} onChange={e => handleItemsPerPageChange(Number(e.target.value))}>
-                        <option value={10}>10개씩</option>
-                        <option value={20}>20개씩</option>
-                        <option value={50}>50개씩</option>
+                        <option value={15}>15개씩 보기</option>
+                        <option value={30}>30개씩 보기</option>
+                        <option value={50}>50개씩 보기</option>
                     </select>
+                    <button type="button" className={'btn_register'} onClick={handleOpenCreatePopup}>신규등록</button>
+                    <button type="button" className={'btn_reset'} onClick={handleReset}>초기화</button>
                 </div>
             </div>
 
@@ -194,30 +209,32 @@ export default function PartnerPage() {
                     <colgroup>
                         <col style={{width: '4%'}}/>
                         <col style={{width: '5%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '10%'}}/>
+                        <col style={{width: '7%'}}/>
                         <col style={{width: '11%'}}/>
-                        <col style={{width: '9%'}}/>
-                        <col style={{width: '9%'}}/>
-                        <col style={{width: '12%'}}/>
-                        <col style={{width: '7%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '7%'}}/>
-                        <col style={{width: '6%'}}/>
                         <col style={{width: '7%'}}/>
-                        <col style={{width: '17%'}}/>
+                        <col style={{width: '8%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '19%'}}/>
                     </colgroup>
                     <thead>
                     <tr>
                         <th style={{textAlign: 'center'}}>순번</th>
                         <th>상태</th>
-                        <th>제휴명</th>
                         <th>로고</th>
-                        <th>고유식별자</th>
-                        <th>가입유효기간</th>
-                        <th>보너스 크레딧</th>
+                        <th>제휴기관</th>
+                        <th>교유식별자</th>
+                        <th>모집기간</th>
                         <th>모집인원</th>
-                        <th>가입크레딧</th>
-                        <th>가입자수</th>
-                        <th>등록일자</th>
+                        <th>무료 크레딧</th>
+                        <th>보너스 크레딧(%)</th>
+                        <th>대시보드 접속코드</th>
+                        <th>신청수</th>
+                        <th>승인수</th>
                         <th>관리</th>
                     </tr>
                     </thead>

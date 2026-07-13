@@ -487,12 +487,45 @@
 }
 
 .partner_page {
+  .btn_register {
+    height: 30px;
+    padding: 0 20px;
+    font-size: $font-size-sm;
+    font-weight: 600;
+    background: $theme-color;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  .btn_reset {
+    height: 30px;
+    padding: 0 20px;
+    font-size: $font-size-sm;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    color: #666;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+      background: #f5f5f5;
+    }
+  }
+
   .td_actions {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
     align-items: center;
-    justify-content: center;
+    height: 64px;
 
     .btn_action,
     .btn_delete_text {
@@ -513,6 +546,17 @@
 
       &:hover {
         background: #f0f0f0;
+      }
+    }
+
+    .btn_dark {
+      background: $theme-color;
+      color: #fff;
+      border-color: $theme-color;
+
+      &:hover {
+        opacity: 0.9;
+        background: $theme-color;
       }
     }
 
@@ -721,6 +765,299 @@
       button { padding: 9px 20px; border-radius: 8px; font-size: $font-size-sm; cursor: pointer; }
       .pe_cancel { background: #eef0f2; color: #555; border: 1px solid #ddd; }
       .pe_save { background: $main-color; color: #fff; border: none; &:disabled { opacity: .5; } }
+    }
+  }
+}
+
+// ── 신규등록 팝업 ──
+.partner_register_popup {
+  width: 900px;
+  max-width: 95vw;
+  max-height: 91dvh;
+  background: #fff;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .popup_title {
+    font-size: 16px;
+    font-weight: 700;
+    color: $theme-color;
+    margin-bottom: 20px;
+  }
+
+  .popup_body_row {
+    display: flex;
+    gap: 30px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  // 좌측 폼
+  .popup_form_left {
+    width: 340px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .popup_field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      .label_required {
+        font-size: $font-size-sm;
+        color: #666;
+
+        .required {
+          color: #E74C3C;
+          margin-left: 2px;
+        }
+      }
+
+      > input[type="text"] {
+        width: 100%;
+        height: 36px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 0 12px;
+        font-size: $font-size-sm;
+        box-sizing: border-box;
+
+        &::placeholder { color: #bbb; }
+        &:focus { outline: none; border-color: #3B82F6; }
+        &:disabled { background: #f5f5f5; color: #999; }
+      }
+
+      .btn_upload_logo {
+        width: 100%;
+        height: 44px;
+        border: 1px dashed #ccc;
+        border-radius: 6px;
+        background: #f9f9f9;
+        color: #888;
+        font-size: $font-size-sm;
+        cursor: pointer;
+
+        &:hover { background: #f0f0f0; }
+        &:disabled { opacity: 0.6; cursor: default; }
+      }
+
+      .logo_preview_wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .logo_preview_img {
+          height: 44px;
+          max-width: 200px;
+          object-fit: contain;
+          border: 1px solid #eee;
+          border-radius: 6px;
+        }
+
+        .btn_change_logo {
+          height: 30px;
+          padding: 0 12px;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          background: #fff;
+          font-size: $font-size-xs;
+          cursor: pointer;
+
+          &:hover { background: #f5f5f5; }
+        }
+      }
+
+      .input_with_btn {
+        display: flex;
+        gap: 8px;
+
+        input {
+          flex: 1;
+          height: 36px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          padding: 0 12px;
+          font-size: $font-size-sm;
+          box-sizing: border-box;
+
+          &::placeholder { color: #bbb; }
+          &:focus { outline: none; border-color: #3B82F6; }
+        }
+
+        .btn_check {
+          height: 36px;
+          padding: 0 14px;
+          font-size: $font-size-sm;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          background: #f5f5f5;
+          white-space: nowrap;
+          cursor: pointer;
+
+          &:hover { background: #e8e8e8; }
+          &:disabled { opacity: 0.5; cursor: default; }
+        }
+      }
+
+      .date_range {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        input[type="date"] {
+          flex: 1;
+          height: 36px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          padding: 0 12px;
+          font-size: $font-size-sm;
+          box-sizing: border-box;
+
+          &:focus { outline: none; border-color: #3B82F6; }
+        }
+      }
+
+      .input_with_check {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        input[type="text"] {
+          flex: 1;
+          height: 36px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          padding: 0 12px;
+          font-size: $font-size-sm;
+          box-sizing: border-box;
+
+          &::placeholder { color: #bbb; }
+          &:focus { outline: none; border-color: #3B82F6; }
+          &:disabled { background: #f5f5f5; }
+        }
+
+        .checkbox_label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: $font-size-sm;
+          color: #333;
+          white-space: nowrap;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+
+  // 우측 미리보기
+  .popup_preview_right {
+    flex: 1;
+    min-width: 0;
+
+    .preview_title {
+      font-size: $font-size-sm;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .preview_section {
+      margin-bottom: 20px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      overflow: hidden;
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      h5 {
+        font-size: $font-size-sm;
+        font-weight: 600;
+        color: #333;
+        padding: 14px 16px;
+        background: #f9f9f9;
+        border-bottom: 1px solid #eee;
+        margin: 0;
+      }
+
+      .preview_table {
+        padding: 14px;
+        .preview_row {
+          display: flex;
+          align-items: baseline;
+          margin-bottom: 10.5px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .preview_label {
+            width: 110px;
+            flex-shrink: 0;
+            font-size: $font-size-sm;
+            color: #666;
+          }
+
+          .preview_input {
+            flex: 1;
+            min-width: 0;
+            height: 34px;
+            border: 1px solid $gray02;
+            border-radius: 6px;
+            background: #fff;
+            font-size: $font-size-sm;
+            color: #333;
+            padding: 0 10px;
+            outline: none;
+            box-sizing: border-box;
+
+            &:focus {
+              border-color: #3B82F6;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 하단 버튼
+  .popup_btn_wrap {
+    display: flex;
+    justify-content: end;
+    gap: 12px;
+    padding-top: 20px;
+    flex-shrink: 0;
+
+    .save_btn,
+    .cancel_btn {
+      min-width: 100px;
+      height: 40px;
+      font-size: $font-size-sm;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .save_btn {
+      background: $theme-color;
+      color: #fff;
+      border: none;
+
+      &:hover { opacity: 0.9; }
+    }
+
+    .cancel_btn {
+      background: #555;
+      color: #fff;
+      border: none;
+
+      &:hover { opacity: 0.9; }
     }
   }
 }
