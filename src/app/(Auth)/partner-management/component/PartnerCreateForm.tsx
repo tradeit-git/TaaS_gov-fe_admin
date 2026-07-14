@@ -89,7 +89,7 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
     };
 
     const handleCreate = async () => {
-        if (!partnerName.trim() || !partnerKey.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim()) {
+        if (!partnerName.trim() || !partnerKey.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim() || !systemStartDate) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
             return;
         }

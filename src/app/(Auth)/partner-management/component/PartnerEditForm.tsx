@@ -135,7 +135,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
 
     const handleSave = async () => {
         if (saving) return;
-        if (!partnerName.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim()) {
+        if (!partnerName.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim() || !systemStartDate) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
             return;
         }
