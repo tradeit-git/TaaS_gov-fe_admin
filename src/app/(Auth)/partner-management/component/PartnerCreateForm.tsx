@@ -111,11 +111,21 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
                 bonusCredit: Number(creditAmount),
                 maxMembers: noMemberLimit ? 0 : Number(maxMembers || 0),
                 signupCredit: Number(signupCredit),
-                requiresApproval: false,
+                requiresApproval: true, // 승인심사 임시 고정(폼 토글 추가 전까지)
                 startDate, endDate,
                 logoUrl: logoUrl || null,
-                dashboardCode: dashboardCode.trim(),
-                systemStartDate: systemStartDate || null,
+                dashboardAccessCode: dashboardCode.trim(),
+                operationStartDate: systemStartDate || null,
+                // 우측 안내 문구(가입 페이지 노출)
+                guideApplyPeriod: pvPeriod || null,
+                guideApplyTarget: pvTarget || null,
+                guideApplyScale: pvScale || null,
+                guideSelectionMethod: pvMethod || null,
+                guideSelectionResult: pvResult || null,
+                guideOnboarding: pvOnboarding || null,
+                guideAccessDate: pvAccessDate || null,
+                guideFreeCredit: pvFreeCredit || null,
+                guideBonusCredit: pvBonusCredit || null,
             }),
         });
 
@@ -234,12 +244,13 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
                                    onChange={e => setDashboardCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}/>
                         </div>
 
-                        {/* 시스템 접속시작일 */}
+                        {/* 시스템 접속시작일 (=운영시작일, 이 날짜 전까지 로그인 차단) */}
                         <div className={'popup_field'}>
                             <label className={'label_required'}>시스템 접속시작일 <span className={'required'}>(필수)</span></label>
-                            <input type="text" value={systemStartDate}
-                                   placeholder={'영문, 숫자만 입력'}
-                                   onChange={e => setSystemStartDate(e.target.value)}/>
+                            <div className={'date_range'}>
+                                <input type="date" value={systemStartDate}
+                                       onChange={e => setSystemStartDate(e.target.value)}/>
+                            </div>
                         </div>
                     </div>
 

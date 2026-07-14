@@ -42,7 +42,7 @@ interface CoalitionApiRow {
     status: string;
     logoUrl?: string;
     requiresApproval?: boolean;
-    dashboardCode?: string;
+    dashboardAccessCode?: string;
 }
 
 interface CoalitionListResponse {
@@ -65,7 +65,7 @@ const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
     createdAt: row.createdAt,
     logoUrl: row.logoUrl ?? '',
     requiresApproval: row.requiresApproval ?? false,
-    dashboardCode: row.dashboardCode ?? '',
+    dashboardCode: row.dashboardAccessCode ?? '',
 });
 
 export default function PartnerPage() {
