@@ -6,46 +6,42 @@ import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import callApi from "@/utill/apiRequest";
 
 interface Props {
+    uId?: string;
     onCreated?: () => void;
 }
 
-export default function PartnerCreateForm({onCreated}: Props) {
-    const {addPopup} = usePopupStore();
+export default function PartnerCreateForm({uId, onCreated}: Props) {
+    const {closePopup, addPopup} = usePopupStore();
     const [partnerName, setPartnerName] = useState('');
     const [partnerKey, setPartnerKey] = useState('');
     const [creditAmount, setCreditAmount] = useState('');
     const [maxMembers, setMaxMembers] = useState('');
+    const [noMemberLimit, setNoMemberLimit] = useState(false);
     const [signupCredit, setSignupCredit] = useState('');
-    const [requiresApproval, setRequiresApproval] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [dashboardCode, setDashboardCode] = useState('');
+    const [systemStartDate, setSystemStartDate] = useState('');
     const [logoUrl, setLogoUrl] = useState('');
-    const [logoFileName, setLogoFileName] = useState('');
     const [uploading, setUploading] = useState(false);
+
+    // 우측 미리보기 편집 state
+    const [pvPeriod, setPvPeriod] = useState('');
+    const [pvTarget, setPvTarget] = useState('');
+    const [pvScale, setPvScale] = useState('');
+    const [pvMethod, setPvMethod] = useState('');
+    const [pvResult, setPvResult] = useState('');
+    const [pvOnboarding, setPvOnboarding] = useState('');
+    const [pvAccessDate, setPvAccessDate] = useState('');
+    const [pvFreeCredit, setPvFreeCredit] = useState('');
+    const [pvBonusCredit, setPvBonusCredit] = useState('');
     const [isDuplChecked, setIsDuplChecked] = useState(false);
     const isComposing = useRef(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleReset = () => {
-        setPartnerName('');
-        setPartnerKey('');
-        setCreditAmount('');
-        setMaxMembers('');
-        setSignupCredit('');
-        setRequiresApproval(false);
-        setStartDate('');
-        setEndDate('');
-        setLogoUrl('');
-        setLogoFileName('');
-        setIsDuplChecked(false);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-    };
-
     const handleLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
-        // 확장자/MIME 체크 (JPG/PNG/SVG/WebP 허용)
         const allowedMimes = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
         const allowedExts = ['.png', '.jpg', '.jpeg', '.svg', '.webp'];
         const lowerName = file.name.toLowerCase();
@@ -55,57 +51,36 @@ export default function PartnerCreateForm({onCreated}: Props) {
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
-
         setUploading(true);
         const formData = new FormData();
         formData.append('image', file);
         const res = await callApi(`/api/admin/partner-keys/upload-logo`, {
-            method: 'POST',
-            credentials: 'include',
-            body: formData,
+            method: 'POST', credentials: 'include', body: formData,
         });
         setUploading(false);
-
         if (fileInputRef.current) fileInputRef.current.value = '';
-
         if (!res.result || !res.data) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '이미지 업로드에 실패했습니다.'}/>);
             return;
         }
-
-        const {logoUrl: uploadedUrl} = res.data as {logoUrl: string};
+        const {logoUrl: uploadedUrl} = res.data as { logoUrl: string };
         setLogoUrl(uploadedUrl);
-        setLogoFileName(file.name);
-    };
-
-    const handleSelectFile = () => {
-        if (uploading) return;
-        fileInputRef.current?.click();
-    };
-
-    const handleRemoveLogo = () => {
-        setLogoUrl('');
-        setLogoFileName('');
-        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const handleDuplCheck = async () => {
         if (!partnerKey.trim()) {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'경로를 입력해주세요.'}/>);
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'고유식별자를 입력해주세요.'}/>);
             return;
         }
-
         const res = await callApi(`/api/admin/partner-keys/check-duplicate?partnerKey=${encodeURIComponent(partnerKey.trim())}`, {
-            method: 'GET',
-            credentials: 'include',
+            method: 'GET', credentials: 'include',
         });
-
         if (res && res.result) {
             if (res.data as unknown as boolean) {
-                addPopup(<AlertComponent alertType={'alert'} infoContent={'이미 사용 중인 경로입니다.'}/>);
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'이미 사용 중인 식별자입니다.'}/>);
                 setIsDuplChecked(false);
             } else {
-                addPopup(<AlertComponent alertType={'alert'} infoContent={'사용 가능한 경로입니다.'}/>);
+                addPopup(<AlertComponent alertType={'alert'} infoContent={'사용 가능한 식별자입니다.'}/>);
                 setIsDuplChecked(true);
             }
         } else {
@@ -114,20 +89,16 @@ export default function PartnerCreateForm({onCreated}: Props) {
     };
 
     const handleCreate = async () => {
-        if (!partnerName.trim() || !partnerKey.trim() || !creditAmount || !signupCredit || !startDate || !endDate) {
+        if (!partnerName.trim() || !partnerKey.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim() || !systemStartDate) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
             return;
         }
         if (!isDuplChecked) {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'경로 중복체크를 해주세요.'}/>);
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'고유식별자 중복체크를 해주세요.'}/>);
             return;
         }
         if (startDate > endDate) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'종료일은 시작일 이후여야 합니다.'}/>);
-            return;
-        }
-        if (uploading) {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'이미지 업로드 중입니다. 잠시만 기다려주세요.'}/>);
             return;
         }
 
@@ -136,155 +107,218 @@ export default function PartnerCreateForm({onCreated}: Props) {
             headers: {'Content-Type': 'application/json'},
             credentials: 'include',
             body: JSON.stringify({
-                partnerKey: partnerKey,
-                partnerName: partnerName,
+                partnerKey, partnerName,
                 bonusCredit: Number(creditAmount),
-                maxMembers: Number(maxMembers || 0),
+                maxMembers: noMemberLimit ? 0 : Number(maxMembers || 0),
                 signupCredit: Number(signupCredit),
-                requiresApproval: requiresApproval,
-                startDate: startDate,
-                endDate: endDate,
+                requiresApproval: true, // 승인심사 임시 고정(폼 토글 추가 전까지)
+                startDate, endDate,
                 logoUrl: logoUrl || null,
+                dashboardAccessCode: dashboardCode.trim(),
+                operationStartDate: systemStartDate || null,
+                // 우측 안내 문구(가입 페이지 노출)
+                guideApplyPeriod: pvPeriod || null,
+                guideApplyTarget: pvTarget || null,
+                guideApplyScale: pvScale || null,
+                guideSelectionMethod: pvMethod || null,
+                guideSelectionResult: pvResult || null,
+                guideOnboarding: pvOnboarding || null,
+                guideAccessDate: pvAccessDate || null,
+                guideFreeCredit: pvFreeCredit || null,
+                guideBonusCredit: pvBonusCredit || null,
             }),
         });
 
-        if(res && res.result) {
-            // 목업: 등록 성공
+        if (res && res.result) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'등록되었습니다.'}/>);
-            handleReset();
             onCreated?.();
+            closePopup(uId ?? '');
         } else {
-            //  addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '수정에 실패했습니다.'}/>);
             addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '등록에 실패하였습니다.'}/>);
         }
     };
 
     return (
-        <div className={'partner_create_form'}>
-            <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml,.svg,image/webp"
-                   style={{display: 'none'}} onChange={handleLogoSelect}/>
+        <div className={'alertSection'}>
+            <div className={'partner_register_popup'}>
+                <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml,.svg,image/webp"
+                       style={{display: 'none'}} onChange={handleLogoSelect}/>
 
-            {/* 왼쪽: 로고 */}
-            <div className={'logo_box'}>
-                {logoUrl ? (
-                    <div className={'logo_filled'}>
-                        <img src={logoUrl} alt={'logo'} className={'logo_img'}/>
-                        <button type="button" className={'btn_remove_logo'}
-                                onClick={handleRemoveLogo} title={'삭제'}>×</button>
-                        <div className={'logo_overlay'}>
-                            <span className={'logo_name'} title={logoFileName}>{logoFileName}</span>
-                            <button type="button" className={'btn_change_logo'}
-                                    onClick={handleSelectFile} disabled={uploading}>
-                                {uploading ? '업로드 중...' : '변경'}
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <button type="button" className={'logo_empty'}
-                            onClick={handleSelectFile} disabled={uploading}>
-                        <span className={'admin_icon'}/>
-                        <span className={'logo_empty_text'}>
-                            {uploading ? '업로드 중...' : '로고 업로드'}
-                        </span>
-                    </button>
-                )}
-            </div>
+                <h4 className={'popup_title'}>신규등록</h4>
 
-            {/* 오른쪽: 입력 필드 (한 줄) */}
-            <div className={'form_right'}>
-                <div className={'form_row'}>
-                    <div className={'form_field field_name'}>
-                        <label>제휴명</label>
-                        <div className={'input_wrap'}>
-                            <input type="text" value={partnerName} autoComplete="off" maxLength={20}
-                                   onChange={e => setPartnerName(e.target.value.slice(0, 20))} placeholder={'최대 20자'}/>
+                <div className={'popup_body_row'}>
+                    {/* 좌측: 입력폼 */}
+                    <div className={'popup_form_left'}>
+                        {/* 로고 */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>로고 <span className={'required'}>(필수)</span></label>
+                            {logoUrl ? (
+                                <div className={'logo_preview_wrap'}>
+                                    <img src={logoUrl} alt="logo" className={'logo_preview_img'}/>
+                                    <button type="button" className={'btn_change_logo'} onClick={() => fileInputRef.current?.click()}>변경</button>
+                                </div>
+                            ) : (
+                                <button type="button" className={'btn_upload_logo'} onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                                    {uploading ? '업로드 중...' : '이미지 업로드'}
+                                </button>
+                            )}
                         </div>
-                    </div>
-                    <div className={'form_field field_path'}>
-                        <label>고유식별자</label>
-                        <div className={'input_wrap'}>
-                            <input type="text" value={partnerKey} autoComplete="off" maxLength={20}
-                                   onCompositionStart={() => { isComposing.current = true; }}
-                                   onCompositionEnd={e => {
-                                       isComposing.current = false;
-                                       const filtered = e.currentTarget.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
-                                       setPartnerKey(filtered);
-                                       setIsDuplChecked(false);
-                                   }}
-                                   onChange={e => {
-                                       if (isComposing.current) {
-                                           setPartnerKey(e.target.value);
-                                           return;
-                                       }
-                                       setPartnerKey(e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20));
-                                       setIsDuplChecked(false);
-                                   }}
-                                   placeholder={'영문 or 숫자 최대 20자'}/>
-                            <button type="button" className={'btn_check'} onClick={handleDuplCheck}
-                                    disabled={!partnerKey.trim()}>중복체크
-                            </button>
+
+                        {/* 제휴기관 */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>제휴기관 <span className={'required'}>(필수)</span></label>
+                            <input type="text" value={partnerName} maxLength={20}
+                                   onChange={e => setPartnerName(e.target.value.slice(0, 20))}/>
                         </div>
-                    </div>
-                    <div className={'form_field field_period'}>
-                        <label>가입유효기간</label>
-                        <div className={'input_wrap'}>
-                            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}/>
-                            <span className={'date_tilde'}>-</span>
-                            <input type="date" value={endDate}
-                                   min={startDate || undefined}
-                                   onChange={e => setEndDate(e.target.value)}/>
+
+                        {/* 고유식별자 */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>고유식별자 <span className={'required'}>(필수)</span></label>
+                            <div className={'input_with_btn'}>
+                                <input type="text" value={partnerKey} maxLength={20}
+                                       placeholder={'영문, 숫자만 입력'}
+                                       onCompositionStart={() => { isComposing.current = true; }}
+                                       onCompositionEnd={e => {
+                                           isComposing.current = false;
+                                           setPartnerKey(e.currentTarget.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20));
+                                           setIsDuplChecked(false);
+                                       }}
+                                       onChange={e => {
+                                           if (isComposing.current) { setPartnerKey(e.target.value); return; }
+                                           setPartnerKey(e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20));
+                                           setIsDuplChecked(false);
+                                       }}/>
+                                <button type="button" className={'btn_check'} onClick={handleDuplCheck} disabled={!partnerKey.trim()}>중복체크</button>
+                            </div>
                         </div>
-                    </div>
-                    <div className={'form_field field_credit'}>
-                        <label>보너스 크레딧</label>
-                        <div className={'input_wrap'}>
-                            <input type="text" inputMode="numeric" autoComplete="off"
-                                   value={creditAmount}
+
+                        {/* 모집기간 */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>모집기간 <span className={'required'}>(필수)</span></label>
+                            <div className={'date_range'}>
+                                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}/>
+                                <input type="date" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)}/>
+                            </div>
+                        </div>
+
+                        {/* 모집인원 */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>모집인원 <span className={'required'}>(필수)</span></label>
+                            <div className={'input_with_check'}>
+                                <input type="text" inputMode="numeric" value={noMemberLimit ? '' : maxMembers}
+                                       disabled={noMemberLimit}
+                                       placeholder={'숫자만 입력'}
+                                       onChange={e => setMaxMembers(e.target.value.replace(/[^0-9]/g, ''))}/>
+                                <label className={'checkbox_label'}>
+                                    <input type="checkbox" checked={noMemberLimit}
+                                           onChange={e => { setNoMemberLimit(e.target.checked); if (e.target.checked) setMaxMembers(''); }}/>
+                                    인원제한없음
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* 무료 크레딧 */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>무료 크레딧 <span className={'required'}>(필수)</span></label>
+                            <input type="text" inputMode="numeric" value={signupCredit}
+                                   placeholder={'숫자만 입력'}
+                                   onChange={e => setSignupCredit(e.target.value.replace(/[^0-9]/g, ''))}/>
+                        </div>
+
+                        {/* 보너스 크레딧(%) */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>보너스 크레딧(%) <span className={'required'}>(필수)</span></label>
+                            <input type="text" inputMode="numeric" value={creditAmount}
+                                   placeholder={'숫자만 입력'}
                                    onChange={e => {
                                        const raw = e.target.value.replace(/[^0-9]/g, '');
-                                       const capped = raw ? String(Math.min(Number(raw), 100)) : '';
-                                       setCreditAmount(capped);
-                                   }}
-                                   placeholder={''}/>
-                            <span className={'unit'}>%</span>
+                                       setCreditAmount(raw ? String(Math.min(Number(raw), 100)) : '');
+                                   }}/>
+                        </div>
+
+                        {/* 대시보드 접속코드 */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>대시보드 접속코드 <span className={'required'}>(필수)</span></label>
+                            <input type="text" value={dashboardCode}
+                                   placeholder={'영문, 숫자만 입력'}
+                                   onChange={e => setDashboardCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}/>
+                        </div>
+
+                        {/* 시스템 접속시작일 (=운영시작일, 이 날짜 전까지 로그인 차단) */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>시스템 접속시작일 <span className={'required'}>(필수)</span></label>
+                            <div className={'date_range'}>
+                                <input type="date" value={systemStartDate}
+                                       onChange={e => setSystemStartDate(e.target.value)}/>
+                            </div>
                         </div>
                     </div>
-                    <div className={'form_field field_max_members'}>
-                        <label>모집인원</label>
-                        <div className={'input_wrap'}>
-                            <input type="text" inputMode="numeric" autoComplete="off"
-                                   value={maxMembers}
-                                   onChange={e => setMaxMembers(e.target.value.replace(/[^0-9]/g, ''))}
-                                   placeholder={'0=무제한'}/>
-                            <span className={'unit'}>명</span>
+
+                    {/* 우측: 미리보기 (편집 가능) */}
+                    <div className={'popup_preview_right'}>
+                        <p className={'preview_title'}>가입 페이지에 노출되는 내용입니다.</p>
+
+                        <div className={'preview_section'}>
+                            <h5>신청안내</h5>
+                            <div className={'preview_table'}>
+                                <div className={'preview_row'}>
+                                    <span className={'preview_label'}>신청기간</span>
+                                    <input type="text" className={'preview_input'} value={pvPeriod} onChange={e => setPvPeriod(e.target.value)}/>
+                                </div>
+                                <div className={'preview_row'}>
+                                    <span className={'preview_label'}>신청대상</span>
+                                    <input type="text" className={'preview_input'} value={pvTarget} onChange={e => setPvTarget(e.target.value)}/>
+                                </div>
+                                <div className={'preview_row'}>
+                                    <span className={'preview_label'}>신청규모</span>
+                                    <input type="text" className={'preview_input'} value={pvScale} onChange={e => setPvScale(e.target.value)}/>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div className={'form_field field_signup_credit'}>
-                        <label>가입크레딧</label>
-                        <div className={'input_wrap'}>
-                            <input type="text" inputMode="numeric" autoComplete="off"
-                                   value={signupCredit}
-                                   onChange={e => setSignupCredit(e.target.value.replace(/[^0-9]/g, ''))}
-                                   placeholder={'가입 시 지급'}/>
+
+                        <div className={'preview_section'}>
+                            <h5>운영안내</h5>
+                            <div className={'preview_table'}>
+                                <div className={'preview_row'}>
+                                    <span className={'preview_label'}>선정방법</span>
+                                    <input type="text" className={'preview_input'} value={pvMethod} onChange={e => setPvMethod(e.target.value)}/>
+                                </div>
+                                <div className={'preview_row'}>
+                                    <span className={'preview_label'}>선정결과</span>
+                                    <input type="text" className={'preview_input'} value={pvResult} onChange={e => setPvResult(e.target.value)}/>
+                                </div>
+                                <div className={'preview_row'}>
+                                    <span className={'preview_label'}>온보딩 교육</span>
+                                    <input type="text" className={'preview_input'} value={pvOnboarding} onChange={e => setPvOnboarding(e.target.value)}/>
+                                </div>
+                                <div className={'preview_row'}>
+                                    <span className={'preview_label'}>시스템 접속가능일</span>
+                                    <input type="text" className={'preview_input'} value={pvAccessDate} onChange={e => setPvAccessDate(e.target.value)}/>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div className={'form_field field_approval'}>
-                        <label>승인심사</label>
-                        <div className={'input_wrap'}>
-                            <label style={{display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer'}}>
-                                <input type="checkbox" checked={requiresApproval}
-                                       onChange={e => setRequiresApproval(e.target.checked)}/>
-                                <span>가입 승인 필요</span>
-                            </label>
+
+                        <div className={'preview_section'}>
+                            <h5>제공혜택</h5>
+                            <div className={'preview_table'}>
+                                <div className={'preview_row'}>
+                                    <span className={'preview_label'}>무료 크레딧</span>
+                                    <input type="text" className={'preview_input'} value={pvFreeCredit} onChange={e => setPvFreeCredit(e.target.value)}/>
+                                </div>
+                                <div className={'preview_row'}>
+                                    <span className={'preview_label'}>보너스 크레딧</span>
+                                    <input type="text" className={'preview_input'} value={pvBonusCredit} onChange={e => setPvBonusCredit(e.target.value)}/>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* 액션 버튼 */}
-            <div className={'form_actions'}>
-                <button type="button" className={'btn_create'} onClick={handleCreate}>등록</button>
-                <button type="button" className={'btn_reset'} onClick={handleReset}>초기화</button>
+                {/* 하단 버튼 */}
+                <div className={'popup_btn_wrap'}>
+                    <button type="button" className={'cancel_btn'} onClick={() => closePopup(uId ?? '')}>취소</button>
+                    <button type="button" className={'save_btn'} onClick={handleCreate}>저장</button>
+                </div>
             </div>
         </div>
     );
