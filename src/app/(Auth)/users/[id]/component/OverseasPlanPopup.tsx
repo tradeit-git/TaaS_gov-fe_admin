@@ -21,6 +21,7 @@ interface Props {
     initialData?: Partial<OverseasPlanFormData>;
     onSave?: (data: OverseasPlanFormData) => void;
     onCreditChange?: () => void;
+    planStatus?: 'ACTIVE' | 'SCHEDULED' | 'EXPIRED';
 }
 
 export type PlanType = 'OVERSEAS' | 'GENERAL';
@@ -127,7 +128,7 @@ const planTypeToCategory = (data?: Partial<OverseasPlanFormData>): PlanCategory 
     return 'CUSTOM';
 };
 
-export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
+export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}: Props) {
     const {closePopup, addPopup} = usePopupStore();
     const isEdit = !!initialData;
 
@@ -198,7 +199,7 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
             addPopup(<AlertComponent alertType={'error'} infoContent={'종료일을 입력해주세요.'}/>);
             return;
         }
-        if (form.planEndDate <= form.planStartDate) {
+        if (!isEdit && form.planEndDate <= form.planStartDate) {
             addPopup(<AlertComponent alertType={'error'} infoContent={'종료일은 시작일 이후여야 합니다.'}/>);
             return;
         }
@@ -255,6 +256,7 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
                         {category === 'HYBRID' ? (
                             <div className={'date_range hybrid_date_range'}>
                                 <input type="date" value={form.planStartDate}
+                                       disabled={planStatus === 'ACTIVE'}
                                        onChange={e => {
                                            const v = e.target.value;
                                            setForm(prev => {
@@ -279,6 +281,7 @@ export default function OverseasPlanPopup({uId, initialData, onSave}: Props) {
                         ) : (
                             <div className={'date_range'}>
                                 <input type="date" value={form.planStartDate}
+                                       disabled={planStatus === 'ACTIVE'}
                                        onChange={e => setForm(prev => ({...prev, planStartDate: e.target.value}))}/>
                                 <span className={'tilde'}>-</span>
                                 <input type="date" value={form.planEndDate}

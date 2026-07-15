@@ -201,6 +201,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
         addPopup(<OverseasPlanPopup
             userId={userId}
             onCreditChange={refreshSummary}
+            planStatus={getPlanStatus(plan)}
             initialData={{
                 planType: plan.paymentMethod === 'GA_CONTRACT' ? 'OVERSEAS' : 'GENERAL',
                 planName: plan.planName,
@@ -228,7 +229,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
                 const originalCredit = plan.rounds.reduce((sum, r) => sum + (r.grantedAmount ?? 0), 0);
                 const diff = data.totalCredit - originalCredit;
 
-                if (isGeneral && diff !== 0) {
+                if (isGeneral && diff !== 0 && getPlanStatus(plan) === 'ACTIVE') {
                     const creditEndpoint = diff > 0
                         ? `/api/admin/members/users/${userId}/credits/grant`
                         : `/api/admin/members/users/${userId}/credits/deduct`;
