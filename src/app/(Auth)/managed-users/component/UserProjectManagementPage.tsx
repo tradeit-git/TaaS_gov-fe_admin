@@ -180,7 +180,7 @@ export default function UserProjectManagementPage({initialData}: Props) {
                 <table className={'client_table managed_user_table'}>
                     <colgroup>
                         <col style={{width: '1%'}}/>
-                        <col style={{width: '10%'}}/>
+                        <col style={{width: '8%'}}/>
                         <col style={{width: '7%'}}/>
                         <col style={{width: '8%'}}/>
                         <col style={{width: '5%'}}/>
@@ -192,7 +192,7 @@ export default function UserProjectManagementPage({initialData}: Props) {
                         <col style={{width: '2%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '6%'}}/>
-                        <col style={{width: '2%'}}/>
+                        <col style={{width: '1%'}}/>
                     </colgroup>
                     <thead>
                     <tr>
