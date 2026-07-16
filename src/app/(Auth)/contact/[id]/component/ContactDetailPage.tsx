@@ -7,7 +7,7 @@ import callApi from "@/utill/apiRequest";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import {formatDateDot} from "@/utill/format";
-import {InquiryRow, INQUIRY_STATUS_OPTIONS} from "@/app/(Auth)/contact/component/ContactPage";
+import {InquiryRow, INQUIRY_STATUS_OPTIONS, TYPE_MAP} from "@/app/(Auth)/contact/component/ContactPage";
 
 interface Props {
     id: string;
@@ -55,6 +55,9 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
     const mobileParts = detail.mobile ? detail.mobile.split('-') : ['', '', ''];
     const emailParts = detail.email ? detail.email.split('@') : ['', ''];
 
+    // CRM 문의: 연락처(전화/이메일)는 회신 희망값
+    const isCrm = detail.inquiryType === 'CRM_1ON1';
+
     return (
         <div className={'admin_page'}>
             <div className={'page_start_box'}>
@@ -71,39 +74,60 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
                 <section className={'account_info'}>
                     <ul className={'form_list'}>
                         <li className={'form_item'}>
-                            <p className={'form_label'}>소속(기업/기관)</p>
-                            <input type="text" defaultValue={detail.companyName}/>
+                            <p className={'form_label'}>유형</p>
+                            <input type="text" readOnly value={TYPE_MAP[detail.inquiryType] || detail.inquiryType}/>
                         </li>
                         <li className={'form_item'}>
-                            <p className={'form_label'}>이름</p>
-                            <input type="text" defaultValue={detail.name}/>
+                            <p className={'form_label'}>
+                                소속(기업/기관)
+                                {detail.inquiryType === 'CRM_1ON1' && detail.userId && (
+                                    <a className={'user_link'} href={`/admin/users/${detail.userId}`} target="_blank" rel="noopener noreferrer">
+                                        회원 상세 (#{detail.userId})
+                                    </a>
+                                )}
+                            </p>
+                            <input type="text" defaultValue={detail.companyName ?? ''}/>
+                        </li>
+                        <li className={'form_item form_row'}>
+                            <div className={'form_col'}>
+                                <p className={'form_label'}>이름</p>
+                                <input type="text" defaultValue={detail.name ?? ''}/>
+                            </div>
+                            <div className={'form_col'}>
+                                <p className={'form_label'}>부서</p>
+                                <input type="text" defaultValue={detail.department ?? ''}/>
+                            </div>
+                            <div className={'form_col'}>
+                                <p className={'form_label'}>직함</p>
+                                <input type="text" defaultValue={detail.position ?? ''}/>
+                            </div>
                         </li>
                         <li className={'form_item'}>
-                            <p className={'form_label'}>부서</p>
-                            <input type="text" defaultValue={detail.department}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>직함</p>
-                            <input type="text" defaultValue={detail.position}/>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>전화번호</p>
+                            <p className={'form_label'}>
+                                전화번호
+                                {isCrm && <span className={'label_note'}>(희망)</span>}
+                            </p>
                             <div className={'multi_input_wrap'}>
                                 <input type="text" defaultValue={phoneParts[0]}/>
                                 <input type="text" defaultValue={phoneParts[1]}/>
                                 <input type="text" defaultValue={phoneParts[2]}/>
                             </div>
                         </li>
+                        {!isCrm && (
+                            <li className={'form_item'}>
+                                <p className={'form_label'}>휴대전화</p>
+                                <div className={'multi_input_wrap'}>
+                                    <input type="text" defaultValue={mobileParts[0]}/>
+                                    <input type="text" defaultValue={mobileParts[1]}/>
+                                    <input type="text" defaultValue={mobileParts[2]}/>
+                                </div>
+                            </li>
+                        )}
                         <li className={'form_item'}>
-                            <p className={'form_label'}>휴대전화</p>
-                            <div className={'multi_input_wrap'}>
-                                <input type="text" defaultValue={mobileParts[0]}/>
-                                <input type="text" defaultValue={mobileParts[1]}/>
-                                <input type="text" defaultValue={mobileParts[2]}/>
-                            </div>
-                        </li>
-                        <li className={'form_item'}>
-                            <p className={'form_label'}>이메일</p>
+                            <p className={'form_label'}>
+                                이메일
+                                {isCrm && <span className={'label_note'}>(희망)</span>}
+                            </p>
                             <div className={'multi_input_wrap'}>
                                 <input type="text" defaultValue={emailParts[0]}/>
                                 <span className={'separator'}>@</span>
@@ -114,6 +138,12 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
                             <p className={'form_label'}>접수일</p>
                             <input type="text" readOnly value={formatDateDot(detail.createdAt)}/>
                         </li>
+                        {detail.title && (
+                            <li className={'form_item'}>
+                                <p className={'form_label'}>제목</p>
+                                <input type="text" readOnly value={detail.title}/>
+                            </li>
+                        )}
                         <li className={'form_item'}>
                             <p className={'form_label'}>문의내용</p>
                             <textarea defaultValue={detail.content}/>
