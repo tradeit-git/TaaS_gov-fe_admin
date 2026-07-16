@@ -65,7 +65,7 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
                 <ul className={'breadcrumb'}>
                     <li>홈</li>
                     <li><span className={'admin_icon icon_next'}/></li>
-                    <li><Link href={'/contact'}>도입문의</Link></li>
+                    <li><Link href={'/contact'}>고객문의</Link></li>
                     <li><span className={'admin_icon icon_next'}/></li>
                     <li>상세</li>
                 </ul>

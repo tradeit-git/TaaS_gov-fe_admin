@@ -66,7 +66,7 @@ export  default  function Sidebar (){
                 </Link>
                 <Link href={'/contact'}
                       className={`lnb_name${isOn('contact')}`}>
-                    <span className={'admin_icon contact'}/>도입문의
+                    <span className={'admin_icon contact'}/>고객문의
                 </Link>
                 <Link href={'/onboarding'}
                       className={`lnb_name${isOn('onboarding')}`}>
