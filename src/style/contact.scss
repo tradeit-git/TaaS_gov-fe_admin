@@ -852,6 +852,22 @@
 // -------------------- 고객관리 ----------------------------
 .contact_table {
   td {
+    .type_badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: $font-size-xs;
+      font-weight: 500;
+      white-space: nowrap;
+      &.partnership {
+        color: #287fff;
+        background: rgba(40, 127, 255, 0.1);
+      }
+      &.crm {
+        color: #7b3ff2;
+        background: rgba(123, 63, 242, 0.1);
+      }
+    }
     .status_badge {
       display: flex;
       gap: 3px;
@@ -890,11 +906,45 @@
       display: flex;
       gap: 30px;
       .form_item {
+        &.form_row {
+          display: flex;
+          gap: 12px;
+          .form_col {
+            flex: 1;
+            min-width: 0;
+            input {
+              width: 100%;
+            }
+          }
+        }
         &.memo {
           width: 630px;
           textarea {
             width: 100% !important;
             height: 728px !important;
+          }
+        }
+        .form_label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          .label_note {
+            color: #FF8D28;
+            font-weight: 500;
+          }
+        }
+        .user_link {
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 8px;
+          border: 1px solid $theme-color;
+          border-radius: 4px;
+          color: $theme-color;
+          font-size: $font-size-xs;
+          font-weight: 500;
+          text-decoration: none;
+          &:hover {
+            background: rgba(40, 127, 255, 0.08);
           }
         }
       }

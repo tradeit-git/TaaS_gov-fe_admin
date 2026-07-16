@@ -20,7 +20,7 @@ export const UserSchema = z.object({
     password: z.string().default(""),
     name: z.string().default(""),
     companyName: z.string().default(""),
-    businessNumber: z.string().default(""),
+    businessNumber: z.preprocess((v) => v ?? "", z.string()).default(""),
     department: z.string().default(""),
     position: z.string().default(""),
     email: z.string().default(""),

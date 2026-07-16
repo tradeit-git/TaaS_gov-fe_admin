@@ -20,15 +20,22 @@ export const INQUIRY_STATUS_OPTIONS = [
     {value: 'COMPLETED', label: '완료'},
 ];
 
+export const TYPE_MAP: Record<string, string> = {
+    'PARTNERSHIP': '도입문의',
+    'CRM_1ON1': 'CRM문의',
+};
+
 export interface InquiryRow {
     id: number;
-    companyName: string;
-    name: string;
-    department: string;
-    position: string;
+    inquiryType: string;
+    title: string | null;
+    companyName: string | null;
+    name: string | null;
+    department: string | null;
+    position: string | null;
     phone: string | null;
-    mobile: string;
-    email: string;
+    mobile: string | null;
+    email: string | null;
     content: string;
     ip: string | null;
     privacyAgreed: boolean;
@@ -37,6 +44,7 @@ export interface InquiryRow {
     isRead: boolean;
     readAt: string | null;
     readByAdminId: number | null;
+    userId: number | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -62,6 +70,7 @@ export default function ContactPage({initialData}: Props) {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [totalElements, setTotalElements] = useState(initialData.totalElements);
     const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
+    const [typeFilter, setTypeFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [isReadFilter, setIsReadFilter] = useState('');
     const isInitial = useRef(true);
@@ -76,6 +85,7 @@ export default function ContactPage({initialData}: Props) {
         params.set('page', String(currentPage));
         params.set('size', String(itemsPerPage));
         if (search.trim()) params.set('keyword', search.trim());
+        if (typeFilter) params.set('type', typeFilter);
         if (statusFilter) params.set('status', statusFilter);
         if (isReadFilter !== '') params.set('isRead', isReadFilter);
 
@@ -90,7 +100,7 @@ export default function ContactPage({initialData}: Props) {
             setTotalElements(body.totalElements);
             setTotalPages(Math.max(1, body.totalPages));
         }
-    }, [currentPage, itemsPerPage, search, statusFilter, isReadFilter]);
+    }, [currentPage, itemsPerPage, search, typeFilter, statusFilter, isReadFilter]);
 
     useEffect(() => {
         fetchList();
@@ -153,6 +163,11 @@ export default function ContactPage({initialData}: Props) {
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder={'고객사 검색'}/>
                         {searchInput && <button type="button" className={'btn_clear'} onClick={() => { setSearchInput(''); setSearch(''); setCurrentPage(0); }}><span className={'admin_icon'}/> </button>}
                     </div>
+                    <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setCurrentPage(0); }}>
+                        <option value="">유형 전체</option>
+                        <option value="PARTNERSHIP">도입문의</option>
+                        <option value="CRM_1ON1">CRM문의</option>
+                    </select>
                     <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setCurrentPage(0); }}>
                         <option value="">처리상태 전체</option>
                         <option value="PENDING">접수</option>
@@ -178,6 +193,7 @@ export default function ContactPage({initialData}: Props) {
                     <thead>
                     <tr>
                         <th>순번</th>
+                        <th>유형</th>
                         <th>회사명</th>
                         <th>이름</th>
                         <th>부서</th>
@@ -197,6 +213,7 @@ export default function ContactPage({initialData}: Props) {
                         currentPage={currentPage}
                         itemsPerPage={itemsPerPage}
                         statusMap={STATUS_MAP}
+                        typeMap={TYPE_MAP}
                         formatDate={formatDateDot}
                         onDelete={handleDelete}
                     />
