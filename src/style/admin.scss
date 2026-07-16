@@ -3389,6 +3389,42 @@ input::placeholder {
 }
 
 
+// --- 보고서 선택 팝업 ---
+.reportSelector {
+  .popupContainer {
+    padding: 30px;
+
+    table {
+      width: 546px;
+
+      input[type=date] {
+        border: 1px solid $tableLine;
+        padding: 4px 10px;
+        height: 35px;
+        border-radius: $border-radius;
+        width: 47%;
+
+        &.start_date {
+          margin-right: 5px;
+        }
+      }
+
+      select {
+        height: 35px;
+        padding: 4px 10px;
+        border: 1px solid $tableLine;
+        border-radius: $border-radius;
+        width: 100%;
+      }
+    }
+
+    .report_btn {
+      @include mainBtn;
+      width: 135px;
+    }
+  }
+}
+
 // --- managed-users 상세 페이지 브레드크럼 아이콘: 원본 스프라이트 좌표로 보정 ---
 .standard_user .page_start_box .breadcrumb .icon_next {
   background-position: -20px -21px;

@@ -399,398 +399,129 @@
   align-self: stretch;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
 
-  .plan_list {
-    &.expanded {
-      flex: 1;
-      overflow-y: auto;
-      min-height: 0;
-    }
-  }
-
-  // ── 크레딧 현황 박스 ──
-  .credit_status_box {
-    border: 1px solid $gray02;
-    background-color: #fff;
-    border-radius: 10px;
-    padding: 20px;
+  // ── 크레딧 누계 현황 ──
+  .credit_status_section {
     margin-bottom: 28px;
 
-    .plan_header {
-      margin-bottom: 0;
-    }
-  }
-
-  .plan_header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-
-    .section_title {
-      margin-bottom: 0;
-    }
-
-    .plan_header_buttons {
+    .credit_card_row {
       display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+      gap: 16px;
 
-    .btn_service_credit {
-      height: 32px;
-      padding: 0 16px;
-      font-size: $font-size-sm;
-      background: #fff;
-      color: #333;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      white-space: nowrap;
-      cursor: pointer;
+      .credit_card {
+        flex: 1;
+        border: 1px solid $gray02;
+        border-radius: 10px;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        flex-direction: column;
+        gap: 16px;
+        background: #fff;
 
-      &:hover {
-        background: #f9fafb;
-      }
-    }
-
-    .btn_add_plan {
-      height: 32px;
-      padding: 0 16px;
-      font-size: $font-size-sm;
-      background: $theme-color;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      white-space: nowrap;
-
-      &:hover {
-        opacity: 0.9;
-      }
-    }
-  }
-
-  // ── 플랜 카드 공통 ──
-  .plan_card {
-    border: 1px solid $gray02;
-    background-color: #eee;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 12px;
-
-    &.standard:not(.expired) {
-      background-color: #fff;
-      border-color: #3B82F6;
-    }
-
-    &.overseas {
-      border-color: #3B82F6;
-      background-color: #fff;
-
-      &.expired {
-        border-color: $gray02;
-        //background-color: #eee;
-
-        table {
-          //border-color: #fafafa;
-          thead {
-            background-color: unset;
-            th {
-              //border-color: #fafafa;
-            }
-          }
-          tr:not(:last-child) td {
-            //border-color: #fafafa;
-          }
-          .row_completed {
-            opacity: 1;
-          }
+        &.highlight {
+          border-color: #003E9C;
+          //background: #F6F7FB;
         }
 
-        .credit_table_wrap tbody {
-          tr.row_completed td.negative {
-            color: $theme-color;
-          }
+        .credit_card_label_row {
+          display: flex;
+          justify-content: space-between;
         }
-      }
-    }
 
-    &.service {
-      border-color: #3B82F6;
-      background-color: #fff;
+        .credit_card_label {
+          font-size: $font-size-sm;
+          color: #888;
+        }
 
-      &.expired {
-        border-color: $gray02;
-        background-color: #fff;
-      }
-    }
-
-    &.expired {
-      .credit_summary_row .summary_item {
-        &.grant, &.used, &.remain, &.expired {
+        .credit_card_value {
+          font-size: 18px;
+          font-weight: 600;
           color: $theme-color;
+          font-variant-numeric: tabular-nums;
+          text-align: right;
+
+          &.accent_blue {
+            color: #D76400;
+          }
+
+          &.accent_orange {
+            color: #003E9C;
+          }
+        }
+
+        .btn_usage_small {
+          height: 22px;
+          padding: 0 10px;
+          font-size: $font-size-xs;
+          border: 1px solid #A1AEBF;
+          border-radius: 4px;
+          background: #F6F7FB;
+          color: $theme-color;
+          line-height: 20px;
+          white-space: nowrap;
+
+          &:hover {
+            background: #f5f5f5;
+          }
         }
       }
     }
   }
 
-  // ── 서비스 크레딧 카드 ──
-  .service_card_row {
-    display: flex;
-    align-items: flex-end;
-    gap: 20px;
+  // ── 유료플랜 이용 현황 테이블 ──
+  .plan_table_section {
+    flex: 1;
+    min-height: 0;
 
-    .service_info_section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex-shrink: 0;
-      min-width: 200px;
-      width: 200px;
-
-      &.period {
-        gap: 14px;
-        min-width: 160px;
-        width: 160px;
-      }
-
-      .label {
-        font-size: $font-size-xs;
-        color: #888;
-      }
-
-      .value {
-        font-size: $font-size-sm;
-        color: $theme-color;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        white-space: nowrap;
-      }
-    }
-
-    .service_credit_section {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-      min-width: 0;
-
-      .label {
-        font-size: $font-size-xs;
-        color: #888;
-      }
-
-      .credit_values {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-      }
-
-      .credit_item {
-        font-size: $font-size-sm;
-        color: $theme-color;
-        white-space: nowrap;
-        width: 83px;
-
-        .line {
-          display: inline-flex;
-          width: 1px;
-          height: 8px;
-          border-radius: 5px;
-          background-color: #aaa;
-          margin: 0 8px;
-        }
-      }
-
-      .btn_usage {
-        height: 26px;
-        padding: 0 10px;
-        font-size: $font-size-sm;
-        border: 1px solid $gray02;
-        border-radius: 6px;
-        background: #fff;
-        color: $theme-color;
-        white-space: nowrap;
-        flex-shrink: 0;
-
-        &:hover {
-          background: #f5f5f5;
-        }
-      }
-    }
-
-    .service_actions {
+    .plan_table_header {
       display: flex;
       align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
+      justify-content: space-between;
+      margin-bottom: 12px;
 
-      .btn_edit,
-      .btn_delete {
-        width: 32px;
+      .section_title {
+        margin-bottom: 0;
+      }
+
+      .btn_add_plan {
         height: 32px;
-        border: 1px solid $gray02;
+        padding: 0 16px;
+        font-size: $font-size-sm;
+        background: $theme-color;
+        color: #fff;
+        border: none;
         border-radius: 6px;
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        .icon_edit {
-          display: block;
-          width: 14px;
-          height: 14px;
-          background-position: -156px -165px;
-        }
-
-        .icon_trash {
-          display: block;
-          width: 13px;
-          height: 13px;
-          background-position: -92px -95px;
-        }
+        white-space: nowrap;
 
         &:hover {
-          background: #f5f5f5;
+          opacity: 0.9;
+        }
+
+        &.disabled {
+          opacity: 0.4;
+          cursor: default;
         }
       }
     }
-  }
 
-  // ── 플랜 카드 헤더 (해외영업) ──
-  .plan_card_header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 16px;
-
-    .plan_actions {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .btn_edit,
-    .btn_delete {
-      flex-shrink: 0;
-      width: 32px;
-      height: 32px;
-      border: 1px solid $gray02;
-      border-radius: 6px;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      .icon_edit {
-        display: block;
-        width: 14px;
-        height: 14px;
-        background-position: -156px -165px;
-      }
-
-      .icon_trash {
-        display: block;
-        width: 13px;
-        height: 13px;
-        background-position: -92px -95px;
-      }
-
-      &:hover {
-        background: #f5f5f5;
-      }
-    }
-  }
-
-  // ── 플랜 정보 그리드 ──
-  .plan_info_grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 20px;
-
-    &.overseas_grid {
-      flex: 1;
-    }
-  }
-
-  .plan_info_item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 200px;
-    width: 200px;
-
-    &.period {
-      min-width: 160px;
-      width: 160px;
-    }
-
-    &.narrow {
-      min-width: 130px;
-      width: 130px;
-    }
-
-    .label {
-      font-size: $font-size-xs;
-      color: #888;
-    }
-
-    .value {
-      font-size: $font-size-sm;
-      color: $theme-color;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-  }
-
-  // ── 상태 뱃지 ──
-  .plan_badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-
-    &.badge_active {
-      background: #34C759;
-      color: #fff;
-    }
-
-    &.badge_scheduled {
-      background: #E1F2E5;
-      color: #2AA148;
-    }
-
-    &.badge_expired {
-      background: #4A4A4A;
-      color: #fff;
-    }
-  }
-
-  // ── 크레딧 테이블 (해외영업) ──
-  .credit_table_wrap {
-    margin-top: 16px;
-
-    table {
+    .plan_usage_table {
       width: 100%;
-      max-width: 880px;
       border-collapse: separate;
       border-spacing: 0;
       font-size: $font-size-sm;
       border: 1px solid $gray02;
-      border-radius: 6px;
+      border-radius: 10px;
       overflow: hidden;
 
       thead {
-        background: #F9FAFB;
+        background: #fbfbfb;
 
         th {
-          padding: 8px 12px;
+          padding: 12px 14px;
           text-align: left;
-          color: #555;
+          color: #888;
           font-weight: 400;
           font-size: $font-size-xs;
           border-bottom: 1px solid $gray02;
@@ -803,154 +534,85 @@
           border-bottom: 1px solid #F0F0F0;
         }
 
-        tr.row_completed {
-          opacity: 0.5;
-
-          td.negative {
-            color: $theme-color;
-          }
-        }
-
         td {
-          padding: 10px 12px;
+          padding: 12px 14px;
           color: $theme-color;
           white-space: nowrap;
+          font-size: $font-size-sm;
 
-          &.negative {
-            color: #E74C3C;
+          &.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+          }
+
+          &.used_cell {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+          }
+
+          &.empty {
+            text-align: center;
+            padding: 40px 14px;
+            color: #999;
           }
         }
       }
-    }
 
-    .credit_status {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 500;
+      .plan_status_badge {
+        display: inline-block;
+        white-space: nowrap;
 
-      &.badge_completed {
-        background: #f5f5f5;
-        color: #4a4a4a;
+        &.badge_active {
+          color: #2563EB;
+        }
+
+        &.badge_scheduled {
+          color: #2AA148;
+        }
+
+        &.badge_expired {
+          color: #888;
+        }
       }
 
-      &.badge_progress {
-        background: #E1EDFF;
-        color: #3B82F6;
+      .btn_usage_inline {
+        height: 22px;
+        padding: 0 10px;
+        font-size: $font-size-xs;
+        border: 1px solid #A1AEBF;
+        border-radius: 4px;
+        background: #F6F7FB;
+        color: #262626;
+        line-height: 20px;
+        white-space: nowrap;
+        flex-shrink: 0;
+
+        &:hover {
+          background: #EFF6FF;
+        }
       }
 
-      &.badge_scheduled {
-        background: #E1F2E5;
-        color: #2AA148;
+      .btn_manage {
+        height: 22px;
+        padding: 0 12px;
+        font-size: $font-size-xs;
+        border: 1px solid $gray02;
+        border-radius: 4px;
+        background: #fff;
+        color: $theme-color;
+        line-height: 20px;
+        white-space: nowrap;
+
+        &:hover {
+          background: #f5f5f5;
+        }
       }
-    }
 
-    .btn_usage {
-      height: 26px;
-      padding: 0 10px;
-      font-size: $font-size-xs;
-      border: 1px solid $gray02;
-      border-radius: 4px;
-      background: #fff;
-      color: $theme-color;
-      line-height: 24px;
-
-      &:hover {
-        background: #f5f5f5;
+      .text_muted {
+        color: #ccc;
       }
-    }
-
-    .btn_grant {
-      height: 26px;
-      padding: 0 10px;
-      font-size: $font-size-xs;
-      border: 1px solid #2AA148;
-      border-radius: 4px;
-      background: #2AA148;
-      color: #fff;
-      line-height: 24px;
-
-      &:hover {
-        background: #228A3D;
-        border-color: #228A3D;
-      }
-    }
-  }
-
-  // ── 크레딧 요약 (일반 플랜) ──
-  .credit_summary_row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 16px;
-
-    .summary_label {
-      font-size: $font-size-xs;
-      color: #888;
-    }
-
-    .summary_values {
-      display: flex;
-      align-items: center;
-      gap: 35px;
-    }
-
-    .summary_item {
-      font-size: $font-size-sm;
-      color: $theme-color;
-      min-width: 100px;
-      white-space: nowrap;
-
-      .line {
-        display: inline-flex;
-        width: 1px; height: 8px;
-        border-radius: 5px;
-        background-color: #aaa;
-        margin: 0 8px;
-      }
-    }
-
-    .btn_usage {
-      height: 26px;
-      padding: 0 10px;
-      font-size: $font-size-xs;
-      border: 1px solid $gray02;
-      border-radius: 4px;
-      background: #fff;
-      color: $theme-color;
-      line-height: 24px;
-
-      &:hover {
-        background: #f5f5f5;
-      }
-    }
-  }
-
-  // ── 더보기 버튼 ──
-  .btn_more {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 160px;
-    height: 36px;
-    margin: 0 auto;
-    font-size: $font-size-sm;
-    border: 1px solid $gray02;
-    border-radius: 20px;
-    background: #fff;
-    color: #888;
-    padding-right: 4px;
-
-    .more_icon {
-      width: 14px; height: 14px;
-      background-position: -122px -165px;
-    }
-
-    &:hover {
-      background: #f9f9f9;
-      color: $theme-color;
     }
   }
 }
@@ -959,7 +621,7 @@
 .overseas_plan_popup {
   width: 504px;
   background: #fff;
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 25px 30px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   min-height: 741px;
@@ -1036,14 +698,14 @@
   }
 
   .popup_field {
-    margin-bottom: 14px;
+    margin-bottom: 20px;
 
     // 필수(*) 라벨 — 파란색
     > label.label_required {
       display: block;
       font-size: $font-size-sm;
       color: #666;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
 
       .required {
         color: #E74C3C;
@@ -1056,7 +718,7 @@
       display: block;
       font-size: $font-size-sm;
       color: #666;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     // 날짜 범위
@@ -1079,6 +741,17 @@
       .tilde {
         color: #888;
         flex-shrink: 0;
+      }
+
+      &.hybrid_date_range {
+        input[type="date"] {
+          flex: none;
+          width: 162.26px;
+        }
+        select {
+          flex: none;
+          width: 100px;
+        }
       }
     }
 
@@ -1188,7 +861,11 @@
 
     table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid $gray02;
+      border-radius: 10px;
+      overflow: hidden;
       font-size: $font-size-sm;
 
       thead {
@@ -1198,27 +875,24 @@
           color: #555;
           font-weight: 400;
           font-size: $font-size-xs;
-          border-top: 1px solid $gray02;
           border-bottom: 1px solid $gray02;
           border-right: 1px solid $gray02;
           background: #FAFAFA;
-
-          &:first-child {
-            border-left: 1px solid $gray02;
-          }
         }
       }
 
       tbody {
-        tr {
-          border-bottom: 1px solid $gray02;
+        tr:not(:last-child) {
+          td {
+            border-bottom: 1px solid $gray02;
+          }
+        }
 
-          &.round_past {
-            background: #F5F6F8;
+        tr.round_past {
+          background: #F5F6F8;
 
-            td {
-              color: #aaa;
-            }
+          td {
+            color: #aaa;
           }
         }
 
@@ -1235,67 +909,102 @@
     }
   }
 
-  // ── 커스텀 플랜 크레딧 영역 ──
-  .custom_credit_action {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  // ── 새 플랜등록 팝업 ──
+  &.plan_register_popup {
+    width: 500px;
+    min-height: 700px;
 
-    .credit_balance {
-      min-width: 64px;
-      text-align: right;
-      font-size: $font-size-sm;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
+    .credit_manage_row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .credit_amount_input {
+        @extend %field_input;
+        flex: 1;
+      }
+      .credit_amount_input {
+        text-align: right;
+      }
+
+      .btn_charge,
+      .btn_deduct {
+        height: 30px;
+        padding: 0 20px;
+        font-size: $font-size-sm;
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        white-space: nowrap;
+        cursor: pointer;
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: default;
+        }
+      }
+
+      .btn_charge {
+        background: #E74C3C;
+        color: #fff;
+
+        &:hover:not(:disabled) {
+          background: #D44332;
+        }
+      }
+
+      .btn_deduct {
+        background: #3B82F6;
+        color: #fff;
+
+        &:hover:not(:disabled) {
+          background: #2563EB;
+        }
+      }
+
+      .applied_amount {
+        font-size: $font-size-sm;
+        color: $theme-color;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: 120px;
+
+        .charge {
+          color: #E74C3C;
+        }
+
+        .deduct {
+          color: #3B82F6;
+        }
+      }
     }
 
-    > input[type="text"] {
-      width: 100px;
-      height: 28px;
-      border: 1px solid #ddd;
-      border-radius: $border-radius;
-      padding: 0 8px;
-      font-size: $font-size-xs;
+    .hybrid_credit_input {
+      @extend %field_input;
+      width: 162.26px !important;
       text-align: right;
+    }
+
+    .memo_textarea {
+      width: 100%;
+      min-height: 80px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: $font-size-sm;
+      color: $theme-color;
+      resize: none;
       box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #3B82F6;
+      }
 
       &::placeholder {
         color: #bbb;
-        text-align: left;
       }
     }
-
-    .btn_charge,
-    .btn_deduct {
-      height: 28px;
-      padding: 0 10px;
-      font-size: $font-size-xs;
-      font-weight: 500;
-      border-radius: $border-radius;
-      white-space: nowrap;
-      cursor: pointer;
-
-      &:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
-    }
-
-    .btn_charge {
-      background: #3D914A;
-      border: 1px solid #3D914A;
-      color: #fff;
-    }
-
-    .btn_deduct {
-      background: #fff;
-      border: 1px solid #ccc;
-      color: #333;
-    }
-  }
-
-  &.custom_plan {
-    min-height: auto;
   }
 
   // ── 하단 버튼 ──

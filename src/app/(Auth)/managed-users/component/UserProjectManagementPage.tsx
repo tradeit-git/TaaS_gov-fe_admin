@@ -180,15 +180,16 @@ export default function UserProjectManagementPage({initialData}: Props) {
                 <table className={'client_table'}>
                     <colgroup>
                         <col style={{width: '4%'}}/>
+                        <col style={{width: '9%'}}/>
+                        <col style={{width: '7%'}}/>
                         <col style={{width: '10%'}}/>
+                        <col style={{width: '5%'}}/>
                         <col style={{width: '8%'}}/>
-                        <col style={{width: '10%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '8%'}}/>
                         <col style={{width: '7%'}}/>
-                        <col style={{width: '8%'}}/>
-                        <col style={{width: '8%'}}/>
-                        <col style={{width: '8%'}}/>
+                        <col style={{width: '7%'}}/>
+                        <col style={{width: '6%'}}/>
                         <col style={{width: '9%'}}/>
                         <col style={{width: '5%'}}/>
                         <col style={{width: '6%'}}/>
@@ -206,6 +207,7 @@ export default function UserProjectManagementPage({initialData}: Props) {
                         <th>최근 접속일</th>
                         <th>등록일</th>
                         <th>등록 프로젝트 수</th>
+                        <th>보고서</th>
                         <th>관리</th>
                         <th>기업전략분석</th>
                     </tr>

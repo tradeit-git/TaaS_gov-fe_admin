@@ -1,15 +1,13 @@
 'use client';
 
-import {useMemo, useRef, useState} from "react";
+import {useMemo, useState} from "react";
 import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import OverseasPlanPopup, {OverseasPlanFormData} from "@/app/(Auth)/users/[id]/component/OverseasPlanPopup";
 import CreditUsagePopup, {TransactionsResponse} from "@/app/(Auth)/users/[id]/component/CreditUsagePopup";
-import ContractPlanCard from "@/app/(Auth)/users/[id]/component/ContractPlanCard";
-import PgCardPlanCard from "@/app/(Auth)/users/[id]/component/PgCardPlanCard";
 import CreditStatusSection from "@/app/(Auth)/users/[id]/component/CreditStatusSection";
-import {CreditPlan, CreditRound, getPlanStatus, sortByCreatedDesc} from "@/app/(Auth)/users/[id]/component/planShared";
+import {CreditPlan, CreditRound, formatNum, getPlanStatus, sortByCreatedDesc} from "@/app/(Auth)/users/[id]/component/planShared";
 import {CreditSummaryType} from "@/types/user/user";
 import callApi from "@/utill/apiRequest";
 
@@ -29,6 +27,35 @@ interface Props {
 }
 
 const parseAmount = (s: string) => Number((s || '').replace(/,/g, '')) || 0;
+
+const getPaymentLabel = (method: string | null) => {
+    switch (method) {
+        case 'GA_CONTRACT': return '하이브리드';
+        case 'BANK_TRANSFER': return '커스텀';
+        case 'PG_CARD': return 'PG';
+        default: return '보너스';
+    }
+};
+
+const getStatusLabel = (plan: CreditPlan) => {
+    const s = getPlanStatus(plan);
+    switch (s) {
+        case 'ACTIVE': return {label: '진행', className: 'badge_active'};
+        case 'SCHEDULED': return {label: '예정', className: 'badge_scheduled'};
+        case 'EXPIRED': return {label: '만료', className: 'badge_expired'};
+    }
+};
+
+const getPlanCreditSummary = (plan: CreditPlan) => {
+    let granted = 0, used = 0, balance = 0, expired = 0;
+    for (const r of plan.rounds) {
+        granted += r.grantedAmount ?? 0;
+        used += r.usedAmount ?? 0;
+        balance += r.balance ?? 0;
+        expired += r.expiredAmount ?? 0;
+    }
+    return {granted, used, balance, expired};
+};
 
 const buildCreatePayload = (data: OverseasPlanFormData) => {
     const isGeneral = data.planType === 'GENERAL';
@@ -61,7 +88,6 @@ const buildCreatePayload = (data: OverseasPlanFormData) => {
     };
 };
 
-// 수정은 startDate 변경 불가 (명세 참조)
 const buildEditPayload = (data: OverseasPlanFormData) => {
     const isGeneral = data.planType === 'GENERAL';
     if (isGeneral) {
@@ -96,11 +122,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
     const {addPopup} = usePopupStore();
     const [plans, setPlans] = useState<CreditPlan[]>(initialPlans);
     const [summary, setSummary] = useState<CreditSummaryType | null>(creditSummary);
-    const [visiblePlans] = useState(2);
-    const [expanded, setExpanded] = useState(false);
-    const planListRef = useRef<HTMLDivElement>(null);
 
-    // 즉시 지급 등으로 크레딧이 변동되면 회원 상세를 다시 받아 크레딧 현황을 동기화한다
     const refreshSummary = async () => {
         const res = await callApi(`/api/admin/members/users/${userId}`, {method: 'GET', credentials: 'include'});
         if (res.result && res.data) {
@@ -109,14 +131,16 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
         }
     };
 
-    // 플랜이 없거나, 가장 최근(createdAt) 플랜이 만료된 경우에만 신규 등록 가능
     const canRegisterOverseasPlan = useMemo(() => {
         if (plans.length === 0) return true;
         const lastPlan = sortByCreatedDesc(plans)[0];
         return getPlanStatus(lastPlan) === 'EXPIRED';
     }, [plans]);
 
-    const handleOpenUsagePopup = async (plan: CreditPlan, round: CreditRound) => {
+    const handleOpenUsagePopup = async (plan: CreditPlan) => {
+        // 첫 번째 라운드의 거래내역 조회
+        const round = plan.rounds[0];
+        if (!round) return;
         const endpoint = `/api/admin/members/users/${userId}/credit-plans/${plan.id}/rounds/${round.id}/transactions`;
         const res = await callApi(`${endpoint}?page=0&size=10`, {method: 'GET', credentials: 'include'});
         const initialData: TransactionsResponse = (res.result && res.data)
@@ -151,26 +175,8 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
         addPopup(<OverseasPlanPopup onSave={handleCreateOverseasPlan}/>);
     };
 
-    // 모든 회차가 예정 상태일 때만 삭제 가능 (실제 지급 이력이 없는 케이스)
     const canDeletePlan = (plan: CreditPlan) =>
         plan.rounds.length === 0 || plan.rounds.every(r => (r.status ?? 'SCHEDULED') === 'SCHEDULED');
-
-    const handleGrantRound = (plan: CreditPlan, round: CreditRound) => {
-        addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 회차를 즉시 지급하시겠습니까?'} callback={async () => {
-            const res = await callApi(`/api/admin/members/users/${userId}/credit-plans/${plan.id}/rounds/${round.id}/grant`, {
-                method: 'POST',
-                credentials: 'include',
-            });
-            if (res.result && res.data) {
-                const updated = res.data as CreditPlan;
-                setPlans(prev => sortByCreatedDesc(prev.map(p => p.id === updated.id ? updated : p)));
-                await refreshSummary();
-                addPopup(<AlertComponent alertType={'alert'} infoContent={'지급되었습니다.'}/>);
-            } else {
-                addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '지급에 실패했습니다.'}/>);
-            }
-        }}/>);
-    };
 
     const handleDeleteOverseasPlan = (plan: CreditPlan) => {
         addPopup(<AlertComponent alertType={'confirm'} infoContent={'해당 플랜을 삭제하시겠습니까?'} callback={async () => {
@@ -195,6 +201,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
         addPopup(<OverseasPlanPopup
             userId={userId}
             onCreditChange={refreshSummary}
+            planStatus={getPlanStatus(plan)}
             initialData={{
                 planType: plan.paymentMethod === 'GA_CONTRACT' ? 'OVERSEAS' : 'GENERAL',
                 planName: plan.planName,
@@ -222,8 +229,7 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
                 const originalCredit = plan.rounds.reduce((sum, r) => sum + (r.grantedAmount ?? 0), 0);
                 const diff = data.totalCredit - originalCredit;
 
-                // 커스텀 플랜: 크레딧 차이가 있으면 grant/deduct API 먼저 호출
-                if (isGeneral && diff !== 0) {
+                if (isGeneral && diff !== 0 && getPlanStatus(plan) === 'ACTIVE') {
                     const creditEndpoint = diff > 0
                         ? `/api/admin/members/users/${userId}/credits/grant`
                         : `/api/admin/members/users/${userId}/credits/deduct`;
@@ -264,59 +270,91 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
         />);
     };
 
-    const renderCard = (plan: CreditPlan) => {
-        const onDelete = canDeletePlan(plan) ? () => handleDeleteOverseasPlan(plan) : undefined;
-        const onGrant = (round: CreditRound) => handleGrantRound(plan, round);
-        const onUsage = (round: CreditRound) => handleOpenUsagePopup(plan, round);
-        switch (plan.paymentMethod) {
-            case 'GA_CONTRACT':
-                return <ContractPlanCard plan={plan} onUsage={onUsage} onEdit={() => handleEditOverseasPlan(plan)} onDelete={onDelete} onGrant={onGrant}/>;
-            case 'BANK_TRANSFER':
-                return <ContractPlanCard plan={plan} onUsage={onUsage} onEdit={() => handleEditOverseasPlan(plan)} onDelete={onDelete} onGrant={onGrant}/>;
-            case 'PG_CARD':
-            default:
-                return <PgCardPlanCard plan={plan} onUsage={onUsage}/>;
-        }
+    const handleManagePlan = (plan: CreditPlan) => {
+        if (plan.paymentMethod === 'PG_CARD') return;
+        handleEditOverseasPlan(plan);
     };
 
-    const cardClass = (plan: CreditPlan) => {
-        const layout = plan.paymentMethod === 'PG_CARD' ? 'standard' : 'overseas';
-        const expired = getPlanStatus(plan) === 'EXPIRED' ? 'expired' : '';
-        return `plan_card ${layout} ${expired}`.trim();
-    };
+    const sortedPlans = useMemo(() => sortByCreatedDesc(plans), [plans]);
 
     return (
         <div className={'company_detail_right'}>
             <CreditStatusSection userId={userId} summary={summary}/>
 
-            <div className={'plan_header'}>
-                <div className={'section_title'}>
-                    <span className={'admin_icon arrow_icon'}/>
-                    플랜 상세정보
-                </div>
-                <div className={'plan_header_buttons'}>
+            <div className={'plan_table_section'}>
+                <div className={'plan_table_header'}>
+                    <div className={'section_title'}>
+                        <span className={'admin_icon arrow_icon'}/>
+                        유료플랜 이용 현황
+                    </div>
                     <button type={'button'}
                             className={`btn_add_plan${!canRegisterOverseasPlan ? ' disabled' : ''}`}
                             onClick={handleOpenOverseasPlanPopup}>
-                        + 플랜 등록
+                        플랜등록
                     </button>
                 </div>
-            </div>
 
-            <div ref={planListRef} className={`plan_list ${expanded ? 'expanded' : ''}`}>
-                {/*<ServiceCreditSection userId={userId} activePlanName={activePlanName}/>*/}
-                {(expanded ? plans : plans.slice(0, visiblePlans)).map(plan => (
-                    <div key={plan.id} className={cardClass(plan)}>
-                        {renderCard(plan)}
-                    </div>
-                ))}
+                <div className={'table_wrap'}>
+                    <table className={'plan_usage_table'}>
+                        <colgroup>
+                            <col style={{width: '6%'}}/>
+                            <col style={{width: '7%'}}/>
+                            <col style={{width: '10%'}}/>
+                            <col style={{width: '20%'}}/>
+                            <col style={{width: '10%'}}/>
+                            <col style={{width: '14%'}}/>
+                            <col style={{width: '10%'}}/>
+                            <col style={{width: '10%'}}/>
+                            <col style={{width: '6%'}}/>
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th>상태</th>
+                            <th>구분</th>
+                            <th>플랜명</th>
+                            <th>이용기간</th>
+                            <th>지급</th>
+                            <th>사용</th>
+                            <th>잔여</th>
+                            <th>소멸</th>
+                            <th>비고</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {sortedPlans.length === 0 ? (
+                            <tr>
+                                <td colSpan={9} className={'empty'}>등록된 플랜이 없습니다.</td>
+                            </tr>
+                        ) : sortedPlans.map(plan => {
+                            const status = getStatusLabel(plan);
+                            const credit = getPlanCreditSummary(plan);
+                            return (
+                                <tr key={plan.id}>
+                                    <td><span className={`plan_status_badge ${status.className}`}>{status.label}</span></td>
+                                    <td>{getPaymentLabel(plan.paymentMethod)}</td>
+                                    <td>{plan.planName}</td>
+                                    <td>{formatDateDot(plan.startDate)} ~ {formatDateDot(plan.endDate)}</td>
+                                    <td className={'num'}>{formatNum(credit.granted)}</td>
+                                    <td className={'num used_cell'}>
+                                        {formatNum(credit.used)}
+                                        <button type={'button'} className={'btn_usage_inline'} onClick={() => handleOpenUsagePopup(plan)}>내역</button>
+                                    </td>
+                                    <td className={'num'}>{formatNum(credit.balance)}</td>
+                                    <td className={'num'}>{formatNum(credit.expired)}</td>
+                                    <td>
+                                        {plan.paymentMethod !== 'PG_CARD' ? (
+                                            <button type={'button'} className={'btn_manage'} onClick={() => handleManagePlan(plan)}>관리</button>
+                                        ) : (
+                                            <span className={'text_muted'}>-</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
-            {plans.length > visiblePlans && !expanded && (
-                <button type={'button'} className={'btn_more'} onClick={() => setExpanded(true)}>
-                    <span className={'admin_icon more_icon'}/> 더보기
-                </button>
-            )}
         </div>
     );
 }

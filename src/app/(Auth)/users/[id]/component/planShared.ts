@@ -95,22 +95,27 @@ export const todayISODate = () => {
 
 export const getPlanStatus = (plan: CreditPlan): PlanStatus => {
     const now = new Date();
+    // 시작일/종료일 체크 우선
     if (plan.startDate) {
         const start = new Date(plan.startDate);
         start.setHours(0, 0, 0, 0);
         if (now < start) return 'SCHEDULED';
+    }
+    // 라운드의 expireAt(시간 포함)으로 만료 판단
+    const expireAts = plan.rounds.map(r => r.expireAt).filter(Boolean) as string[];
+    if (expireAts.length > 0) {
+        const lastExpire = new Date(expireAts.sort().pop()!);
+        if (now >= lastExpire) return 'EXPIRED';
     }
     if (plan.endDate) {
         const end = new Date(plan.endDate);
         end.setHours(23, 59, 59, 999);
         if (now > end) return 'EXPIRED';
     }
-    const hasGrantedRound = plan.rounds.some(r => r.status !== null && r.status !== 'SCHEDULED');
-    return hasGrantedRound ? 'ACTIVE' : 'SCHEDULED';
-    // if(!plan.endDate) return 'ACTIVE';
-    // const end = new Date(plan.endDate);
-    // end.setHours(23,59,59,999);
-    // return now > end ? 'EXPIRED' : 'ACTIVE';
+    if (!plan.endDate) return 'ACTIVE';
+    const end = new Date(plan.endDate);
+    end.setHours(23, 59, 59, 999);
+    return now > end ? 'EXPIRED' : 'ACTIVE';
 };
 
 export const sortByCreatedDesc = (list: CreditPlan[]) =>
