@@ -1,14 +1,15 @@
 'use client'
 
 import {useState} from "react";
-import {useRouter} from "next/navigation";
 import {createPortal} from "react-dom";
+import {useRouter} from "next/navigation";
 import {UserProjectRow} from "@/app/(Auth)/managed-users/component/UserProjectManagementPage";
 import {accountTypeLabel} from "@/utill/accountType";
-import ProjectMenuPopup from "@/app/(Auth)/managed-users/component/ProjectMenuPopup";
 import callApi from "@/utill/apiRequest";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
+import PopupProjectReportSelector from "@/app/(Auth)/managed-users/component/PopupProjectReportSelector";
+import ProjectMenuPopup from "@/app/(Auth)/managed-users/component/ProjectMenuPopup";
 
 interface Props {
     data: UserProjectRow[];
@@ -29,11 +30,11 @@ const ellipsisStyle: React.CSSProperties = {
 export default function UserProjectManagementTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDeleted}: Props) {
     const router = useRouter();
     const {addPopup} = usePopupStore();
-    const [menu, setMenu] = useState<{userId: number; top: number; right: number} | null>(null);
+    const [menu, setMenu] = useState<{ userId: number; top: number; right: number } | null>(null);
 
-    const openMenu = (e: React.MouseEvent<HTMLButtonElement>, userId: number) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        setMenu({userId, top: r.bottom + 4, right: window.innerWidth - r.right});
+    const openMenu = (userId: number, e: React.MouseEvent) => {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        setMenu({userId, top: rect.bottom + 4, right: window.innerWidth - rect.right});
     };
 
     const formatDeptPosition = (row: UserProjectRow) => {
@@ -64,7 +65,7 @@ export default function UserProjectManagementTableBody({data, totalElements, cur
         <tbody>
         {data.length === 0 ? (
             <tr>
-                <td colSpan={13} style={{textAlign: 'center'}}>관리 중인 사용자가 없습니다.</td>
+                <td colSpan={14} style={{textAlign: 'center'}}>관리 중인 사용자가 없습니다.</td>
             </tr>
         ) : (
             data.map((row, i) => {
@@ -85,7 +86,12 @@ export default function UserProjectManagementTableBody({data, totalElements, cur
                         <td className={'td_projects'}>
                             <div className={'pc_wrap'}>
                                 <span className={'pc_num'}>{(row.projectCount ?? 0).toLocaleString()}</span>
-                                <button type="button" className={'btn_detail'} onClick={e => openMenu(e, row.id)}>관리</button>
+                                <button type="button" className={'btn_detail'} onClick={e => openMenu(row.id, e)}>관리</button>
+                            </div>
+                        </td>
+                        <td className={'td_projects'}>
+                            <div className={'pc_wrap'}>
+                                <button type="button" className={'btn_detail'} onClick={() => addPopup(<PopupProjectReportSelector userId={row.id} companyName={row.companyName || ''} />)}>열람</button>
                             </div>
                         </td>
                         <td className={'td_actions'}>
@@ -101,8 +107,7 @@ export default function UserProjectManagementTableBody({data, totalElements, cur
         )}
         </tbody>
         {menu && createPortal(
-            <ProjectMenuPopup userId={menu.userId} top={menu.top} right={menu.right}
-                              onClose={() => setMenu(null)}/>,
+            <ProjectMenuPopup userId={menu.userId} top={menu.top} right={menu.right} onClose={() => setMenu(null)}/>,
             document.body
         )}
         </>
