@@ -3389,6 +3389,17 @@ input::placeholder {
 }
 
 
+// --- 유저프로젝트관리 테이블 ---
+.admin_page .table_wrap .managed_user_table {
+  thead th {
+    text-align: center;
+  }
+
+  tbody td {
+    text-align: center;
+  }
+}
+
 // --- 보고서 선택 팝업 ---
 .reportSelector {
   .popupContainer {

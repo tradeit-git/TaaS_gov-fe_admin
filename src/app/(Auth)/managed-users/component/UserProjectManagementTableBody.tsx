@@ -81,8 +81,6 @@ export default function UserProjectManagementTableBody({data, totalElements, cur
                         <td style={ellipsisStyle} title={deptPosition}>{deptPosition}</td>
                         <td style={ellipsisStyle} title={row.planName || '-'}>{row.planName || '-'}</td>
                         <td style={ellipsisStyle} title={row.partnerName || '-'}>{row.partnerName || '-'}</td>
-                        <td style={ellipsisStyle} title={row.lastLoginAt ? formatDate(row.lastLoginAt) : '-'}>{row.lastLoginAt ? formatDate(row.lastLoginAt) : '-'}</td>
-                        <td style={ellipsisStyle} title={formatDate(row.managedAt ?? row.createdAt)}>{formatDate(row.managedAt ?? row.createdAt)}</td>
                         <td className={'td_projects'}>
                             <div className={'pc_wrap'}>
                                 <span className={'pc_num'}>{(row.projectCount ?? 0).toLocaleString()}</span>
@@ -91,15 +89,19 @@ export default function UserProjectManagementTableBody({data, totalElements, cur
                         </td>
                         <td className={'td_projects'}>
                             <div className={'pc_wrap'}>
+                                <button type="button" className={'btn_detail'}
+                                        onClick={() => router.push(`/managed-users/${row.id}/company-analysis`)}>작성</button>
+                            </div>
+                        </td>
+                        <td className={'td_projects'}>
+                            <div className={'pc_wrap'}>
                                 <button type="button" className={'btn_detail'} onClick={() => addPopup(<PopupProjectReportSelector userId={row.id} companyName={row.companyName || ''} />)}>열람</button>
                             </div>
                         </td>
+                        <td style={ellipsisStyle} title={row.lastLoginAt ? formatDate(row.lastLoginAt) : '-'}>{row.lastLoginAt ? formatDate(row.lastLoginAt) : '-'}</td>
+                        <td style={ellipsisStyle} title={formatDate(row.managedAt ?? row.createdAt)}>{formatDate(row.managedAt ?? row.createdAt)}</td>
                         <td className={'td_actions'}>
                             <button type="button" className={'btn_delete'} onClick={() => handleDelete(row.id, row.name)}>삭제</button>
-                        </td>
-                        <td className={'td_actions'} style={{display: 'table-cell', verticalAlign: 'middle', textAlign: 'center'}}>
-                            <button type="button" className={'btn_detail'}
-                                    onClick={() => router.push(`/managed-users/${row.id}/company-analysis`)}>작성</button>
                         </td>
                     </tr>
                 );
