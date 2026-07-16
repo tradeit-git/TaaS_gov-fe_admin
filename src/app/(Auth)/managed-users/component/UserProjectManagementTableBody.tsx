@@ -25,6 +25,7 @@ const ellipsisStyle: React.CSSProperties = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     maxWidth: 0,
+    textAlign: 'left',
 };
 
 export default function UserProjectManagementTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDeleted}: Props) {
