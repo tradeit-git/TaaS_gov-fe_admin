@@ -25,6 +25,10 @@ const ellipsisStyle: React.CSSProperties = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     maxWidth: 0,
+};
+
+const ellipsisLeftStyle: React.CSSProperties = {
+    ...ellipsisStyle,
     textAlign: 'left',
 };
 
@@ -75,13 +79,13 @@ export default function UserProjectManagementTableBody({data, totalElements, cur
                 return (
                     <tr key={row.id}>
                         <td style={ellipsisStyle} title={String(rowNum)}>{rowNum}</td>
-                        <td style={ellipsisStyle} title={row.companyName || '-'}>{row.companyName || '-'}</td>
-                        <td style={ellipsisStyle} title={accountTypeLabel(row.userType)}>{accountTypeLabel(row.userType)}</td>
-                        <td style={ellipsisStyle} title={row.loginId}>{row.loginId}</td>
+                        <td style={ellipsisLeftStyle} title={row.companyName || '-'}>{row.companyName || '-'}</td>
+                        <td style={ellipsisLeftStyle} title={accountTypeLabel(row.userType)}>{accountTypeLabel(row.userType)}</td>
+                        <td style={ellipsisLeftStyle} title={row.loginId}>{row.loginId}</td>
                         <td style={ellipsisStyle} title={row.name}>{row.name}</td>
-                        <td style={ellipsisStyle} title={deptPosition}>{deptPosition}</td>
-                        <td style={ellipsisStyle} title={row.planName || '-'}>{row.planName || '-'}</td>
-                        <td style={ellipsisStyle} title={row.partnerName || '-'}>{row.partnerName || '-'}</td>
+                        <td style={ellipsisLeftStyle} title={deptPosition}>{deptPosition}</td>
+                        <td style={ellipsisLeftStyle} title={row.planName || '-'}>{row.planName || '-'}</td>
+                        <td style={ellipsisLeftStyle} title={row.partnerName || '-'}>{row.partnerName || '-'}</td>
                         <td className={'td_projects'}>
                             <div className={'pc_wrap'}>
                                 <span className={'pc_num'}>{(row.projectCount ?? 0).toLocaleString()}</span>
