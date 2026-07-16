@@ -179,17 +179,17 @@ export default function UserProjectManagementPage({initialData}: Props) {
             <div className={'table_wrap'}>
                 <table className={'client_table managed_user_table'}>
                     <colgroup>
-                        <col style={{width: '2%'}}/>
-                        <col style={{width: '8%'}}/>
+                        <col style={{width: '1%'}}/>
                         <col style={{width: '10%'}}/>
-                        <col style={{width: '8%'}}/>
-                        <col style={{width: '8%'}}/>
-                        <col style={{width: '5%'}}/>
-                        <col style={{width: '8%'}}/>
+                        <col style={{width: '7%'}}/>
                         <col style={{width: '8%'}}/>
                         <col style={{width: '5%'}}/>
-                        <col style={{width: '6%'}}/>
-                        <col style={{width: '4%'}}/>
+                        <col style={{width: '7%'}}/>
+                        <col style={{width: '7%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '2%'}}/>
+                        <col style={{width: '2%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '2%'}}/>
