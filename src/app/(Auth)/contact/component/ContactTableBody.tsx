@@ -36,7 +36,7 @@ export default function ContactTableBody({data, totalElements, currentPage, item
                     <td>{row.position || '-'}</td>
                     <td>{row.phone || '-'}</td>
                     <td>{row.mobile || '-'}</td>
-                    <td>{row.email || '-'}</td>
+                    <td className={'td_email'} title={row.email || ''}>{row.email || '-'}</td>
                     <td>{formatDate(row.createdAt)}</td>
                     <td>{row.readAt ? formatDateTimeDot(row.readAt) : '-'}</td>
                     <td>

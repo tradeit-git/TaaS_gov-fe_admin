@@ -851,6 +851,12 @@
 
 // -------------------- 고객관리 ----------------------------
 .contact_table {
+  .td_email {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   td {
     .type_badge {
       display: inline-block;
