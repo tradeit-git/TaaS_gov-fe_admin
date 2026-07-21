@@ -251,7 +251,7 @@ export default function UserListPage({partnerId}: Props) {
                 <table className={'client_table partner_table'}>
                     <colgroup>
                         <col style={{width: '4%'}}/>{/* 순번 */}
-                        <col style={{width: '5%'}}/>{/* 승인상태 */}
+                        <col style={{width: '7%'}}/>{/* 승인상태 */}
                         <col style={{width: '13%'}}/>{/* 아이디 */}
                         <col style={{width: '6%'}}/>{/* 이름 */}
                         <col style={{width: '11%'}}/>{/* 회사명 */}
@@ -259,8 +259,8 @@ export default function UserListPage({partnerId}: Props) {
                         <col style={{width: '7%'}}/>{/* 대표자명 */}
                         <col style={{width: '8%'}}/>{/* 소속부서 */}
                         <col style={{width: '7%'}}/>{/* 직함 */}
-                        <col style={{width: '10%'}}/>{/* 전화번호 */}
-                        <col style={{width: '8%'}}/>{/* 가입일자 */}
+                        <col style={{width: '9%'}}/>{/* 전화번호 */}
+                        <col style={{width: '7%'}}/>{/* 가입일자 */}
                         <col style={{width: '12%'}}/>{/* 상세보기 */}
                     </colgroup>
                     <thead>
