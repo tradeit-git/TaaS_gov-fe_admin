@@ -11,6 +11,8 @@ import callApi from "@/utill/apiRequest";
 export interface PartnerUser {
     id: number;
     companyName: string;
+    businessNumber: string;            // 사업자번호
+    ceoName: string;                   // 대표자명
     loginId: string;
     name: string;
     department: string;
@@ -24,6 +26,8 @@ export interface PartnerUser {
 interface CoalitionUserApiRow {
     id: number;
     companyName: string;
+    businessNumber: string | null;
+    ceoName: string | null;
     loginId: string;
     name: string;
     department: string;
@@ -57,6 +61,8 @@ interface PartnerInfo {
 const mapToPartnerUser = (row: CoalitionUserApiRow): PartnerUser => ({
     id: row.id,
     companyName: row.companyName,
+    businessNumber: row.businessNumber ?? '',
+    ceoName: row.ceoName ?? '',
     loginId: row.loginId,
     name: row.name,
     department: row.department,
@@ -243,43 +249,33 @@ export default function UserListPage({partnerId}: Props) {
             {/* 테이블 */}
             <div className={'table_wrap'}>
                 <table className={'client_table partner_table'}>
-                    {showApproval ? (
-                        <colgroup>
-                            <col style={{width: '4%'}}/>
-                            <col style={{width: '7%'}}/>
-                            <col style={{width: '16%'}}/>
-                            <col style={{width: '12%'}}/>
-                            <col style={{width: '12%'}}/>
-                            <col style={{width: '7%'}}/>
-                            <col style={{width: '11%'}}/>
-                            <col style={{width: '9%'}}/>
-                            <col style={{width: '9%'}}/>
-                            <col style={{width: '13%'}}/>
-                        </colgroup>
-                    ) : (
-                        <colgroup>
-                            <col style={{width: '4%'}}/>
-                            <col style={{width: '8%'}}/>
-                            <col style={{width: '18%'}}/>
-                            <col style={{width: '15%'}}/>
-                            <col style={{width: '13%'}}/>
-                            <col style={{width: '8%'}}/>
-                            <col style={{width: '12%'}}/>
-                            <col style={{width: '11%'}}/>
-                            <col style={{width: '11%'}}/>
-                        </colgroup>
-                    )}
+                    <colgroup>
+                        <col style={{width: '4%'}}/>{/* 순번 */}
+                        <col style={{width: '5%'}}/>{/* 승인상태 */}
+                        <col style={{width: '13%'}}/>{/* 아이디 */}
+                        <col style={{width: '6%'}}/>{/* 이름 */}
+                        <col style={{width: '11%'}}/>{/* 회사명 */}
+                        <col style={{width: '9%'}}/>{/* 사업자번호 */}
+                        <col style={{width: '7%'}}/>{/* 대표자명 */}
+                        <col style={{width: '8%'}}/>{/* 소속부서 */}
+                        <col style={{width: '7%'}}/>{/* 직함 */}
+                        <col style={{width: '10%'}}/>{/* 전화번호 */}
+                        <col style={{width: '8%'}}/>{/* 가입일자 */}
+                        <col style={{width: '12%'}}/>{/* 상세보기 */}
+                    </colgroup>
                     <thead>
                     <tr>
                         <th style={{textAlign: 'center'}}>순번</th>
-                        <th style={{textAlign: 'center'}}>제휴회원사</th>
-                        <th>ID(e-mail)</th>
-                        <th>회사명</th>
-                        <th>부서&직함</th>
+                        <th style={{textAlign: 'center'}}>승인상태</th>
+                        <th>아이디(E-mail)</th>
                         <th>이름</th>
+                        <th>회사명</th>
+                        <th>사업자번호</th>
+                        <th>대표자명</th>
+                        <th>소속부서</th>
+                        <th>직함</th>
                         <th>전화번호</th>
-                        <th>회원가입일</th>
-                        {showApproval && <th style={{textAlign: 'center'}}>승인상태</th>}
+                        <th>가입일자</th>
                         <th>상세보기</th>
                     </tr>
                     </thead>
@@ -287,14 +283,7 @@ export default function UserListPage({partnerId}: Props) {
                     {visibleData.map((row, i) => (
                         <tr key={row.id}>
                             <td style={{textAlign: 'center'}}>{visibleData.length - i}</td>
-                            <td style={{textAlign: 'center'}}>{row.isPartnerMember ? 'O' : 'X'}</td>
-                            <td>{row.loginId}</td>
-                            <td>{row.companyName}</td>
-                            <td>{row.department} {row.position}</td>
-                            <td>{row.name}</td>
-                            <td>{row.phone}</td>
-                            <td>{formatDateDot(row.createdAt)}</td>
-                            {showApproval && (
+
                                 <td style={{textAlign: 'center'}}>
                                     <span style={{
                                         display: 'inline-block',
@@ -308,7 +297,15 @@ export default function UserListPage({partnerId}: Props) {
                                         {statusLabel(row.status)}
                                     </span>
                                 </td>
-                            )}
+                            <td>{row.loginId}</td>
+                            <td>{row.name}</td>
+                            <td>{row.companyName}</td>
+                            <td>{row.businessNumber || '-'}</td>
+                            <td>{row.ceoName || '-'}</td>
+                            <td>{row.department}</td>
+                            <td>{row.position}</td>
+                            <td>{row.phone}</td>
+                            <td>{formatDateDot(row.createdAt)}</td>
                             <td className={'td_actions'}>
                                 {showApproval && row.status === 'PENDING_APPROVAL' && (
                                     <button type="button" className={'btn_detail'}
