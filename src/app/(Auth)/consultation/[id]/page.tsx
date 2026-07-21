@@ -1,5 +1,9 @@
 import '@/style/contact.scss'
+import {redirect} from "next/navigation";
+import callApi from "@/utill/apiRequest";
+import {getServerRequestOptions} from "@/lib/serverRequest";
 import ConsultationDetailPage from "@/app/(Auth)/consultation/[id]/component/ConsultationDetailPage";
+import {ConsultationRow} from "@/app/(Auth)/consultation/component/ConsultationPage";
 
 interface Props {
     params: Promise<{ id: string }>;
@@ -8,6 +12,9 @@ interface Props {
 export default async function Page({params}: Props) {
     const {id} = await params;
 
-    // 상세는 클라이언트에서 /api/admin/consultations/{id} 로 조회한다.
-    return <ConsultationDetailPage id={id}/>;
+    const options = await getServerRequestOptions();
+    const res = await callApi(`/api/admin/consultations/${id}`, options);
+    if (!res.result || !res.data) redirect('/consultation');
+
+    return <ConsultationDetailPage id={id} initialDetail={res.data as ConsultationRow}/>;
 }

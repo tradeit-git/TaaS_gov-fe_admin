@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import '@/style/contact.scss'
-import {useEffect, useState} from "react";
-import {useRouter} from "next/navigation";
+import {useState} from "react";
 import callApi from "@/utill/apiRequest";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
@@ -12,34 +11,16 @@ import {ConsultationRow, CONSULTATION_STATUS_OPTIONS} from "@/app/(Auth)/consult
 
 interface Props {
     id: string;
+    initialDetail: ConsultationRow;
 }
 
-export default function ConsultationDetailPage({id}: Props) {
+export default function ConsultationDetailPage({id, initialDetail}: Props) {
     const {addPopup} = usePopupStore();
-    const router = useRouter();
-    const [detail, setDetail] = useState<ConsultationRow | null>(null);
-    const [status, setStatus] = useState('');
-    const [adminMemo, setAdminMemo] = useState('');
-
-    useEffect(() => {
-        (async () => {
-            const res = await callApi(`/api/admin/consultations/${id}`, {method: 'GET', credentials: 'include'});
-            if (res.result && res.data) {
-                const d = res.data as ConsultationRow;
-                setDetail(d);
-                setStatus(d.status);
-                setAdminMemo(d.adminMemo || '');
-            } else {
-                addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '상담신청을 찾을 수 없습니다.'}/>);
-                router.replace('/consultation');
-            }
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+    const [detail, setDetail] = useState<ConsultationRow>(initialDetail);
+    const [status, setStatus] = useState(initialDetail.status);
+    const [adminMemo, setAdminMemo] = useState(initialDetail.adminMemo || '');
 
     const handleSave = async () => {
-        if (!detail) return;
-
         if (status !== detail.status) {
             const statusRes = await callApi(`/api/admin/consultations/${id}/status`, {
                 method: 'POST',
@@ -69,23 +50,6 @@ export default function ConsultationDetailPage({id}: Props) {
             addPopup(<AlertComponent alertType={'error'} infoContent={memoRes.message || '저장에 실패했습니다.'}/>);
         }
     };
-
-    if (!detail) {
-        return (
-            <div className={'admin_page'}>
-                <div className={'page_start_box'}>
-                    <h2>상세</h2>
-                    <ul className={'breadcrumb'}>
-                        <li>홈</li>
-                        <li><span className={'admin_icon icon_next'}/></li>
-                        <li><Link href={'/consultation'}>상담신청</Link></li>
-                        <li><span className={'admin_icon icon_next'}/></li>
-                        <li>상세</li>
-                    </ul>
-                </div>
-            </div>
-        );
-    }
 
     const phoneParts = detail.phone ? detail.phone.split('-') : ['', '', ''];
     const emailParts = detail.email ? detail.email.split('@') : ['', ''];

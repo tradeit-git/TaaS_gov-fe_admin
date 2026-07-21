@@ -60,8 +60,14 @@ export default function ConsultationPage({initialData}: Props) {
     const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
     const [statusFilter, setStatusFilter] = useState('');
     const [adConsentFilter, setAdConsentFilter] = useState(false);
+    const isInitial = useRef(true);
 
     const fetchList = useCallback(async () => {
+        if (isInitial.current) {
+            isInitial.current = false;
+            return;
+        }
+
         const params = new URLSearchParams();
         params.set('page', String(currentPage));
         params.set('size', String(itemsPerPage));
