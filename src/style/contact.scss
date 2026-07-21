@@ -915,6 +915,7 @@
         &.form_row {
           display: flex;
           gap: 12px;
+          border-bottom: none;
           .form_col {
             flex: 1;
             min-width: 0;
@@ -953,6 +954,108 @@
             background: rgba(40, 127, 255, 0.08);
           }
         }
+      }
+    }
+  }
+}
+
+// -------------------- 상담신청 ----------------------------
+.consultation_table {
+  .td_email {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  td {
+    .status_badge {
+      display: flex;
+      gap: 3px;
+      font-size: $font-size-xs;
+      font-weight: 500;
+      .admin_icon {
+        display: block;
+        width: 14px;
+        height: 14px;
+      }
+      &.done{
+        color: #34C759;
+        .admin_icon {
+          background-position: -88px -165px;
+        }
+      }
+      &.progress {
+        color: #FF8D28;
+        .admin_icon {
+          background-position: -54px -165px;
+        }
+      }
+      &.pending {
+        color: #287fff;
+        .admin_icon {
+          background-position: -20px -165px;
+        }
+      }
+    }
+  }
+}
+.detail_contents {
+  &.consultation {
+    max-width: 1320px;
+    .account_info {
+      display: flex;
+      gap: 30px;
+      height: calc(100vh - 260px);
+      min-height: 400px;
+      .form_list {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .form_item {
+        &.content {
+          flex: 1;
+        }
+        &.form_row {
+          display: flex;
+          gap: 12px;
+          border-bottom: none;
+          .form_col {
+            flex: 1;
+            min-width: 0;
+            input {
+              width: 100%;
+            }
+          }
+        }
+        &.memo {
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+          textarea {
+            width: 100% !important;
+            flex: 1;
+          }
+        }
+        .required {
+          color: #E74C3C;
+          font-size: $font-size-xs;
+          font-weight: 500;
+        }
+        .readonly_field {
+          background-color: #F5F5F5;
+          color: #999;
+        }
+      }
+    }
+    .form_list .form_item.content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      textarea {
+        flex: 1;
+        resize: none;
       }
     }
   }

@@ -64,6 +64,10 @@ export  default  function Sidebar (){
                       className={`lnb_name${isOn('trial')}`}>
                     <span className={'admin_icon trial'}/>체험계정
                 </Link>
+                <Link href={'/consultation'}
+                      className={`lnb_name${isOn('consultation')}`}>
+                    <span className={'admin_icon consultation'}/>상담신청
+                </Link>
                 <Link href={'/contact'}
                       className={`lnb_name${isOn('contact')}`}>
                     <span className={'admin_icon contact'}/>고객문의

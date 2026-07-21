@@ -705,6 +705,9 @@ input::placeholder {
         &.managed-users {
           background-position: -122px -62px;
         }
+        &.consultation {
+          background-position: -60px -38px;
+        }
       }
       &.on {
         background: rgba(255,255,255,.2);
@@ -851,6 +854,23 @@ input::placeholder {
           height: 16px;
           background-position: -56px -95px;
         }
+      }
+    }
+
+    .checkbox_filter {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: $font-size-sm;
+      color: $theme-color;
+      white-space: nowrap;
+      input[type="checkbox"] {
+        width: 15px;
+        height: 15px;
+        accent-color: #111827;
+        cursor: pointer;
+        margin: 0;
       }
     }
 
