@@ -4,6 +4,7 @@ import {useRef, useState} from "react";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import callApi from "@/utill/apiRequest";
+import GuideSectionsEditor, {GuideCard, buildDefaultGuideSections, defaultFormBtnStyle} from "@/app/(Auth)/partner-management/component/GuideSectionsEditor";
 
 interface Props {
     uId?: string;
@@ -25,16 +26,8 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
     const [logoUrl, setLogoUrl] = useState('');
     const [uploading, setUploading] = useState(false);
 
-    // 우측 미리보기 편집 state
-    const [pvPeriod, setPvPeriod] = useState('');
-    const [pvTarget, setPvTarget] = useState('');
-    const [pvScale, setPvScale] = useState('');
-    const [pvMethod, setPvMethod] = useState('');
-    const [pvResult, setPvResult] = useState('');
-    const [pvOnboarding, setPvOnboarding] = useState('');
-    const [pvAccessDate, setPvAccessDate] = useState('');
-    const [pvFreeCredit, setPvFreeCredit] = useState('');
-    const [pvBonusCredit, setPvBonusCredit] = useState('');
+    // 우측 안내 (동적 카드/로우)
+    const [guideSections, setGuideSections] = useState<GuideCard[]>(() => buildDefaultGuideSections());
     const [isDuplChecked, setIsDuplChecked] = useState(false);
     const isComposing = useRef(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -116,16 +109,8 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
                 logoUrl: logoUrl || null,
                 dashboardAccessCode: dashboardCode.trim(),
                 operationStartDate: systemStartDate || null,
-                // 우측 안내 문구(가입 페이지 노출)
-                guideApplyPeriod: pvPeriod || null,
-                guideApplyTarget: pvTarget || null,
-                guideApplyScale: pvScale || null,
-                guideSelectionMethod: pvMethod || null,
-                guideSelectionResult: pvResult || null,
-                guideOnboarding: pvOnboarding || null,
-                guideAccessDate: pvAccessDate || null,
-                guideFreeCredit: pvFreeCredit || null,
-                guideBonusCredit: pvBonusCredit || null,
+                // 우측 안내(가입 페이지 좌측 노출) - 동적 카드/로우
+                guideSections,
             }),
         });
 
@@ -256,61 +241,16 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
 
                     {/* 우측: 미리보기 (편집 가능) */}
                     <div className={'popup_preview_right'}>
-                        <p className={'preview_title'}>가입 페이지에 노출되는 내용입니다.</p>
-
-                        <div className={'preview_section'}>
-                            <h5>신청안내</h5>
-                            <div className={'preview_table'}>
-                                <div className={'preview_row'}>
-                                    <span className={'preview_label'}>신청기간</span>
-                                    <input type="text" className={'preview_input'} value={pvPeriod} onChange={e => setPvPeriod(e.target.value)}/>
-                                </div>
-                                <div className={'preview_row'}>
-                                    <span className={'preview_label'}>신청대상</span>
-                                    <input type="text" className={'preview_input'} value={pvTarget} onChange={e => setPvTarget(e.target.value)}/>
-                                </div>
-                                <div className={'preview_row'}>
-                                    <span className={'preview_label'}>신청규모</span>
-                                    <input type="text" className={'preview_input'} value={pvScale} onChange={e => setPvScale(e.target.value)}/>
-                                </div>
-                            </div>
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8}}>
+                            <p className={'preview_title'} style={{margin: 0}}>가입 페이지 좌측에 노출되는 안내입니다. (미노출 항목은 숨김)</p>
+                            <button type="button" style={defaultFormBtnStyle}
+                                    onClick={() => setGuideSections(buildDefaultGuideSections({
+                                        partnerName, startDate, endDate, maxMembers, signupCredit, bonusPercent: creditAmount, systemStartDate,
+                                    }))}>
+                                기본폼 생성
+                            </button>
                         </div>
-
-                        <div className={'preview_section'}>
-                            <h5>운영안내</h5>
-                            <div className={'preview_table'}>
-                                <div className={'preview_row'}>
-                                    <span className={'preview_label'}>선정방법</span>
-                                    <input type="text" className={'preview_input'} value={pvMethod} onChange={e => setPvMethod(e.target.value)}/>
-                                </div>
-                                <div className={'preview_row'}>
-                                    <span className={'preview_label'}>선정결과</span>
-                                    <input type="text" className={'preview_input'} value={pvResult} onChange={e => setPvResult(e.target.value)}/>
-                                </div>
-                                <div className={'preview_row'}>
-                                    <span className={'preview_label'}>온보딩 교육</span>
-                                    <input type="text" className={'preview_input'} value={pvOnboarding} onChange={e => setPvOnboarding(e.target.value)}/>
-                                </div>
-                                <div className={'preview_row'}>
-                                    <span className={'preview_label'}>시스템 접속가능일</span>
-                                    <input type="text" className={'preview_input'} value={pvAccessDate} onChange={e => setPvAccessDate(e.target.value)}/>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className={'preview_section'}>
-                            <h5>제공혜택</h5>
-                            <div className={'preview_table'}>
-                                <div className={'preview_row'}>
-                                    <span className={'preview_label'}>무료 크레딧</span>
-                                    <input type="text" className={'preview_input'} value={pvFreeCredit} onChange={e => setPvFreeCredit(e.target.value)}/>
-                                </div>
-                                <div className={'preview_row'}>
-                                    <span className={'preview_label'}>보너스 크레딧</span>
-                                    <input type="text" className={'preview_input'} value={pvBonusCredit} onChange={e => setPvBonusCredit(e.target.value)}/>
-                                </div>
-                            </div>
-                        </div>
+                        <GuideSectionsEditor sections={guideSections} onChange={setGuideSections}/>
                     </div>
                 </div>
 
