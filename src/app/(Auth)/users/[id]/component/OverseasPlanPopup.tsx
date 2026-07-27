@@ -130,6 +130,7 @@ const planTypeToCategory = (data?: Partial<OverseasPlanFormData>): PlanCategory 
 
 export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}: Props) {
     const {closePopup, addPopup} = usePopupStore();
+    console.log('[OverseasPlanPopup] planStatus:', planStatus);
     const isEdit = !!initialData;
 
     const [category, setCategory] = useState<PlanCategory>(() => planTypeToCategory(initialData));
@@ -256,7 +257,7 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                         {category === 'HYBRID' ? (
                             <div className={'date_range hybrid_date_range'}>
                                 <input type="date" value={form.planStartDate}
-                                       disabled={planStatus === 'ACTIVE'}
+                                       disabled={planStatus === 'ACTIVE' || planStatus === 'EXPIRED'}
                                        onChange={e => {
                                            const v = e.target.value;
                                            setForm(prev => {
@@ -266,6 +267,7 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                                        }}/>
                                 <span className={'tilde'}>로 부터</span>
                                 <select value={form.planMonths}
+                                        disabled={planStatus === 'EXPIRED'}
                                         onChange={e => {
                                             const m = Number(e.target.value);
                                             setForm(prev => {
@@ -281,10 +283,11 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                         ) : (
                             <div className={'date_range'}>
                                 <input type="date" value={form.planStartDate}
-                                       disabled={planStatus === 'ACTIVE'}
+                                       disabled={planStatus === 'ACTIVE' || planStatus === 'EXPIRED'}
                                        onChange={e => setForm(prev => ({...prev, planStartDate: e.target.value}))}/>
                                 <span className={'tilde'}>-</span>
                                 <input type="date" value={form.planEndDate}
+                                       disabled={planStatus === 'EXPIRED'}
                                        min={form.planStartDate || undefined}
                                        onChange={e => setForm(prev => ({...prev, planEndDate: e.target.value}))}/>
                             </div>
