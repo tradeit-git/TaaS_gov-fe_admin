@@ -258,6 +258,7 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                             <div className={'date_range hybrid_date_range'}>
                                 <input type="date" value={form.planStartDate}
                                        disabled={planStatus === 'ACTIVE' || planStatus === 'EXPIRED'}
+                                       min={!isEdit ? todayISO() : undefined}
                                        onChange={e => {
                                            const v = e.target.value;
                                            setForm(prev => {
@@ -284,11 +285,12 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                             <div className={'date_range'}>
                                 <input type="date" value={form.planStartDate}
                                        disabled={planStatus === 'ACTIVE' || planStatus === 'EXPIRED'}
+                                       min={!isEdit ? todayISO() : undefined}
                                        onChange={e => setForm(prev => ({...prev, planStartDate: e.target.value}))}/>
                                 <span className={'tilde'}>-</span>
                                 <input type="date" value={form.planEndDate}
                                        disabled={planStatus === 'EXPIRED'}
-                                       min={form.planStartDate || undefined}
+                                       min={!isEdit && form.planStartDate ? toISODate(new Date(new Date(form.planStartDate).getTime() + 86400000)) : (isEdit ? todayISO() : undefined)}
                                        onChange={e => setForm(prev => ({...prev, planEndDate: e.target.value}))}/>
                             </div>
                         )}
@@ -343,9 +345,10 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                                 <input type="text" inputMode="numeric" value={creditInput}
                                        className={'credit_amount_input'}
                                        placeholder={'숫자만 입력'}
+                                       disabled={planStatus === 'EXPIRED'}
                                        onChange={e => setCreditInput(e.target.value.replace(/[^0-9]/g, ''))}/>
-                                <button type={'button'} className={'btn_charge'} disabled={!creditInput} onClick={handleCharge}>충전</button>
-                                <button type={'button'} className={'btn_deduct'} disabled={!creditInput} onClick={handleDeduct}>차감</button>
+                                <button type={'button'} className={'btn_charge'} disabled={planStatus === 'EXPIRED'} onClick={handleCharge}>충전</button>
+                                <button type={'button'} className={'btn_deduct'} disabled={planStatus === 'EXPIRED'} onClick={handleDeduct}>차감</button>
                                 <span className={'applied_amount'}>반영 금액 : <span className={appliedAmount > 0 ? 'charge' : appliedAmount < 0 ? 'deduct' : ''}>{appliedAmount.toLocaleString()}</span></span>
                             </div>
                         )}
