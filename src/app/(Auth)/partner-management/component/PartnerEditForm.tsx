@@ -26,6 +26,7 @@ interface PartnerDetail {
     guideSections: unknown;
     startDate: string;
     endDate: string;
+    creditExpirationDate: string | null;
 }
 
 export default function PartnerEditForm({uId, partner, onEdited}: Props) {
@@ -45,6 +46,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
     const [endDate, setEndDate] = useState((partner.endDate ?? '').slice(0, 10));
     const [dashboardCode, setDashboardCode] = useState(partner.dashboardCode ?? '');
     const [systemStartDate, setSystemStartDate] = useState('');
+    const [creditExpireDate, setCreditExpireDate] = useState('');
     const [logoUrl, setLogoUrl] = useState(partner.logoUrl ?? '');
     const [uploading, setUploading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -73,6 +75,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
             setLogoUrl(d.logoUrl ?? '');
             setDashboardCode(d.dashboardAccessCode ?? '');
             setSystemStartDate((d.operationStartDate ?? '').slice(0, 10));
+            setCreditExpireDate((d.creditExpirationDate ?? '').slice(0, 10));
             setGuideSections(normalizeGuideSections(d.guideSections));
         })();
     }, [partner.id]);
@@ -112,7 +115,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
 
     const handleSave = async () => {
         if (saving) return;
-        if (!partnerName.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim() || !systemStartDate) {
+        if (!partnerName.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim() || !systemStartDate || !creditExpireDate) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
             return;
         }
@@ -136,6 +139,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                 logoUrl: logoUrl || null,
                 dashboardAccessCode: dashboardCode.trim(),
                 operationStartDate: systemStartDate || null,
+                creditExpirationDate: creditExpireDate || null,
                 guideSections,
             }),
         });
@@ -249,6 +253,15 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                             <div className={'date_range'}>
                                 <input type="date" value={systemStartDate}
                                        onChange={e => setSystemStartDate(e.target.value)}/>
+                            </div>
+                        </div>
+
+                        {/* 크레딧 만료일 (수정 시 활성 가입 크레딧 만료일 일괄 갱신) */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>크레딧 만료일 <span className={'required'}>(필수)</span></label>
+                            <div className={'date_range'}>
+                                <input type="date" value={creditExpireDate}
+                                       onChange={e => setCreditExpireDate(e.target.value)}/>
                             </div>
                         </div>
 

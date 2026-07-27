@@ -23,6 +23,7 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
     const [endDate, setEndDate] = useState('');
     const [dashboardCode, setDashboardCode] = useState('');
     const [systemStartDate, setSystemStartDate] = useState('');
+    const [creditExpireDate, setCreditExpireDate] = useState('');
     const [logoUrl, setLogoUrl] = useState('');
     const [uploading, setUploading] = useState(false);
 
@@ -82,7 +83,7 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
     };
 
     const handleCreate = async () => {
-        if (!partnerName.trim() || !partnerKey.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim() || !systemStartDate) {
+        if (!partnerName.trim() || !partnerKey.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim() || !systemStartDate || !creditExpireDate) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
             return;
         }
@@ -109,6 +110,7 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
                 logoUrl: logoUrl || null,
                 dashboardAccessCode: dashboardCode.trim(),
                 operationStartDate: systemStartDate || null,
+                creditExpirationDate: creditExpireDate || null,
                 // 우측 안내(가입 페이지 좌측 노출) - 동적 카드/로우
                 guideSections,
             }),
@@ -235,6 +237,15 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
                             <div className={'date_range'}>
                                 <input type="date" value={systemStartDate}
                                        onChange={e => setSystemStartDate(e.target.value)}/>
+                            </div>
+                        </div>
+
+                        {/* 크레딧 만료일 (가입 크레딧 만료 기준일) */}
+                        <div className={'popup_field'}>
+                            <label className={'label_required'}>크레딧 만료일 <span className={'required'}>(필수)</span></label>
+                            <div className={'date_range'}>
+                                <input type="date" value={creditExpireDate}
+                                       onChange={e => setCreditExpireDate(e.target.value)}/>
                             </div>
                         </div>
                     </div>
