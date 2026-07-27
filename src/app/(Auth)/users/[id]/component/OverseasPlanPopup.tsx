@@ -130,6 +130,7 @@ const planTypeToCategory = (data?: Partial<OverseasPlanFormData>): PlanCategory 
 
 export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}: Props) {
     const {closePopup, addPopup} = usePopupStore();
+    console.log('[OverseasPlanPopup] planStatus:', planStatus);
     const isEdit = !!initialData;
 
     const [category, setCategory] = useState<PlanCategory>(() => planTypeToCategory(initialData));
@@ -256,7 +257,8 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                         {category === 'HYBRID' ? (
                             <div className={'date_range hybrid_date_range'}>
                                 <input type="date" value={form.planStartDate}
-                                       disabled={planStatus === 'ACTIVE'}
+                                       disabled={planStatus === 'ACTIVE' || planStatus === 'EXPIRED'}
+                                       min={!isEdit ? todayISO() : undefined}
                                        onChange={e => {
                                            const v = e.target.value;
                                            setForm(prev => {
@@ -266,6 +268,7 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                                        }}/>
                                 <span className={'tilde'}>로 부터</span>
                                 <select value={form.planMonths}
+                                        disabled={planStatus === 'EXPIRED'}
                                         onChange={e => {
                                             const m = Number(e.target.value);
                                             setForm(prev => {
@@ -281,11 +284,13 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                         ) : (
                             <div className={'date_range'}>
                                 <input type="date" value={form.planStartDate}
-                                       disabled={planStatus === 'ACTIVE'}
+                                       disabled={planStatus === 'ACTIVE' || planStatus === 'EXPIRED'}
+                                       min={!isEdit ? todayISO() : undefined}
                                        onChange={e => setForm(prev => ({...prev, planStartDate: e.target.value}))}/>
                                 <span className={'tilde'}>-</span>
                                 <input type="date" value={form.planEndDate}
-                                       min={form.planStartDate || undefined}
+                                       disabled={planStatus === 'EXPIRED'}
+                                       min={!isEdit && form.planStartDate ? toISODate(new Date(new Date(form.planStartDate).getTime() + 86400000)) : (isEdit ? todayISO() : undefined)}
                                        onChange={e => setForm(prev => ({...prev, planEndDate: e.target.value}))}/>
                             </div>
                         )}
@@ -340,9 +345,10 @@ export default function OverseasPlanPopup({uId, initialData, onSave, planStatus}
                                 <input type="text" inputMode="numeric" value={creditInput}
                                        className={'credit_amount_input'}
                                        placeholder={'숫자만 입력'}
+                                       disabled={planStatus === 'EXPIRED'}
                                        onChange={e => setCreditInput(e.target.value.replace(/[^0-9]/g, ''))}/>
-                                <button type={'button'} className={'btn_charge'} disabled={!creditInput} onClick={handleCharge}>충전</button>
-                                <button type={'button'} className={'btn_deduct'} disabled={!creditInput} onClick={handleDeduct}>차감</button>
+                                <button type={'button'} className={'btn_charge'} disabled={planStatus === 'EXPIRED'} onClick={handleCharge}>충전</button>
+                                <button type={'button'} className={'btn_deduct'} disabled={planStatus === 'EXPIRED'} onClick={handleDeduct}>차감</button>
                                 <span className={'applied_amount'}>반영 금액 : <span className={appliedAmount > 0 ? 'charge' : appliedAmount < 0 ? 'deduct' : ''}>{appliedAmount.toLocaleString()}</span></span>
                             </div>
                         )}

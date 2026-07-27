@@ -225,28 +225,29 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
                 })),
             }}
             onSave={async (data) => {
-                const isGeneral = data.planType === 'GENERAL';
-                const originalCredit = plan.rounds.reduce((sum, r) => sum + (r.grantedAmount ?? 0), 0);
-                const diff = data.totalCredit - originalCredit;
+                // const isGeneral = data.planType === 'GENERAL';
+                // const originalCredit = plan.rounds.reduce((sum, r) => sum + (r.grantedAmount ?? 0), 0);
+                // const diff = data.totalCredit - originalCredit;
 
-                if (isGeneral && diff !== 0 && getPlanStatus(plan) === 'ACTIVE') {
-                    const creditEndpoint = diff > 0
-                        ? `/api/admin/members/users/${userId}/credits/grant`
-                        : `/api/admin/members/users/${userId}/credits/deduct`;
-                    const creditBody = diff > 0
-                        ? {amount: diff, expireDate: null}
-                        : {amount: Math.abs(diff)};
-                    const creditRes = await callApi(creditEndpoint, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        credentials: 'include',
-                        body: JSON.stringify(creditBody),
-                    });
-                    if (!creditRes.result) {
-                        addPopup(<AlertComponent alertType={'alert'} infoContent={creditRes.message || '크레딧 변경에 실패했습니다.'}/>);
-                        return;
-                    }
-                }
+                // // 백엔드 PUT이 ACTIVE 라운드 grantedAmount 변경 + 차액 크레딧 처리를 직접 수행하므로 별도 크레딧 API 호출 제거
+                // if (isGeneral && diff !== 0 && getPlanStatus(plan) === 'ACTIVE') {
+                //     const creditEndpoint = diff > 0
+                //         ? `/api/admin/members/users/${userId}/credits/grant`
+                //         : `/api/admin/members/users/${userId}/credits/deduct`;
+                //     const creditBody = diff > 0
+                //         ? {amount: diff, expireDate: null}
+                //         : {amount: Math.abs(diff)};
+                //     const creditRes = await callApi(creditEndpoint, {
+                //         method: 'POST',
+                //         headers: {'Content-Type': 'application/json'},
+                //         credentials: 'include',
+                //         body: JSON.stringify(creditBody),
+                //     });
+                //     if (!creditRes.result) {
+                //         addPopup(<AlertComponent alertType={'alert'} infoContent={creditRes.message || '크레딧 변경에 실패했습니다.'}/>);
+                //         return;
+                //     }
+                // }
 
                 const putPayload = buildEditPayload(data);
                 console.log('[플랜수정] PUT 요청 payload:', putPayload);
