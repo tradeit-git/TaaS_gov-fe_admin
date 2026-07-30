@@ -46,7 +46,6 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                     </td>
                     <td>{formatDate(row.startDate)} ~ {formatDate(row.endDate)}</td>
                     <td>{row.maxMembers === 0 ? '인원제한없음' : `${row.maxMembers.toLocaleString()}`}</td>
-                    <td>{row.signupCredit.toLocaleString()}</td>
                     <td>{row.creditAmount}%</td>
                     <td>{row.dashboardCode || '-'}</td>
                     <td>{row.usedCount.toLocaleString()}</td>

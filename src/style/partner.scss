@@ -771,7 +771,7 @@
 
 // ── 신규등록 팝업 ──
 .partner_register_popup {
-  width: 1200px;
+  width: 1440px;
   max-width: 95vw;
   max-height: 91dvh;
   background: #fff;
@@ -795,11 +795,13 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    // 팝업 프레임은 그대로, 내부 콘텐츠만 90%로 축소.
+    zoom: 0.9;
   }
 
   // 좌측 폼
   .popup_form_left {
-    width: 340px;
+    width: 560px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;

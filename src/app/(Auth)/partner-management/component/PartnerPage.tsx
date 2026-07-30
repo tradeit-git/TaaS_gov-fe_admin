@@ -18,7 +18,6 @@ export interface PartnerRow {
     endDate: string;
     creditAmount: number;
     maxMembers: number;
-    signupCredit: number;
     usedCount: number;
     approvedCount: number;
     createdAt: string;
@@ -33,7 +32,6 @@ interface CoalitionApiRow {
     partnerKey: string;
     bonusCredit: number;
     maxMembers: number;
-    signupCredit: number;
     startDate: string;
     endDate: string;
     createdAt: string;
@@ -59,7 +57,6 @@ const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
     endDate: row.endDate,
     creditAmount: row.bonusCredit,
     maxMembers: row.maxMembers ?? 0,
-    signupCredit: row.signupCredit ?? 0,
     usedCount: row.userCount,
     approvedCount: row.approvedCount ?? 0,
     createdAt: row.createdAt,
@@ -214,7 +211,6 @@ export default function PartnerPage() {
                         <col style={{width: '6%'}}/>
                         <col style={{width: '11%'}}/>
                         <col style={{width: '6%'}}/>
-                        <col style={{width: '6%'}}/>
                         <col style={{width: '7%'}}/>
                         <col style={{width: '7%'}}/>
                         <col style={{width: '5%'}}/>
@@ -230,7 +226,6 @@ export default function PartnerPage() {
                         <th>교유식별자</th>
                         <th>모집기간</th>
                         <th>모집인원</th>
-                        <th>무료 크레딧</th>
                         <th>보너스 크레딧(%)</th>
                         <th>대시보드 접속코드</th>
                         <th>신청수</th>

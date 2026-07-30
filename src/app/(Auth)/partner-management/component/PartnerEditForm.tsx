@@ -6,6 +6,7 @@ import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import callApi from "@/utill/apiRequest";
 import {PartnerRow} from "@/app/(Auth)/partner-management/component/PartnerPage";
 import GuideSectionsEditor, {GuideCard, buildDefaultGuideSections, defaultFormBtnStyle, normalizeGuideSections} from "@/app/(Auth)/partner-management/component/GuideSectionsEditor";
+import CreditScheduleEditor, {CreditSchedule, normalizeSchedules} from "@/app/(Auth)/partner-management/component/CreditScheduleEditor";
 
 interface Props {
     uId?: string;
@@ -18,21 +19,20 @@ interface PartnerDetail {
     partnerName: string;
     logoUrl: string | null;
     bonusCredit: number | null;
-    signupCredit: number | null;
     maxMembers: number | null;
     requiresApproval: boolean | null;
     operationStartDate: string | null;
     dashboardAccessCode: string | null;
     guideSections: unknown;
+    creditSchedules: unknown;
     startDate: string;
     endDate: string;
-    creditExpirationDate: string | null;
 }
 
 export default function PartnerEditForm({uId, partner, onEdited}: Props) {
     const {addPopup, closePopup} = usePopupStore();
 
-    // 가입자가 한 명이라도 있으면 보너스/무료 크레딧 수정 불가 (백엔드 partner.CREDIT_LOCKED)
+    // 가입자가 한 명이라도 있으면 보너스 크레딧 수정 불가 (백엔드 partner.CREDIT_LOCKED)
     const hasMembers = (partner.usedCount ?? 0) > 0;
 
     // 좌측 입력 (목록 row로 우선 초기화 → 상세조회로 보강)
@@ -40,23 +40,24 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
     const [creditAmount, setCreditAmount] = useState(String(partner.creditAmount ?? ''));
     const [maxMembers, setMaxMembers] = useState(partner.maxMembers ? String(partner.maxMembers) : '');
     const [noMemberLimit, setNoMemberLimit] = useState(!partner.maxMembers);
-    const [signupCredit, setSignupCredit] = useState(String(partner.signupCredit ?? ''));
     const [requiresApproval, setRequiresApproval] = useState(partner.requiresApproval ?? false);
     const [startDate, setStartDate] = useState((partner.startDate ?? '').slice(0, 10));
     const [endDate, setEndDate] = useState((partner.endDate ?? '').slice(0, 10));
     const [dashboardCode, setDashboardCode] = useState(partner.dashboardCode ?? '');
     const [systemStartDate, setSystemStartDate] = useState('');
-    const [creditExpireDate, setCreditExpireDate] = useState('');
     const [logoUrl, setLogoUrl] = useState(partner.logoUrl ?? '');
     const [uploading, setUploading] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    // 크레딧 지급 스케줄
+    const [schedules, setSchedules] = useState<CreditSchedule[]>([]);
 
     // 우측 안내 (동적 카드/로우)
     const [guideSections, setGuideSections] = useState<GuideCard[]>([]);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // 상세조회로 목록에 없는 값(운영시작일·대시보드코드·안내문구) 프리필
+    // 상세조회로 목록에 없는 값(운영시작일·대시보드코드·안내문구·스케줄) 프리필
     useEffect(() => {
         (async () => {
             const res = await callApi(`/api/admin/partner-keys/${partner.id}`, {
@@ -66,7 +67,6 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
             const d = res.data as PartnerDetail;
             setPartnerName(d.partnerName ?? '');
             setCreditAmount(d.bonusCredit != null ? String(d.bonusCredit) : '');
-            setSignupCredit(d.signupCredit != null ? String(d.signupCredit) : '');
             setMaxMembers(d.maxMembers ? String(d.maxMembers) : '');
             setNoMemberLimit(!d.maxMembers);
             setRequiresApproval(d.requiresApproval ?? false);
@@ -75,8 +75,8 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
             setLogoUrl(d.logoUrl ?? '');
             setDashboardCode(d.dashboardAccessCode ?? '');
             setSystemStartDate((d.operationStartDate ?? '').slice(0, 10));
-            setCreditExpireDate((d.creditExpirationDate ?? '').slice(0, 10));
             setGuideSections(normalizeGuideSections(d.guideSections));
+            setSchedules(normalizeSchedules(d.creditSchedules));
         })();
     }, [partner.id]);
 
@@ -113,14 +113,32 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
         setLogoUrl(uploadedUrl);
     };
 
+    // 스케줄 행 검증 (각 행 크레딧량·지급일 필수, 만료일은 지급일 이후) — 통과 시 null, 실패 시 메시지
+    const validateSchedules = (): string | null => {
+        for (const s of schedules) {
+            if (s.creditAmount === '' || !s.startDate || !s.expirationDate) {
+                return '크레딧 지급 스케줄의 크레딧량, 지급일, 만료일을 모두 입력해주세요.';
+            }
+            if (s.expirationDate < s.startDate) {
+                return '스케줄 만료일은 지급일 이후여야 합니다.';
+            }
+        }
+        return null;
+    };
+
     const handleSave = async () => {
         if (saving) return;
-        if (!partnerName.trim() || !signupCredit || !creditAmount || !startDate || !endDate || !dashboardCode.trim() || !systemStartDate || !creditExpireDate) {
+        if (!partnerName.trim() || !creditAmount || !startDate || !endDate || !dashboardCode.trim() || !systemStartDate) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'모든 필수 항목을 입력해주세요.'}/>);
             return;
         }
         if (startDate > endDate) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'종료일은 시작일 이후여야 합니다.'}/>);
+            return;
+        }
+        const scheduleError = validateSchedules();
+        if (scheduleError) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={scheduleError}/>);
             return;
         }
 
@@ -133,13 +151,17 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                 partnerName,
                 bonusCredit: Number(creditAmount),
                 maxMembers: noMemberLimit ? 0 : Number(maxMembers || 0),
-                signupCredit: Number(signupCredit),
                 requiresApproval,
                 startDate, endDate,
                 logoUrl: logoUrl || null,
                 dashboardAccessCode: dashboardCode.trim(),
                 operationStartDate: systemStartDate || null,
-                creditExpirationDate: creditExpireDate || null,
+                creditSchedules: schedules.map(s => ({
+                    id: s.id,
+                    creditAmount: Number(s.creditAmount),
+                    startDate: s.startDate,
+                    expirationDate: s.expirationDate || null,
+                })),
                 guideSections,
             }),
         });
@@ -165,7 +187,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                 <div className={'popup_body_row'}>
                     {/* 좌측: 입력폼 */}
                     <div className={'popup_form_left'}>
-                        {/* 로고 */}
+                        {/* 1. 로고 */}
                         <div className={'popup_field'}>
                             <label className={'label_required'}>로고 <span className={'required'}>(필수)</span></label>
                             {logoUrl ? (
@@ -180,20 +202,28 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                             )}
                         </div>
 
-                        {/* 제휴기관 */}
+                        {/* 2. 제휴기관 */}
                         <div className={'popup_field'}>
                             <label className={'label_required'}>제휴기관 <span className={'required'}>(필수)</span></label>
                             <input type="text" value={partnerName} maxLength={20}
                                    onChange={e => setPartnerName(e.target.value.slice(0, 20))}/>
                         </div>
 
-                        {/* 고유식별자 (수정 불가) */}
-                        <div className={'popup_field'}>
-                            <label className={'label_required'}>고유식별자 <span className={'required'}>(필수)</span></label>
-                            <input type="text" value={partner.partnerKey} readOnly disabled/>
+                        {/* 3. 고유식별자(수정 불가) | 대시보드 접속코드 (나란히) */}
+                        <div style={{display: 'flex', gap: 28}}>
+                            <div className={'popup_field'} style={{flex: 1, minWidth: 0}}>
+                                <label className={'label_required'}>고유식별자 <span className={'required'}>(필수)</span></label>
+                                <input type="text" value={partner.partnerKey} readOnly disabled/>
+                            </div>
+                            <div className={'popup_field'} style={{flex: 1, minWidth: 0}}>
+                                <label className={'label_required'}>대시보드 접속코드 <span className={'required'}>(필수)</span></label>
+                                <input type="text" value={dashboardCode}
+                                       placeholder={'영문, 숫자만 입력'}
+                                       onChange={e => setDashboardCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}/>
+                            </div>
                         </div>
 
-                        {/* 모집기간 */}
+                        {/* 4. 모집기간 */}
                         <div className={'popup_field'}>
                             <label className={'label_required'}>모집기간 <span className={'required'}>(필수)</span></label>
                             <div className={'date_range'}>
@@ -202,7 +232,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                             </div>
                         </div>
 
-                        {/* 모집인원 */}
+                        {/* 5. 모집인원 */}
                         <div className={'popup_field'}>
                             <label className={'label_required'}>모집인원 <span className={'required'}>(필수)</span></label>
                             <div className={'input_with_check'}>
@@ -218,16 +248,16 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                             </div>
                         </div>
 
-                        {/* 무료 크레딧 */}
+                        {/* 6. 시스템 접속시작일 (=운영시작일) */}
                         <div className={'popup_field'}>
-                            <label className={'label_required'}>무료 크레딧 <span className={'required'}>(필수)</span></label>
-                            <input type="text" inputMode="numeric" value={signupCredit}
-                                   disabled={hasMembers}
-                                   placeholder={'숫자만 입력'}
-                                   onChange={e => setSignupCredit(e.target.value.replace(/[^0-9]/g, ''))}/>
+                            <label className={'label_required'}>시스템 접속시작일 <span className={'required'}>(필수)</span></label>
+                            <div className={'date_range'}>
+                                <input type="date" value={systemStartDate}
+                                       onChange={e => setSystemStartDate(e.target.value)}/>
+                            </div>
                         </div>
 
-                        {/* 보너스 크레딧(%) */}
+                        {/* 7. 보너스 크레딧(%) */}
                         <div className={'popup_field'}>
                             <label className={'label_required'}>보너스 크레딧(%) <span className={'required'}>(필수)</span></label>
                             <input type="text" inputMode="numeric" value={creditAmount}
@@ -239,36 +269,16 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                                    }}/>
                         </div>
 
-                        {/* 대시보드 접속코드 */}
+                        {/* 8. 크레딧 지급 스케줄 */}
                         <div className={'popup_field'}>
-                            <label className={'label_required'}>대시보드 접속코드 <span className={'required'}>(필수)</span></label>
-                            <input type="text" value={dashboardCode}
-                                   placeholder={'영문, 숫자만 입력'}
-                                   onChange={e => setDashboardCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}/>
-                        </div>
-
-                        {/* 시스템 접속시작일 (=운영시작일) */}
-                        <div className={'popup_field'}>
-                            <label className={'label_required'}>시스템 접속시작일 <span className={'required'}>(필수)</span></label>
-                            <div className={'date_range'}>
-                                <input type="date" value={systemStartDate}
-                                       onChange={e => setSystemStartDate(e.target.value)}/>
-                            </div>
-                        </div>
-
-                        {/* 크레딧 만료일 (수정 시 활성 가입 크레딧 만료일 일괄 갱신) */}
-                        <div className={'popup_field'}>
-                            <label className={'label_required'}>크레딧 만료일 <span className={'required'}>(필수)</span></label>
-                            <div className={'date_range'}>
-                                <input type="date" value={creditExpireDate}
-                                       onChange={e => setCreditExpireDate(e.target.value)}/>
-                            </div>
+                            <label>크레딧 지급 스케줄</label>
+                            <CreditScheduleEditor schedules={schedules} onChange={setSchedules}/>
                         </div>
 
                         {/* 승인심사: 체크박스 숨김. 저장 시 기존 설정값(requiresApproval) 그대로 전송 */}
 
                         {hasMembers && (
-                            <p className={'edit_notice'}>가입자가 있어 <b>무료/보너스 크레딧</b>은 수정할 수 없습니다.</p>
+                            <p className={'edit_notice'}>가입자가 있어 <b>보너스 크레딧</b>은 수정할 수 없습니다.</p>
                         )}
                     </div>
 
@@ -278,7 +288,8 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                             <p className={'preview_title'} style={{margin: 0}}>가입 페이지 좌측에 노출되는 안내입니다. (미노출 항목은 숨김)</p>
                             <button type="button" style={defaultFormBtnStyle}
                                     onClick={() => setGuideSections(buildDefaultGuideSections({
-                                        partnerName, startDate, endDate, maxMembers, signupCredit, bonusPercent: creditAmount, systemStartDate,
+                                        partnerName, startDate, endDate, maxMembers, bonusPercent: creditAmount, systemStartDate,
+                                        totalScheduleCredit: schedules.reduce((sum, s) => sum + (Number(s.creditAmount) || 0), 0),
                                     }))}>
                                 기본폼 생성
                             </button>

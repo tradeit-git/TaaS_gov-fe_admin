@@ -61,7 +61,7 @@ export function buildDefaultGuideSections(p: {
     startDate?: string;
     endDate?: string;
     maxMembers?: string | number;
-    signupCredit?: string | number;
+    totalScheduleCredit?: string | number;
     bonusPercent?: string | number;
     systemStartDate?: string;
 } = {}): GuideCard[] {
@@ -82,8 +82,8 @@ export function buildDefaultGuideSections(p: {
 
     const sysDate = fmtDate(p.systemStartDate) ?? `'yy.mm.dd(D)`;
 
-    const signup = toNum(p.signupCredit);
-    const freeCredit = `${signup.toLocaleString()}크레딧 제공`;
+    const totalCredit = toNum(p.totalScheduleCredit);
+    const freeCredit = `총 크레딧 ${totalCredit.toLocaleString()} 지급`;
 
     const bonus = toNum(p.bonusPercent);
     const bonusCredit = `유료 플랜 결제 시 크레딧 ${bonus}% 추가 지급`;
