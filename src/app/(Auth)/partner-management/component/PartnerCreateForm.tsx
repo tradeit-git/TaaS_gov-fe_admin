@@ -4,7 +4,7 @@ import {useRef, useState} from "react";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import callApi from "@/utill/apiRequest";
-import GuideSectionsEditor, {GuideCard, buildDefaultGuideSections, defaultFormBtnStyle} from "@/app/(Auth)/partner-management/component/GuideSectionsEditor";
+import GuideSectionsEditor, {GuideCard, buildDefaultGuideSections, defaultFormBtnStyle, defaultGuideTitle} from "@/app/(Auth)/partner-management/component/GuideSectionsEditor";
 import CreditScheduleEditor, {CreditSchedule} from "@/app/(Auth)/partner-management/component/CreditScheduleEditor";
 
 interface Props {
@@ -30,6 +30,7 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
     const [schedules, setSchedules] = useState<CreditSchedule[]>([]);
 
     // 우측 안내 (동적 카드/로우)
+    const [guideTitle, setGuideTitle] = useState('');
     const [guideSections, setGuideSections] = useState<GuideCard[]>(() => buildDefaultGuideSections());
     const [isDuplChecked, setIsDuplChecked] = useState(false);
     const isComposing = useRef(false);
@@ -110,6 +111,10 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'종료일은 시작일 이후여야 합니다.'}/>);
             return;
         }
+        if (!guideTitle.trim()) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'가입 안내 타이틀을 입력해주세요.'}/>);
+            return;
+        }
         const scheduleError = validateSchedules();
         if (scheduleError) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={scheduleError}/>);
@@ -135,7 +140,8 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
                     startDate: s.startDate,
                     expirationDate: s.expirationDate || null,
                 })),
-                // 우측 안내(가입 페이지 좌측 노출) - 동적 카드/로우
+                // 우측 안내(가입 페이지 좌측 노출) - 타이틀 + 동적 카드/로우
+                guideTitle: guideTitle.trim(),
                 guideSections,
             }),
         });
@@ -268,12 +274,23 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
                         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8}}>
                             <p className={'preview_title'} style={{margin: 0}}>가입 페이지 좌측에 노출되는 안내입니다. (미노출 항목은 숨김)</p>
                             <button type="button" style={defaultFormBtnStyle}
-                                    onClick={() => setGuideSections(buildDefaultGuideSections({
-                                        partnerName, startDate, endDate, maxMembers, bonusPercent: creditAmount, systemStartDate,
-                                        totalScheduleCredit: schedules.reduce((sum, s) => sum + (Number(s.creditAmount) || 0), 0),
-                                    }))}>
+                                    onClick={() => {
+                                        setGuideTitle(defaultGuideTitle(partnerName));
+                                        setGuideSections(buildDefaultGuideSections({
+                                            partnerName, startDate, endDate, maxMembers, bonusPercent: creditAmount, systemStartDate,
+                                            totalScheduleCredit: schedules.reduce((sum, s) => sum + (Number(s.creditAmount) || 0), 0),
+                                        }));
+                                    }}>
                                 기본폼 생성
                             </button>
+                        </div>
+                        <div style={{display: 'flex', gap: 6, alignItems: 'center', marginBottom: 12}}>
+                            <span style={{width: 120, height: 32, display: 'inline-flex', alignItems: 'center', padding: '0 8px', border: '1px solid #d0d5dd', borderRadius: 8, background: '#f9fafb', color: '#475467', fontWeight: 600, flexShrink: 0, boxSizing: 'border-box', whiteSpace: 'nowrap'}}>
+                                타이틀<span style={{color: '#d92d20', marginLeft: 2}}>*</span>
+                            </span>
+                            <input style={{flex: 1, minWidth: 0, height: 32, padding: '0 8px', border: '1px solid #d0d5dd', borderRadius: 8, boxSizing: 'border-box'}}
+                                   placeholder="예: OO 회원사만을 위한 특별 가입 혜택"
+                                   value={guideTitle} onChange={e => setGuideTitle(e.target.value)}/>
                         </div>
                         <GuideSectionsEditor sections={guideSections} onChange={setGuideSections}/>
                     </div>

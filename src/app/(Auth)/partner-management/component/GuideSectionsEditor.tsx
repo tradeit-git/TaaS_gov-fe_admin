@@ -32,6 +32,10 @@ export function normalizeGuideSections(raw: unknown): GuideCard[] {
     });
 }
 
+/** 가입 페이지 좌측 안내 상단 타이틀 기본값 (CRM 기존 하드코딩과 동일 문구). */
+export const defaultGuideTitle = (partnerName?: string): string =>
+    `${(partnerName ?? '').trim()} 회원사만을 위한 특별 가입 혜택`.trim();
+
 // ── 기본폼 빌더 (변경 전 기획: 신청안내/운영안내/제공혜택) + 오른쪽 값 데이터 연동 ──
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
