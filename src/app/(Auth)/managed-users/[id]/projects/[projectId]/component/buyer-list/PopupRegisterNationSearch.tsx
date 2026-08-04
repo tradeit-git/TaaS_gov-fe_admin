@@ -20,7 +20,7 @@ export default function PopupRegisterNationSearch(
         const country = appConfig.geoCodes
             .filter(geoCode => geoCode.type === GeoCodeDataTypeEnum.enum.COUNTRY)
             .find(geoCode => {
-            return geoCode.code === props.buyer.geoCode.code && geoCode.type === props.buyer.geoCode.type;
+            return geoCode.code === props.buyer.geoCode?.code && geoCode.type === props.buyer.geoCode?.type;
         })
         if(!country) return ["",""];
         else {

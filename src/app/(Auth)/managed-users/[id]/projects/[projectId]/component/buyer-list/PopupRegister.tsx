@@ -109,7 +109,7 @@ export default function PopupRegister(props : {
             return [false, null, null];
         }
         // 필수값 변경: companyName만 필수. 국가·소재지 주소는 선택값 (백엔드 storeBuyerDetail 변경 반영)
-        newBuyer.geoCode.code = newBuyer.geoCode.code.trim();
+        if (newBuyer.geoCode?.code) newBuyer.geoCode.code = newBuyer.geoCode.code.trim();
         newBuyer.googleMapAddress = newBuyer.googleMapAddress?.trim();
 
         newBuyer.homepage = newBuyer.homepage?.trim();
