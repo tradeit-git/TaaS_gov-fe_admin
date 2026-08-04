@@ -19,6 +19,8 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
     const [detail, setDetail] = useState<InquiryRow>(initialDetail);
     const [status, setStatus] = useState(initialDetail.status);
     const [adminMemo, setAdminMemo] = useState(initialDetail.adminMemo || '');
+    const [department, setDepartment] = useState(initialDetail.department ?? '');
+    const [position, setPosition] = useState(initialDetail.position ?? '');
 
     const handleSave = async () => {
         if (status !== detail.status) {
@@ -34,6 +36,19 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
             }
         }
 
+        if (department !== (detail.department ?? '') || position !== (detail.position ?? '')) {
+            const profileRes = await callApi(`/api/admin/inquiries/${id}/profile`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify({department: department.trim() || null, position: position.trim() || null}),
+            });
+            if (!profileRes.result) {
+                addPopup(<AlertComponent alertType={'error'} infoContent={profileRes.message || '부서/직함 변경에 실패했습니다.'}/>);
+                return;
+            }
+        }
+
         const memoRes = await callApi(`/api/admin/inquiries/${id}/memo`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -45,6 +60,8 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
             setDetail(d);
             setStatus(d.status);
             setAdminMemo(d.adminMemo || '');
+            setDepartment(d.department ?? '');
+            setPosition(d.position ?? '');
             addPopup(<AlertComponent alertType={'alert'} infoContent={'저장되었습니다.'}/>);
         } else {
             addPopup(<AlertComponent alertType={'error'} infoContent={memoRes.message || '저장에 실패했습니다.'}/>);
@@ -95,11 +112,11 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
                             </div>
                             <div className={'form_col'}>
                                 <p className={'form_label'}>부서</p>
-                                <input type="text" defaultValue={detail.department ?? ''}/>
+                                <input type="text" value={department} onChange={e => setDepartment(e.target.value)}/>
                             </div>
                             <div className={'form_col'}>
                                 <p className={'form_label'}>직함</p>
-                                <input type="text" defaultValue={detail.position ?? ''}/>
+                                <input type="text" value={position} onChange={e => setPosition(e.target.value)}/>
                             </div>
                         </li>
                         <li className={'form_item'}>
@@ -146,7 +163,7 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
                         )}
                         <li className={'form_item'}>
                             <p className={'form_label'}>문의내용</p>
-                            <textarea defaultValue={detail.content}/>
+                            <textarea defaultValue={detail.content ?? ''}/>
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>상태</p>

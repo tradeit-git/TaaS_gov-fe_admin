@@ -67,14 +67,14 @@ export default function BuyerInfoCompany(props: {
                         <span className={'icon_admin icon_continent'}/>
                         continent
                     </label>
-                    <div> {appConfig.geoCodes.find(geoCode => geoCode.code === props.buyer.geoCode.code.slice(0, 1))?.name}</div>
+                    <div> {appConfig.geoCodes.find(geoCode => geoCode.code === props.buyer.geoCode?.code?.slice(0, 1))?.name}</div>
                 </li>
                 <li>
                     <label>
                         <span className={'icon_admin icon_subregion'}/>
                         sub-region
                     </label>
-                    <div>{appConfig.geoCodes.find(geoCode => geoCode.code === props.buyer.geoCode.code.slice(0, 3))?.name}</div>
+                    <div>{appConfig.geoCodes.find(geoCode => geoCode.code === props.buyer.geoCode?.code?.slice(0, 3))?.name}</div>
                 </li>
                 <li>
                     <label>
@@ -83,14 +83,14 @@ export default function BuyerInfoCompany(props: {
                     </label>
                     <div>
                         {
-                            props.buyer.geoCode.isoCode &&
+                            props.buyer.geoCode?.isoCode &&
                             <Image src={`${APP_URL}/static/img/nation/gonfalon/${props.buyer.geoCode.isoCode}.svg`}
                                    alt={'nation_img'} width={26} height={17}/>
                         }
                         {
-                            props.buyer.geoCode.isoCode && (
+                            props.buyer.geoCode?.isoCode && (
                                 <p>
-                                    {appConfig.geoCodes.find(geoCode => geoCode.code === props.buyer.geoCode.code)?.name}{' '}
+                                    {appConfig.geoCodes.find(geoCode => geoCode.code === props.buyer.geoCode?.code)?.name}{' '}
                                     {localTime.replaceAll("-", ".")}
                                 </p>
                             )

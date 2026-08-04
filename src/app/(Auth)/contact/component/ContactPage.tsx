@@ -36,7 +36,7 @@ export interface InquiryRow {
     phone: string | null;
     mobile: string | null;
     email: string | null;
-    content: string;
+    content: string | null;
     ip: string | null;
     privacyAgreed: boolean;
     adminMemo: string | null;
