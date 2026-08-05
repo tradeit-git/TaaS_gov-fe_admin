@@ -19,7 +19,7 @@ export default function ConsultationTableBody({data, totalElements, currentPage,
         {data.map((row, i) => {
             const rowNum = totalElements - (currentPage * itemsPerPage) - i;
             const statusLabel = statusMap[row.status] || row.status;
-            const statusClass = row.status === 'COMPLETED' ? 'done' : row.status === 'IN_PROGRESS' ? 'progress' : 'pending';
+            const statusClass = row.status === 'COMPLETED' ? 'done' : row.status === 'IN_PROGRESS' ? 'progress' : row.status === 'EXCLUDED' ? 'excluded' : 'pending';
 
             return (
                 <tr key={row.id}>

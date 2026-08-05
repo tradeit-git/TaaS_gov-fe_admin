@@ -10,12 +10,14 @@ import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 
 export const STATUS_MAP: Record<string, string> = {
     'PENDING': '접수',
+    'EXCLUDED': '대상제외',
     'IN_PROGRESS': '처리중',
     'COMPLETED': '완료',
 };
 
 export const INQUIRY_STATUS_OPTIONS = [
     {value: 'PENDING', label: '접수'},
+    {value: 'EXCLUDED', label: '대상제외'},
     {value: 'IN_PROGRESS', label: '처리중'},
     {value: 'COMPLETED', label: '완료'},
 ];
@@ -171,6 +173,7 @@ export default function ContactPage({initialData}: Props) {
                     <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setCurrentPage(0); }}>
                         <option value="">처리상태 전체</option>
                         <option value="PENDING">접수</option>
+                        <option value="EXCLUDED">대상제외</option>
                         <option value="IN_PROGRESS">처리중</option>
                         <option value="COMPLETED">완료</option>
                     </select>

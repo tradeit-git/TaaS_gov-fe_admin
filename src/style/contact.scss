@@ -902,6 +902,12 @@
           background-position: -20px -165px;
         }
       }
+      &.excluded {
+        color: #8E8E93;
+        .admin_icon {
+          display: none;
+        }
+      }
     }
   }
 }
@@ -994,6 +1000,12 @@
         color: #287fff;
         .admin_icon {
           background-position: -20px -165px;
+        }
+      }
+      &.excluded {
+        color: #8E8E93;
+        .admin_icon {
+          display: none;
         }
       }
     }

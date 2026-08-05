@@ -22,7 +22,7 @@ export default function ContactTableBody({data, totalElements, currentPage, item
         {data.map((row, i) => {
             const rowNum = totalElements - (currentPage * itemsPerPage) - i;
             const statusLabel = statusMap[row.status] || row.status;
-            const statusClass = row.status === 'COMPLETED' ? 'done' : row.status === 'IN_PROGRESS' ? 'progress' : 'pending';
+            const statusClass = row.status === 'COMPLETED' ? 'done' : row.status === 'IN_PROGRESS' ? 'progress' : row.status === 'EXCLUDED' ? 'excluded' : 'pending';
             const isCrm = row.inquiryType === 'CRM_1ON1';
             const typeLabel = typeMap[row.inquiryType] || row.inquiryType;
 
