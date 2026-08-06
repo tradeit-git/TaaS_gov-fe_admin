@@ -16,43 +16,73 @@ interface Props {
 
 export default function ConsultationDetailPage({id, initialDetail}: Props) {
     const {addPopup} = usePopupStore();
-    const [detail, setDetail] = useState<ConsultationRow>(initialDetail);
+
+    const initialPhone = initialDetail.phone ? initialDetail.phone.split('-') : ['', '', ''];
+    const initialEmail = initialDetail.email ? initialDetail.email.split('@') : ['', ''];
+
+    const [companyName, setCompanyName] = useState(initialDetail.companyName ?? '');
+    const [name, setName] = useState(initialDetail.name ?? '');
+    const [department, setDepartment] = useState(initialDetail.department ?? '');
+    const [position, setPosition] = useState(initialDetail.position ?? '');
+    const [phone1, setPhone1] = useState(initialPhone[0] ?? '');
+    const [phone2, setPhone2] = useState(initialPhone[1] ?? '');
+    const [phone3, setPhone3] = useState(initialPhone[2] ?? '');
+    const [email1, setEmail1] = useState(initialEmail[0] ?? '');
+    const [email2, setEmail2] = useState(initialEmail[1] ?? '');
+    const [adConsent, setAdConsent] = useState(String(initialDetail.adConsent));
+    const [content, setContent] = useState(initialDetail.content ?? '');
     const [status, setStatus] = useState(initialDetail.status);
     const [adminMemo, setAdminMemo] = useState(initialDetail.adminMemo || '');
+    const [createdAt, setCreatedAt] = useState(initialDetail.createdAt);
 
-    const handleSave = async () => {
-        if (status !== detail.status) {
-            const statusRes = await callApi(`/api/admin/consultations/${id}/status`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'include',
-                body: JSON.stringify({status}),
-            });
-            if (!statusRes.result) {
-                addPopup(<AlertComponent alertType={'error'} infoContent={statusRes.message || '상태 변경에 실패했습니다.'}/>);
-                return;
-            }
-        }
-
-        const memoRes = await callApi(`/api/admin/consultations/${id}/memo`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include',
-            body: JSON.stringify({adminMemo}),
-        });
-        if (memoRes.result && memoRes.data) {
-            const d = memoRes.data as ConsultationRow;
-            setDetail(d);
-            setStatus(d.status);
-            setAdminMemo(d.adminMemo || '');
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'저장되었습니다.'}/>);
-        } else {
-            addPopup(<AlertComponent alertType={'error'} infoContent={memoRes.message || '저장에 실패했습니다.'}/>);
-        }
+    const applyDetail = (d: ConsultationRow) => {
+        const p = d.phone ? d.phone.split('-') : ['', '', ''];
+        const e = d.email ? d.email.split('@') : ['', ''];
+        setCompanyName(d.companyName ?? '');
+        setName(d.name ?? '');
+        setDepartment(d.department ?? '');
+        setPosition(d.position ?? '');
+        setPhone1(p[0] ?? '');
+        setPhone2(p[1] ?? '');
+        setPhone3(p[2] ?? '');
+        setEmail1(e[0] ?? '');
+        setEmail2(e[1] ?? '');
+        setAdConsent(String(d.adConsent));
+        setContent(d.content ?? '');
+        setStatus(d.status);
+        setAdminMemo(d.adminMemo || '');
+        setCreatedAt(d.createdAt);
     };
 
-    const phoneParts = detail.phone ? detail.phone.split('-') : ['', '', ''];
-    const emailParts = detail.email ? detail.email.split('@') : ['', ''];
+    const handleSave = async () => {
+        const phone = [phone1, phone2, phone3].filter(v => v.trim()).join('-');
+        const email = email1 || email2 ? `${email1}@${email2}` : '';
+
+        const res = await callApi(`/api/admin/consultations/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({
+                companyName,
+                name,
+                department,
+                position,
+                phone,
+                email,
+                adConsent: adConsent === 'true',
+                content,
+                adminMemo,
+                status,
+            }),
+        });
+
+        if (res.result && res.data) {
+            applyDetail(res.data as ConsultationRow);
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'저장되었습니다.'}/>);
+        } else {
+            addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '저장에 실패했습니다.'}/>);
+        }
+    };
 
     return (
         <div className={'admin_page'}>
@@ -71,57 +101,57 @@ export default function ConsultationDetailPage({id, initialDetail}: Props) {
                     <ul className={'form_list'}>
                         <li className={'form_item form_row'}>
                             <div className={'form_col'}>
-                                <p className={'form_label'}>회사명 <span className={'required'}>(필수)</span></p>
-                                <input type="text" defaultValue={detail.companyName ?? ''}/>
+                                <p className={'form_label'}>회사명</p>
+                                <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)}/>
                             </div>
                             <div className={'form_col'}>
-                                <p className={'form_label'}>성함 <span className={'required'}>(필수)</span></p>
-                                <input type="text" defaultValue={detail.name ?? ''}/>
+                                <p className={'form_label'}>성함</p>
+                                <input type="text" value={name} onChange={e => setName(e.target.value)}/>
                             </div>
                         </li>
                         <li className={'form_item form_row'}>
                             <div className={'form_col'}>
-                                <p className={'form_label'}>부서 <span className={'required'}>(필수)</span></p>
-                                <input type="text" defaultValue={detail.department ?? ''}/>
+                                <p className={'form_label'}>부서</p>
+                                <input type="text" value={department} onChange={e => setDepartment(e.target.value)}/>
                             </div>
                             <div className={'form_col'}>
-                                <p className={'form_label'}>직함 <span className={'required'}>(필수)</span></p>
-                                <input type="text" defaultValue={detail.position ?? ''}/>
+                                <p className={'form_label'}>직함</p>
+                                <input type="text" value={position} onChange={e => setPosition(e.target.value)}/>
                             </div>
                         </li>
                         <li className={'form_item'}>
-                            <p className={'form_label'}>연락처 <span className={'required'}>(필수)</span></p>
+                            <p className={'form_label'}>연락처</p>
                             <div className={'multi_input_wrap'}>
-                                <input type="text" defaultValue={phoneParts[0]}/>
-                                <input type="text" defaultValue={phoneParts[1]}/>
-                                <input type="text" defaultValue={phoneParts[2]}/>
+                                <input type="text" value={phone1} onChange={e => setPhone1(e.target.value)}/>
+                                <input type="text" value={phone2} onChange={e => setPhone2(e.target.value)}/>
+                                <input type="text" value={phone3} onChange={e => setPhone3(e.target.value)}/>
                             </div>
                         </li>
                         <li className={'form_item'}>
-                            <p className={'form_label'}>이메일 <span className={'required'}>(필수)</span></p>
+                            <p className={'form_label'}>이메일</p>
                             <div className={'multi_input_wrap'}>
-                                <input type="text" defaultValue={emailParts[0]}/>
+                                <input type="text" value={email1} onChange={e => setEmail1(e.target.value)}/>
                                 <span className={'separator'}>@</span>
-                                <input type="text" defaultValue={emailParts[1]}/>
+                                <input type="text" value={email2} onChange={e => setEmail2(e.target.value)}/>
                             </div>
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>광고수신동의</p>
-                            <select defaultValue={String(detail.adConsent)}>
+                            <select value={adConsent} onChange={e => setAdConsent(e.target.value)}>
                                 <option value="false">미동의</option>
                                 <option value="true">동의</option>
                             </select>
                         </li>
                         <li className={'form_item'}>
                             <p className={'form_label'}>신청일</p>
-                            <input type="text" readOnly value={formatDateDot(detail.createdAt)} className={'readonly_field'}/>
+                            <input type="text" readOnly value={formatDateDot(createdAt)} className={'readonly_field'}/>
                         </li>
                         <li className={'form_item content'}>
-                            <p className={'form_label'}>상담내용 <span className={'required'}>(필수)</span></p>
-                            <textarea defaultValue={detail.content}/>
+                            <p className={'form_label'}>상담내용</p>
+                            <textarea value={content} onChange={e => setContent(e.target.value)}/>
                         </li>
                         <li className={'form_item'}>
-                            <p className={'form_label'}>처리상태 <span className={'required'}>(필수)</span></p>
+                            <p className={'form_label'}>처리상태</p>
                             <select value={status} onChange={e => setStatus(e.target.value)}>
                                 {CONSULTATION_STATUS_OPTIONS.map(opt => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
