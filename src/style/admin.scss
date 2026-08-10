@@ -1339,7 +1339,7 @@ input::placeholder {
       color: #666;
     }
   }
-  textarea {
+  textarea:not(.user_memo_textarea) {
     width: 100% !important;
     height: 90px !important;
     border: 1px solid $gray02;

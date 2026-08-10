@@ -21,6 +21,7 @@ export default function AccountInfoSection({user}: Props) {
     const {addPopup} = usePopupStore();
     const router = useRouter();
     const [password, setPassword] = useState('');
+    const [memo, setMemo] = useState(user.memo ?? '');
     const [saving, setSaving] = useState(false);
 
     const isValid = useMemo(() => PASSWORD_PATTERN.test(password), [password]);
@@ -31,22 +32,21 @@ export default function AccountInfoSection({user}: Props) {
     };
 
     const handleSave = () => {
-        if (!password) {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'비밀번호를 입력해주세요.'}/>);
-            return;
-        }
-        if (!isValid) {
+        // 비밀번호는 선택 입력 — 입력했을 때만 형식 검증
+        if (password && !isValid) {
             addPopup(<AlertComponent alertType={'alert'} infoContent={'비밀번호는 영문/숫자/특수문자 8~20자로 입력해주세요.'}/>);
             return;
         }
-        addPopup(<AlertComponent alertType={'confirm'} infoContent={'비밀번호를 변경하시겠습니까?'} callback={async () => {
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={'저장하시겠습니까?'} callback={async () => {
             setSaving(true);
             try {
+                const body: {memo: string; password?: string} = {memo};
+                if (password) body.password = password;
                 const res = await callApi(`/api/admin/members/users/${user.id}`, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     credentials: 'include',
-                    body: JSON.stringify({password}),
+                    body: JSON.stringify(body),
                 });
                 if (res.result) {
                     setPassword('');
@@ -60,13 +60,47 @@ export default function AccountInfoSection({user}: Props) {
         }}/>);
     };
 
+    // 회원모드 접속 — 원-타임 티켓만 받아서 fe_crm 로그인 랜딩(/login/impersonate)으로 넘긴다.
+    // 세션 발급/쿠키 처리는 fe_crm 이 담당한다. (관리자쪽에서 토큰을 직접 만지지 않음)
+    const handleImpersonate = () => {
+        addPopup(<AlertComponent alertType={'confirm'} infoContent={`${user.name || user.loginId} 계정으로 회원모드에 접속하시겠습니까?`} callback={async () => {
+            const res = await callApi(`/api/admin/members/users/${user.id}/impersonate`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+            if (!res.result || !res.data) {
+                addPopup(<AlertComponent alertType={'alert'} infoContent={res.message || '회원모드 접속에 실패했습니다.'}/>);
+                return;
+            }
+            const {ticket} = res.data as { ticket: string };
+            const crmUrl = process.env.NEXT_PUBLIC_FRONT_URL ?? '';
+            window.open(`${crmUrl}/login/impersonate?ticket=${encodeURIComponent(ticket)}`, '_blank');
+        }}/>);
+    };
+
     const showError = password !== '' && (!hasOnlyAllowed || !isValid);
 
     return (
         <div className={'company_detail_left'}>
-            <div className={'section_title'}>
-                <span className={'admin_icon arrow_icon'}/>
-                계정정보
+            <div className={'section_title'} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <span>
+                    <span className={'admin_icon arrow_icon'}/>
+                    계정정보
+                </span>
+                <button
+                    type="button"
+                    onClick={handleImpersonate}
+                    style={{
+                        backgroundColor: '#232323',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 4,
+                        padding: '6px 14px',
+                        fontSize: 13,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                    }}
+                >회원모드 접속</button>
             </div>
 
             <ul className={'form_list'}>
@@ -94,39 +128,53 @@ export default function AccountInfoSection({user}: Props) {
                         </p>
                     )}
                 </li>
-                <li className={'form_item'}>
-                    <p className={'form_label'}>이름</p>
-                    <input type="text" readOnly disabled value={user.name}/>
+                <li className={'form_row'}>
+                    <div className={'form_item'}>
+                        <p className={'form_label'}>이름</p>
+                        <input type="text" readOnly disabled value={user.name}/>
+                    </div>
+                    <div className={'form_item'}>
+                        <p className={'form_label'}>전화번호</p>
+                        <input type="text" readOnly disabled value={user.contact}/>
+                    </div>
+                </li>
+                <li className={'form_row'}>
+                    <div className={'form_item'}>
+                        <p className={'form_label'}>회사명</p>
+                        <input type="text" readOnly disabled value={user.companyName}/>
+                    </div>
+                    <div className={'form_item'}>
+                        <p className={'form_label'}>부서</p>
+                        <input type="text" readOnly disabled value={user.department || '-'}/>
+                    </div>
+                    <div className={'form_item'}>
+                        <p className={'form_label'}>직함</p>
+                        <input type="text" readOnly disabled value={user.position || '-'}/>
+                    </div>
+                </li>
+                <li className={'form_row'}>
+                    <div className={'form_item'}>
+                        <p className={'form_label'}>회원가입일</p>
+                        <input type="text" readOnly disabled value={formatDateDot(user.createdAt)}/>
+                    </div>
+                    <div className={'form_item'}>
+                        <p className={'form_label'}>최근접속일</p>
+                        <input type="text" readOnly disabled value={user.lastLoginAt ? formatDateDot(user.lastLoginAt) : '-'}/>
+                    </div>
                 </li>
                 <li className={'form_item'}>
-                    <p className={'form_label'}>전화번호</p>
-                    <input type="text" readOnly disabled value={user.contact}/>
-                </li>
-                <li className={'form_item'}>
-                    <p className={'form_label'}>회사명</p>
-                    <input type="text" readOnly disabled value={user.companyName}/>
-                </li>
-                <li className={'form_item'}>
-                    <p className={'form_label'}>부서</p>
-                    <input type="text" readOnly disabled value={user.department || '-'}/>
-                </li>
-                <li className={'form_item'}>
-                    <p className={'form_label'}>직함</p>
-                    <input type="text" readOnly disabled value={user.position || '-'}/>
-                </li>
-                <li className={'form_item'}>
-                    <p className={'form_label'}>회원가입일</p>
-                    <input type="text" readOnly disabled value={formatDateDot(user.createdAt)}/>
-                </li>
-                <li className={'form_item'}>
-                    <p className={'form_label'}>최근접속일</p>
-                    <input type="text" readOnly disabled value={user.lastLoginAt ? formatDateDot(user.lastLoginAt) : '-'}/>
+                    <p className={'form_label'}>메모</p>
+                    <textarea
+                        className={'user_memo_textarea'}
+                        value={memo}
+                        onChange={(e) => setMemo(e.target.value)}
+                    />
                 </li>
             </ul>
 
             <div className={'btn_wrap'}>
                 <button type="button" className={'cancel_btn'} onClick={() => router.back()}>취소</button>
-                <button type="button" className={'save_btn'} onClick={handleSave} disabled={saving || !isValid}>저장</button>
+                <button type="button" className={'save_btn'} onClick={handleSave} disabled={saving}>저장</button>
             </div>
         </div>
     );

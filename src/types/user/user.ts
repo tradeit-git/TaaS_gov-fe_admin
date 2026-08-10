@@ -25,6 +25,7 @@ export const UserSchema = z.object({
     position: z.string().default(""),
     email: z.string().default(""),
     contact: z.string().default(""),
+    memo: z.string().nullable().default(null),
     partnerName : z.string().nullable().default(null),
     createdAt: z.string().default(""),
     updatedAt: z.string().nullable().default(null),

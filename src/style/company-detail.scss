@@ -46,6 +46,39 @@
     gap: 14px;
   }
 
+  // 한 줄에 여러 필드를 나열하는 행 (이름|전화번호, 회사명|부서|직함 등)
+  .form_row {
+    display: flex;
+    gap: 12px;
+
+    .form_item {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  // 메모: 공용 textarea 규칙에서 :not 으로 제외했으므로 여기서 단독 스타일.
+  // 고정 없이 min-height + 세로 리사이즈 허용.
+  .form_item textarea.user_memo_textarea {
+    width: 100%;
+    min-height: 200px;
+    border: 1px solid $gray02;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: $font-size-sm;
+    color: $theme-color;
+    resize: vertical;
+
+    &::placeholder {
+      color: #bbb;
+    }
+
+    &:focus {
+      outline: none;
+      border: 1px solid $gray02;
+    }
+  }
+
   .form_item {
     .form_label {
       font-size: $font-size-sm-bm;
