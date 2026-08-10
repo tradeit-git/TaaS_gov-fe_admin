@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {UserType} from "@/types/user/user";
-import AccountInfoSection from "@/app/(Auth)/users/[id]/component/AccountInfoSection";
+import AccountInfoSection from "@/app/(Auth)/components/AccountInfoSection";
 import PlanSection, {CreditPlan} from "@/app/(Auth)/users/[id]/component/PlanSection";
 
 interface Props {
@@ -26,7 +26,7 @@ export default function CompanyDetailPage({id, initialUser, initialPlans}: Props
             </div>
 
             <div className={'company_detail_layout'}>
-                <AccountInfoSection user={initialUser}/>
+                <AccountInfoSection user={initialUser} memberType={'users'}/>
                 <PlanSection userId={id} initialPlans={initialPlans} creditSummary={initialUser.creditSummary}/>
             </div>
         </div>

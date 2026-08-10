@@ -10,21 +10,31 @@ import callApi from "@/utill/apiRequest";
 
 interface Props {
     user: UserType;
+    // demo-users: 프로필 편집 가능 + 비번 4~20 / users: 프로필 읽기전용 + 비번 8~20
+    memberType: 'users' | 'demo-users';
 }
 
 // 영문 대소문자/숫자/범용 특수문자만 허용 (공백·한글 등 비 ASCII 차단)
 const PASSWORD_ALLOWED = /^[!-~]+$/;
-const PASSWORD_PATTERN = /^[!-~]{8,20}$/;
 const stripDisallowed = (s: string) => s.replace(/[^!-~]/g, '');
 
-export default function AccountInfoSection({user}: Props) {
+export default function AccountInfoSection({user, memberType}: Props) {
+    const isDemo = memberType === 'demo-users';   // 유일한 분기 기준
+    const passwordMin = isDemo ? 4 : 8;
+    const passwordPattern = useMemo(() => new RegExp(`^[!-~]{${passwordMin},20}$`), [passwordMin]);
+
     const {addPopup} = usePopupStore();
     const router = useRouter();
     const [password, setPassword] = useState('');
+    const [name, setName] = useState(user.name ?? '');
+    const [contact, setContact] = useState(user.contact ?? '');
+    const [companyName, setCompanyName] = useState(user.companyName ?? '');
+    const [department, setDepartment] = useState(user.department ?? '');
+    const [position, setPosition] = useState(user.position ?? '');
     const [memo, setMemo] = useState(user.memo ?? '');
     const [saving, setSaving] = useState(false);
 
-    const isValid = useMemo(() => PASSWORD_PATTERN.test(password), [password]);
+    const isValid = useMemo(() => passwordPattern.test(password), [passwordPattern, password]);
     const hasOnlyAllowed = useMemo(() => password === '' || PASSWORD_ALLOWED.test(password), [password]);
 
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,21 +42,41 @@ export default function AccountInfoSection({user}: Props) {
     };
 
     const handleSave = () => {
-        // 비밀번호는 선택 입력 — 입력했을 때만 형식 검증
-        if (password && !isValid) {
-            addPopup(<AlertComponent alertType={'alert'} infoContent={'비밀번호는 영문/숫자/특수문자 8~20자로 입력해주세요.'}/>);
+        // 프로필 편집이 가능한 demo 계정만 이름 필수 검증
+        if (isDemo && !name.trim()) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'이름을 입력해주세요.'}/>);
             return;
         }
+        if (password && !isValid) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={`비밀번호는 영문/숫자/특수문자 ${passwordMin}~20자로 입력해주세요.`}/>);
+            return;
+        }
+
+        // 변경된 필드만 전송 (백엔드: null=미수정, ""=반영)
+        const payload: Record<string, string> = {};
+        if (isDemo) {
+            if (name.trim() !== (user.name ?? '')) payload.name = name.trim();
+            if (contact.trim() !== (user.contact ?? '')) payload.contact = contact.trim();
+            if (companyName.trim() !== (user.companyName ?? '')) payload.companyName = companyName.trim();
+            if (department.trim() !== (user.department ?? '')) payload.department = department.trim();
+            if (position.trim() !== (user.position ?? '')) payload.position = position.trim();
+        }
+        if (memo !== (user.memo ?? '')) payload.memo = memo;
+        if (password) payload.password = password;
+
+        if (Object.keys(payload).length === 0) {
+            addPopup(<AlertComponent alertType={'alert'} infoContent={'변경된 내용이 없습니다.'}/>);
+            return;
+        }
+
         addPopup(<AlertComponent alertType={'confirm'} infoContent={'저장하시겠습니까?'} callback={async () => {
             setSaving(true);
             try {
-                const body: {memo: string; password?: string} = {memo};
-                if (password) body.password = password;
-                const res = await callApi(`/api/admin/members/users/${user.id}`, {
+                const res = await callApi(`/api/admin/members/${memberType}/${user.id}`, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     credentials: 'include',
-                    body: JSON.stringify(body),
+                    body: JSON.stringify(payload),
                 });
                 if (res.result) {
                     setPassword('');
@@ -64,7 +94,7 @@ export default function AccountInfoSection({user}: Props) {
     // 세션 발급/쿠키 처리는 fe_crm 이 담당한다. (관리자쪽에서 토큰을 직접 만지지 않음)
     const handleImpersonate = () => {
         addPopup(<AlertComponent alertType={'confirm'} infoContent={`${user.name || user.loginId} 계정으로 회원모드에 접속하시겠습니까?`} callback={async () => {
-            const res = await callApi(`/api/admin/members/users/${user.id}/impersonate`, {
+            const res = await callApi(`/api/admin/members/${memberType}/${user.id}/impersonate`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -79,6 +109,8 @@ export default function AccountInfoSection({user}: Props) {
     };
 
     const showError = password !== '' && (!hasOnlyAllowed || !isValid);
+    // demo 는 편집 가능, users 는 읽기전용
+    const editableProps = isDemo ? {} : {readOnly: true, disabled: true};
 
     return (
         <div className={'company_detail_left'}>
@@ -117,39 +149,44 @@ export default function AccountInfoSection({user}: Props) {
                     <input
                         type="password"
                         autoComplete="new-password"
-                        placeholder="영문/숫자/특수문자 8~20자 (한글·공백 불가)"
+                        placeholder={`영문/숫자/특수문자 ${passwordMin}~20자 (한글·공백 불가)`}
                         value={password}
                         onChange={handlePasswordChange}
                         maxLength={20}
                     />
                     {showError && (
                         <p className={'form_error'} style={{color: '#E74C3C', fontSize: 12, marginTop: 4}}>
-                            영문/숫자/범용 특수문자 8~20자로 입력해주세요.
+                            영문/숫자/범용 특수문자 {passwordMin}~20자로 입력해주세요.
                         </p>
                     )}
                 </li>
                 <li className={'form_row'}>
                     <div className={'form_item'}>
                         <p className={'form_label'}>이름</p>
-                        <input type="text" readOnly disabled value={user.name}/>
+                        <input type="text" value={name} maxLength={20}
+                               onChange={e => setName(e.target.value)} {...editableProps}/>
                     </div>
                     <div className={'form_item'}>
                         <p className={'form_label'}>전화번호</p>
-                        <input type="text" readOnly disabled value={user.contact}/>
+                        <input type="text" value={contact}
+                               onChange={e => setContact(e.target.value)} {...editableProps}/>
                     </div>
                 </li>
                 <li className={'form_row'}>
                     <div className={'form_item'}>
                         <p className={'form_label'}>회사명</p>
-                        <input type="text" readOnly disabled value={user.companyName}/>
+                        <input type="text" value={companyName}
+                               onChange={e => setCompanyName(e.target.value)} {...editableProps}/>
                     </div>
                     <div className={'form_item'}>
                         <p className={'form_label'}>부서</p>
-                        <input type="text" readOnly disabled value={user.department || '-'}/>
+                        <input type="text" value={department}
+                               onChange={e => setDepartment(e.target.value)} {...editableProps}/>
                     </div>
                     <div className={'form_item'}>
                         <p className={'form_label'}>직함</p>
-                        <input type="text" readOnly disabled value={user.position || '-'}/>
+                        <input type="text" value={position}
+                               onChange={e => setPosition(e.target.value)} {...editableProps}/>
                     </div>
                 </li>
                 <li className={'form_row'}>

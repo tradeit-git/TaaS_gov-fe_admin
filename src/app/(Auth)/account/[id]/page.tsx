@@ -4,7 +4,7 @@ import callApi from "@/utill/apiRequest";
 import {redirect} from "next/navigation";
 import {ApiUserDetailResponse} from "@/app/(Auth)/client/[id]/component/ClientDetailPage";
 import {UserSchema} from "@/types/user/user";
-import AccountInfoSection from "@/app/(Auth)/account/[id]/component/AccountInfoSection";
+import AccountInfoSection from "@/app/(Auth)/components/AccountInfoSection";
 
 interface Props {
     params: Promise<{ id: string }>;
@@ -34,7 +34,7 @@ export default async function Page({params}: Props) {
             </div>
 
             <div className={'company_detail_layout'}>
-                <AccountInfoSection user={initialUser}/>
+                <AccountInfoSection user={initialUser} memberType={'demo-users'}/>
             </div>
         </div>
     );
