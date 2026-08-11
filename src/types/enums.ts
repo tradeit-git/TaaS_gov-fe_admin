@@ -1,6 +1,6 @@
 import {z} from "zod";
 
-export const AuthStatusTypeEnum = z.enum(["ACTIVE", "INACTIVE", "SUSPENDED", "WITHDRAWN","PENDING_APPROVAL"]);
+export const AuthStatusTypeEnum = z.enum(["ACTIVE", "INACTIVE", "SUSPENDED", "WITHDRAWN", "TRIAL_EXPIRED", "PENDING_APPROVAL", "REJECTED"]);
 
 export const GradeTypeEnum = z.enum(["NEW", "GUEST", "MEMBER", "EXPIRED"]);
 

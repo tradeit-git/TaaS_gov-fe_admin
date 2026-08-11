@@ -83,7 +83,7 @@ const mapToPartnerInfo = (row: CoalitionDetailApiRow): PartnerInfo => ({
 });
 
 const statusLabel = (status: string) =>
-    status === 'PENDING_APPROVAL' ? '승인대기' : status === 'ACTIVE' ? '승인완료' : status;
+    status === 'PENDING_APPROVAL' ? '승인대기' : status === 'ACTIVE' ? '승인완료' : status === 'REJECTED' ? '미승인' : status;
 
 interface Props {
     partnerId: string;
@@ -126,18 +126,18 @@ export default function UserListPage({partnerId}: Props) {
         fetchUsers();
     }, [fetchPartner, fetchUsers]);
 
-    // 승인 / 승인취소 (확인 팝업 → PATCH → 목록 갱신)
-    const handleApproval = (user: PartnerUser, approve: boolean) => {
-        const action = approve ? 'approve' : 'cancel-approval';
-        const label = approve ? '승인' : '승인취소';
+    // 승인상태 변경 (신청/승인/미승인 3상태, 확인 팝업 → PUT /approval → 목록 갱신)
+    const handleApproval = (user: PartnerUser, approvalStatus: 'REQUESTED' | 'APPROVED' | 'PENDING', label: string) => {
         addPopup(
             <AlertComponent
                 alertType={'confirm'}
                 infoContent={`${user.name || user.loginId} 님을 ${label} 처리하시겠습니까?`}
                 callback={async () => {
-                    const res = await callApi(`/api/admin/partner-keys/members/${user.id}/${action}`, {
+                    const res = await callApi(`/api/admin/partner-keys/members/${user.id}/approval`, {
                         method: 'PUT',
                         credentials: 'include',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({approvalStatus}),
                     });
                     if (res.result) {
                         addPopup(<AlertComponent alertType={'alert'} infoContent={`${label} 처리되었습니다.`}/>);
@@ -291,8 +291,8 @@ export default function UserListPage({partnerId}: Props) {
                                         borderRadius: '12px',
                                         fontSize: '12px',
                                         fontWeight: 600,
-                                        color: row.status === 'PENDING_APPROVAL' ? '#B45309' : '#15803D',
-                                        background: row.status === 'PENDING_APPROVAL' ? '#FEF3C7' : '#DCFCE7',
+                                        color: row.status === 'PENDING_APPROVAL' ? '#B45309' : row.status === 'REJECTED' ? '#B91C1C' : '#15803D',
+                                        background: row.status === 'PENDING_APPROVAL' ? '#FEF3C7' : row.status === 'REJECTED' ? '#FEE2E2' : '#DCFCE7',
                                     }}>
                                         {statusLabel(row.status)}
                                     </span>
@@ -307,18 +307,32 @@ export default function UserListPage({partnerId}: Props) {
                             <td>{row.phone}</td>
                             <td>{formatDateDot(row.createdAt)}</td>
                             <td className={'td_actions'}>
-                                {showApproval && row.status === 'PENDING_APPROVAL' && (
+                                {showApproval && row.status === 'PENDING_APPROVAL' && (<>
                                     <button type="button" className={'btn_detail'}
-                                            onClick={() => handleApproval(row, true)}>
+                                            onClick={() => handleApproval(row, 'APPROVED', '승인')}>
                                         승인
                                     </button>
-                                )}
+                                    <button type="button" className={'btn_detail'}
+                                            onClick={() => handleApproval(row, 'PENDING', '미승인')}>
+                                        미승인
+                                    </button>
+                                </>)}
                                 {showApproval && row.status === 'ACTIVE' && (
                                     <button type="button" className={'btn_detail'}
-                                            onClick={() => handleApproval(row, false)}>
+                                            onClick={() => handleApproval(row, 'REQUESTED', '승인취소')}>
                                         승인취소
                                     </button>
                                 )}
+                                {showApproval && row.status === 'REJECTED' && (<>
+                                    <button type="button" className={'btn_detail'}
+                                            onClick={() => handleApproval(row, 'APPROVED', '승인')}>
+                                        승인
+                                    </button>
+                                    <button type="button" className={'btn_detail'}
+                                            onClick={() => handleApproval(row, 'REQUESTED', '승인대기')}>
+                                        승인대기
+                                    </button>
+                                </>)}
                                 <button type="button" className={'btn_detail'}
                                         onClick={() => router.push(`/partner-management/${partnerId}/user-list/${row.id}`)}>
                                     상세보기
