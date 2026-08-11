@@ -11,6 +11,7 @@ export default async function Page({searchParams}: { searchParams: Promise<Recor
     const filters: CompanyFilters = {
         planName: sp.planName ?? '',
         hasPlan: sp.hasPlan ?? '',
+        isPartnerMember: sp.isPartnerMember ?? '',
         keyword: sp.keyword ?? '',
         page: Math.max(0, (Number(sp.page ?? '1') || 1) - 1),   // URL 1-based → 내부 0-based
         size: Number(sp.size ?? '10') || 10,
@@ -23,6 +24,7 @@ export default async function Page({searchParams}: { searchParams: Promise<Recor
     if (filters.keyword) params.set('keyword', filters.keyword);
     if (filters.planName) params.set('planName', filters.planName);
     if (filters.hasPlan) params.set('hasPlan', filters.hasPlan);
+    if (filters.isPartnerMember) params.set('isPartnerMember', filters.isPartnerMember);
 
     let initialData: CompanyListResponse = {
         content: [],

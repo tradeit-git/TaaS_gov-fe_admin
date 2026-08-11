@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 import CompanyManagementTableBody from "@/app/(Auth)/users/component/CompanyManagementTableBody";
+import UsersExcelDownloadButton from "@/app/(Auth)/users/component/UsersExcelDownloadButton";
 import {formatDateDot} from "@/utill/format";
 import {CreditSummaryType} from "@/types/user/user";
 
@@ -36,6 +37,7 @@ export interface CompanyListResponse {
 export interface CompanyFilters {
     planName: string;
     hasPlan: string;
+    isPartnerMember: string;
     keyword: string;
     page: number;   // 0-based (서버에서 1-based URL을 변환해 전달)
     size: number;
@@ -58,6 +60,7 @@ export default function CompanyManagementPage({initialData, filters, planNames}:
     const itemsPerPage = filters.size;
     const planFilter = filters.planName;
     const hasPlan = filters.hasPlan;
+    const isPartnerMember = filters.isPartnerMember;
 
     // 검색어만 입력 중 로컬 상태 (디바운스 후 네비게이션). 네비게이션 완료 시 서버값과 동기화.
     const [searchInput, setSearchInput] = useState(filters.keyword);
@@ -67,10 +70,11 @@ export default function CompanyManagementPage({initialData, filters, planNames}:
 
     // 현재 필터 + 변경분으로 URL을 만들어 네비게이션 (router가 basePath/히스토리 정상 처리)
     const navigate = (next: Partial<CompanyFilters>) => {
-        const f = {planName: planFilter, hasPlan, keyword: filters.keyword, page: currentPage, size: itemsPerPage, ...next};
+        const f = {planName: planFilter, hasPlan, isPartnerMember, keyword: filters.keyword, page: currentPage, size: itemsPerPage, ...next};
         const params = new URLSearchParams();
         if (f.planName) params.set('planName', f.planName);
         if (f.hasPlan) params.set('hasPlan', f.hasPlan);
+        if (f.isPartnerMember) params.set('isPartnerMember', f.isPartnerMember);
         if (f.keyword.trim()) params.set('keyword', f.keyword.trim());
         if (f.page > 0) params.set('page', String(f.page + 1));   // URL은 1-based(표시 페이지)
         if (f.size !== 10) params.set('size', String(f.size));
@@ -125,6 +129,11 @@ export default function CompanyManagementPage({initialData, filters, planNames}:
                         <option value="true">유효 구독 보유</option>
                         <option value="false">플랜 없음</option>
                     </select>
+                    <select value={isPartnerMember} onChange={e => navigate({isPartnerMember: e.target.value, page: 0})}>
+                        <option value="">제휴가입 전체</option>
+                        <option value="true">제휴가입사</option>
+                        <option value="false">일반가입</option>
+                    </select>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
                                placeholder={'고객사 검색'}/>
@@ -138,6 +147,12 @@ export default function CompanyManagementPage({initialData, filters, planNames}:
                         <option value={20}>20개씩</option>
                         <option value={50}>50개씩</option>
                     </select>
+                    <UsersExcelDownloadButton
+                        planName={planFilter}
+                        hasPlan={hasPlan}
+                        isPartnerMember={isPartnerMember}
+                        keyword={filters.keyword}
+                    />
                 </div>
             </div>
 

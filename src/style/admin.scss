@@ -879,6 +879,22 @@ input::placeholder {
       font-size: $font-size-sm;
       background-color: #FAFAFA;
     }
+
+    .btn_excel_down {
+      height: 30px;
+      padding: 0 14px;
+      border-radius: 6px;
+      background: #2a4e89;
+      color: #fff;
+      font-size: $font-size-sm;
+      white-space: nowrap;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+    }
   }
 }
 
