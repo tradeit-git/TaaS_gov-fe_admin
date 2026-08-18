@@ -22,6 +22,9 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [dashboardCode, setDashboardCode] = useState('');
+    // 제휴 성과 대시보드(CRM) 헤더 문구. 비우면 CRM 기본 문구로 노출된다.
+    const [dashboardTitle, setDashboardTitle] = useState('');
+    const [dashboardDescription, setDashboardDescription] = useState('');
     const [systemStartDate, setSystemStartDate] = useState('');
     const [logoUrl, setLogoUrl] = useState('');
     const [uploading, setUploading] = useState(false);
@@ -126,13 +129,16 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
             headers: {'Content-Type': 'application/json'},
             credentials: 'include',
             body: JSON.stringify({
-                partnerKey, partnerName,
+                partnerKey: partnerKey.trim(),
+                partnerName: partnerName.trim(),
                 bonusCredit: Number(creditAmount),
                 maxMembers: noMemberLimit ? 0 : Number(maxMembers || 0),
                 requiresApproval: true, // 승인심사 임시 고정(폼 토글 추가 전까지)
                 startDate, endDate,
                 logoUrl: logoUrl || null,
                 dashboardAccessCode: dashboardCode.trim(),
+                dashboardTitle: dashboardTitle.trim() || null,
+                dashboardDescription: dashboardDescription.trim() || null,
                 operationStartDate: systemStartDate || null,
                 creditSchedules: schedules.map(s => ({
                     id: s.id,
@@ -215,6 +221,20 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
                                        placeholder={'영문, 숫자만 입력'}
                                        onChange={e => setDashboardCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}/>
                             </div>
+                        </div>
+
+                        {/* 3-1. 제휴 성과 대시보드 헤더 문구 (미입력 시 CRM 기본 문구로 노출) */}
+                        <div className={'popup_field'}>
+                            <label>대시보드 타이틀</label>
+                            <input type="text" value={dashboardTitle} maxLength={200}
+                                   placeholder={`${partnerName.trim() || 'OO'} 제휴 성과 대시보드`}
+                                   onChange={e => setDashboardTitle(e.target.value)}/>
+                        </div>
+                        <div className={'popup_field'}>
+                            <label>대시보드 설명</label>
+                            <input type="text" value={dashboardDescription} maxLength={500}
+                                   placeholder={'가입 기업 현황과 바이어 등록 추이를 실시간으로 집계합니다.'}
+                                   onChange={e => setDashboardDescription(e.target.value)}/>
                         </div>
 
                         {/* 4. 모집기간 */}

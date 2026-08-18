@@ -23,6 +23,8 @@ interface PartnerDetail {
     requiresApproval: boolean | null;
     operationStartDate: string | null;
     dashboardAccessCode: string | null;
+    dashboardTitle: string | null;
+    dashboardDescription: string | null;
     guideTitle: string | null;
     guideSections: unknown;
     creditSchedules: unknown;
@@ -45,6 +47,9 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
     const [startDate, setStartDate] = useState((partner.startDate ?? '').slice(0, 10));
     const [endDate, setEndDate] = useState((partner.endDate ?? '').slice(0, 10));
     const [dashboardCode, setDashboardCode] = useState(partner.dashboardCode ?? '');
+    // 제휴 성과 대시보드(CRM) 헤더 문구. 비우면 CRM 기본 문구로 노출된다.
+    const [dashboardTitle, setDashboardTitle] = useState('');
+    const [dashboardDescription, setDashboardDescription] = useState('');
     const [systemStartDate, setSystemStartDate] = useState('');
     const [logoUrl, setLogoUrl] = useState(partner.logoUrl ?? '');
     const [uploading, setUploading] = useState(false);
@@ -76,6 +81,8 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
             setEndDate((d.endDate ?? '').slice(0, 10));
             setLogoUrl(d.logoUrl ?? '');
             setDashboardCode(d.dashboardAccessCode ?? '');
+            setDashboardTitle(d.dashboardTitle ?? '');
+            setDashboardDescription(d.dashboardDescription ?? '');
             setSystemStartDate((d.operationStartDate ?? '').slice(0, 10));
             setGuideTitle((d.guideTitle ?? '').trim() || defaultGuideTitle(d.partnerName));
             setGuideSections(normalizeGuideSections(d.guideSections));
@@ -155,13 +162,15 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
             headers: {'Content-Type': 'application/json'},
             credentials: 'include',
             body: JSON.stringify({
-                partnerName,
+                partnerName: partnerName.trim(),
                 bonusCredit: Number(creditAmount),
                 maxMembers: noMemberLimit ? 0 : Number(maxMembers || 0),
                 requiresApproval,
                 startDate, endDate,
                 logoUrl: logoUrl || null,
                 dashboardAccessCode: dashboardCode.trim(),
+                dashboardTitle: dashboardTitle.trim() || null,
+                dashboardDescription: dashboardDescription.trim() || null,
                 operationStartDate: systemStartDate || null,
                 creditSchedules: schedules.map(s => ({
                     id: s.id,
@@ -229,6 +238,20 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                                        placeholder={'영문, 숫자만 입력'}
                                        onChange={e => setDashboardCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}/>
                             </div>
+                        </div>
+
+                        {/* 3-1. 제휴 성과 대시보드 헤더 문구 (미입력 시 CRM 기본 문구로 노출) */}
+                        <div className={'popup_field'}>
+                            <label>대시보드 타이틀</label>
+                            <input type="text" value={dashboardTitle} maxLength={200}
+                                   placeholder={`${partnerName.trim() || 'OO'} 제휴 성과 대시보드`}
+                                   onChange={e => setDashboardTitle(e.target.value)}/>
+                        </div>
+                        <div className={'popup_field'}>
+                            <label>대시보드 설명</label>
+                            <input type="text" value={dashboardDescription} maxLength={500}
+                                   placeholder={'가입 기업 현황과 바이어 등록 추이를 실시간으로 집계합니다.'}
+                                   onChange={e => setDashboardDescription(e.target.value)}/>
                         </div>
 
                         {/* 4. 모집기간 */}
