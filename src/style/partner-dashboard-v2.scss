@@ -1,0 +1,636 @@
+/* ==================== Partner 가입명단 V2 (탭 기반) ====================
+ * CRM(Taas_gov-fe_crm) src/styles/partner-dashboard-v2.css 에서
+ * 가입명단관리 / 기업별 활동현황 두 탭이 실제로 쓰는 규칙만 발췌.
+ * 팝업(분포/우수기업관리/계산기/데이터보드/회원접속모드) 관련 규칙은 제외.
+ * 아이콘 스프라이트 경로만 admin 기준(/admin/static/img)으로 교체.
+ * ==================================================================== */
+
+.content_icon {
+    background-image: url("/admin/static/img/content_icon.svg");
+    display: block;
+}
+
+/* 흰색 카드 컨테이너 */
+.v2_card {
+    flex-shrink: 0;
+    border-radius: 16px 16px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* 탭 바 — 폴더형 탭 */
+.v2_tab_bar {
+    display: flex;
+    gap: 18px;
+    padding: 0;
+    flex-shrink: 0;
+    background: #F9F9F9;
+    border-radius: 16px 16px 0 0;
+}
+
+.v2_tab {
+    padding: 14px 10px 14px 32px;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 400;
+    color: #888;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+    z-index: 1;
+}
+
+.v2_tab.on {
+    color: #2B7FFF;
+    font-weight: 500;
+    background: #fff;
+    border-radius: 10px 0 0 0;
+    z-index: 2;
+}
+
+/* 활성 탭 오른쪽 사선 */
+.v2_tab.on::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -28px;
+    width: 50px;
+    height: 100%;
+    background: #fff;
+    border-radius: 0 10px 0 0;
+    transform: skewX(20deg);
+    z-index: -1;
+}
+
+.v2_tab:hover:not(.on) {
+    color: #555;
+}
+
+/* 탭 콘텐츠 */
+.v2_tab_content {
+    flex: 1;
+    min-height: 0;
+    padding: 24px 32px 32px;
+    background-color: #fff;
+    border-radius: 0 18px 18px 18px;
+}
+
+.v2_tab_content.v2_tab_content_round_left {
+    border-radius: 18px 18px 18px 18px;
+}
+
+/* 테이블 가로 스크롤바 */
+.v2_table_wrap::-webkit-scrollbar {
+    height: 8px;
+}
+
+.v2_table_wrap::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.v2_table_wrap::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.v2_table_wrap::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* 목록으로 버튼을 제휴 정보 바 같은 줄 우측 끝으로.
+ * admin.scss 의 .list_button(margin-right: 10px)을 이겨야 해서 선택자를 한 단계 더 준다. */
+.partner_info_bar .info_row .info_row_list_button {
+    margin-left: auto;
+    margin-right: 0;
+}
+
+/* ==================== 공통 테이블 ==================== */
+/* 세로는 주간 드롭다운이 넘칠 수 있도록 visible */
+.v2_table_wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    margin-top: 16px;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+}
+
+.v2_table .center {
+    text-align: center;
+}
+
+.v2_table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    min-width: 1200px;
+}
+
+.v2_table th,
+.v2_table td {
+    padding: 10px 12px;
+    font-size: 13px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid #e5e5e5;
+    border-right: 1px solid #e5e5e5;
+}
+
+.v2_table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.v2_table tbody tr td:last-child {
+    border-right: none;
+}
+
+.v2_table thead th {
+    background: #FBFBFB;
+    color: #5d5c63;
+    font-weight: 400;
+    font-size: 13px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* thead 첫/마지막 th border-radius */
+.v2_table thead th:first-child {
+    border-top-left-radius: 10px;
+}
+
+.v2_table thead th:last-child {
+    border-top-right-radius: 10px;
+}
+
+.v2_table thead tr:first-child th:last-child {
+    border-right: none;
+}
+
+.v2_table tbody td {
+    color: #4b5563;
+    font-size: 13px;
+}
+
+.v2_table tbody tr:hover td {
+    background: #fafbfe;
+}
+
+/* ==================== 상세보기 버튼 / 고정 컬럼 ==================== */
+.v2_btn_view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 16px;
+    width: 100%;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.v2_btn_view:hover {
+    background: #1a6ce8;
+}
+
+/* 활동현황 테이블은 17컬럼이라 가로 스크롤이 상시 발생 → 맨 뒤 상세보기 컬럼을 오른쪽에 고정.
+ * border-collapse: collapse 라 스크롤 중 좌측 보더가 안 그려져서 box-shadow 로 대체한다. */
+.v2_activity_table .v2_col_detail {
+    position: sticky;
+    right: 0;
+    z-index: 3;
+    background: #fff;
+    box-shadow: -1px 0 0 #e5e5e5;
+}
+
+.v2_activity_table thead .v2_col_detail {
+    z-index: 4;
+    background: #FBFBFB;
+}
+
+/* ==================== 공통 페이지네이션 ==================== */
+.v2_pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 24px;
+    padding-bottom: 8px;
+}
+
+.v2_pagination button {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #fff;
+    color: #5d5c63;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.v2_pagination button:hover:not(:disabled):not(.on) {
+    border-color: #2B7FF2;
+    color: #2B7FF2;
+}
+
+.v2_pagination button.on {
+    background: #2B7FF2;
+    border-color: #2B7FF2;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(43, 127, 242, 0.5);
+}
+
+.v2_pagination button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* ==================== 빈 데이터 상태 ==================== */
+.v2_table .v2_empty_td {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    font-size: 14px;
+    border-right: none;
+}
+
+/* ==================== 공통 검색 ==================== */
+.v2_search_wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.v2_search_wrap input {
+    width: 200px;
+    height: 36px;
+    padding: 0 12px 0 32px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    background: #fff;
+}
+
+.v2_search_wrap input:focus {
+    border-color: #5b8def;
+}
+
+.v2_search_wrap .v2_search_icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* ==================== Tab 1: 가입명단관리 ==================== */
+.v2_member_list .v2_list_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.v2_stats {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.v2_stat_item {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 13.5px;
+    color: #4a4a4a;
+}
+
+.v2_stat_item b {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 13.5px;
+}
+
+.v2_stat_item .content_icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}
+
+.v2_stat_item .content_icon.pending_icon {
+    background-position: -20px -968px;
+}
+
+.v2_stat_item .content_icon.approved_icon {
+    background-position: -56px -968px;
+}
+
+.v2_stat_item .content_icon.unapproved_icon {
+    background-position: -92px -968px;
+}
+
+.v2_list_actions {
+    display: flex;
+    gap: 10px;
+}
+
+.v2_filter_select {
+    height: 36px;
+    padding: 0 28px 0 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #1a1a1a;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.v2_btn_download {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #fff;
+    color: #2d8c5a;
+    border: 1px solid #2d8c5a;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.v2_btn_download .content_icon {
+    width: 18px;
+    height: 18px;
+    background-position: -18px -883px;
+}
+
+.v2_btn_download:hover {
+    background: #e8f5ee;
+}
+
+/* 승인 셀 */
+.v2_approval_cell {
+    display: flex;
+    gap: 8px;
+}
+
+.v2_approval_select {
+    height: 30px;
+    padding: 0 24px 0 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #1a1a1a;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+}
+
+.v2_btn_save {
+    padding: 5px 14px;
+    background: #eee;
+    color: #aaa;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: default;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.v2_btn_save.active {
+    background: #3b3b3b;
+    color: #fff;
+    cursor: pointer;
+}
+
+.v2_btn_save.active:hover {
+    background: #222;
+}
+
+/* ==================== Tab 2: 기업별 활동현황 ==================== */
+.v2_activity_list .v2_activity_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.v2_sort_buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    align-items: center;
+}
+
+.v2_sort_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: none;
+    font-size: 13.5px;
+    color: #888;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s;
+}
+
+.v2_sort_btn .content_icon {
+    width: 12px;
+    height: 12px;
+    background-position: -196px -968px;
+}
+
+.v2_sort_btn.on .content_icon {
+    background-position: -164px -968px;
+}
+
+.v2_sort_btn:hover {
+    color: #333;
+}
+
+.v2_sort_btn.on {
+    color: #2b7fff;
+}
+
+.v2_activity_actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Activity table 최소 너비 (데이터보드/우수기업관리 컬럼 제외분 반영) */
+.v2_activity_table {
+    min-width: 1500px;
+}
+
+/* 그룹 헤더 */
+.v2_activity_table .v2_thead_group th {
+    text-align: center;
+}
+
+.v2_activity_table .v2_th_group {
+    background: #FBFBFB;
+}
+
+.v2_activity_table .v2_thead_sub th {
+    line-height: 1.4;
+    padding: 8px 0;
+    text-align: center;
+}
+
+/* activity 테이블 셀 패딩/정렬 오버라이드 */
+.v2_activity_table th,
+.v2_activity_table td {
+    padding: 8px;
+}
+
+.v2_activity_table tbody td {
+    text-align: center;
+}
+
+/* 바이어 번호 뱃지 */
+.v2_buyer_badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 18px;
+}
+
+.v2_buyer_badge.b1 { background: #FCB900; }
+.v2_buyer_badge.b2 { background: #00D3F3; }
+.v2_buyer_badge.b3 { background: #36B37E; }
+.v2_buyer_badge.b4 { background: #FF7051; }
+
+/* 합계 셀 */
+.v2_td_total {
+    white-space: nowrap !important;
+    font-weight: 600;
+}
+
+.v2_day_suffix {
+    font-size: 11px;
+    color: #999;
+}
+
+/* 주간 접속수 헤더 */
+.v2_week_header {
+    margin-bottom: 4px;
+    color: #5d5c63;
+    font-size: 13px;
+}
+
+/* 주간 접속수 커스텀 드롭다운 */
+.v2_week_custom {
+    position: relative;
+    display: inline-block;
+}
+
+.v2_week_trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    white-space: nowrap;
+    width: 154px;
+    justify-content: space-between;
+}
+
+.v2_week_trigger:hover {
+    border-color: #bbb;
+}
+
+.v2_week_custom.open .v2_week_trigger {
+    border-color: #2B7FFF;
+}
+
+.v2_week_arrow {
+    display: inline-block;
+    width: 8px;
+    height: 5px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%23888' stroke-width='1.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+    transition: transform 0.2s;
+}
+
+.v2_week_custom.open .v2_week_arrow {
+    transform: rotate(180deg);
+}
+
+.v2_week_dropdown {
+    position: fixed;
+    z-index: 100;
+    min-width: 150px;
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.v2_week_dropdown button {
+    display: block;
+    width: 100%;
+    padding: 7px 12px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    color: #333;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.v2_week_dropdown button:hover {
+    background: #f5f6f8;
+}
+
+.v2_week_dropdown button.on {
+    color: #2B7FFF;
+    font-weight: 600;
+}
+
+/* 회사명 셀 */
+.v2_td_company {
+    text-align: left !important;
+    font-weight: 500;
+}
