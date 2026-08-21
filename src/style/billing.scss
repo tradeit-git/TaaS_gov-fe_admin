@@ -122,6 +122,35 @@
   }
 }
 
+.admin_page .table_wrap .billing_table {
+  // colgroup 비율대로 컬럼을 고정. auto 레이아웃에서는 결제ID/결제수단 같은
+  // 긴 값이 폭을 다 가져가 회사명이 눌린다.
+  table-layout: fixed;
+  min-width: 1400px;
+
+  thead th,
+  tbody td {
+    padding-left: 10px;
+    padding-right: 10px;
+
+    &:first-child {
+      padding-left: 12px;
+    }
+    &:last-child {
+      padding-right: 12px;
+    }
+  }
+
+  thead th {
+    white-space: normal;   // '결제금액(부가세 포함)' 등 좁힌 컬럼의 헤더는 줄바꿈 허용
+  }
+
+  tbody td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .admin_page .table_wrap .client_table {
   .status_failed {
     color: #E74C3C;
@@ -129,5 +158,20 @@
 
   .status_completed {
     color: #16A34A;
+  }
+
+  // 청구서 / 고객 상세보기 두 개의 액션 셀이 연속으로 오는데,
+  // admin.scss의 .td_actions{display:flex}는 td를 셀에서 제외시켜
+  // 두 칸이 하나의 익명 셀로 합쳐진다. 셀로 되돌린다.
+  tbody td.td_actions {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+
+    .btn_detail {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
   }
 }

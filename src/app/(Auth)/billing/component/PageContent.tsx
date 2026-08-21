@@ -161,13 +161,25 @@ export default function PageContent({initialData, filters, planOptions}: Props) 
             </div>
 
             <div className={'table_wrap'}>
-                <table className={'client_table'}>
+                <table className={'client_table billing_table'}>
+                    <colgroup>
+                        <col style={{width: '4%'}}/>{/* 순번 */}
+                        <col style={{width: '8%'}}/>{/* 결제일시 */}
+                        <col style={{width: '12%'}}/>{/* 결제 ID */}
+                        <col style={{width: '16%'}}/>{/* 회사명 */}
+                        <col style={{width: '10%'}}/>{/* 사용자명 */}
+                        <col style={{width: '10%'}}/>{/* 이용플랜 */}
+                        <col style={{width: '8%'}}/>{/* 결제금액 */}
+                        <col style={{width: '14%'}}/>{/* 결제수단 */}
+                        <col style={{width: '6%'}}/>{/* 결제상태 */}
+                        <col style={{width: '6%'}}/>{/* 청구서 */}
+                        <col style={{width: '6%'}}/>{/* 고객 상세보기 */}
+                    </colgroup>
                     <thead>
                     <tr>
                         <th>순번</th>
                         <th>결제일시</th>
                         <th>결제 ID</th>
-                        <th>사용자 ID</th>
                         <th>회사명</th>
                         <th>사용자명</th>
                         <th>이용플랜</th>
