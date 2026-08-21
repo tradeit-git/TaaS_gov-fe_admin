@@ -175,6 +175,7 @@ export default function PageContent({initialData, filters, planOptions}: Props) 
                         <th>결제수단</th>
                         <th>결제상태</th>
                         <th>청구서</th>
+                        <th>고객 상세보기</th>
                     </tr>
                     </thead>
                     <BillingTableBody

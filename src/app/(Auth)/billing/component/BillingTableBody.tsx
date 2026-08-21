@@ -1,6 +1,7 @@
 'use client'
 
 import React from "react";
+import {useRouter} from "next/navigation";
 import {formatDateTimeDot} from "@/utill/format";
 
 export type PaymentStatus = 'SUCCESS' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
@@ -35,13 +36,14 @@ interface Props {
 }
 
 export default function BillingTableBody({items, totalElements, currentPage, size}: Props) {
+    const router = useRouter();
     const getRowNo = (index: number) => totalElements - (currentPage * size) - index;
 
     return (
         <tbody>
         {items.length === 0 ? (
             <tr>
-                <td colSpan={11} style={{textAlign: 'center', padding: '40px'}}>결제 이력이 없습니다.</td>
+                <td colSpan={12} style={{textAlign: 'center', padding: '40px'}}>결제 이력이 없습니다.</td>
             </tr>
         ) : items.map((item, index) => (
             <tr key={item.id}>
@@ -68,6 +70,20 @@ export default function BillingTableBody({items, totalElements, currentPage, siz
                             >
                                 영수증
                             </a>
+                        )
+                        : <span>-</span>
+                    }
+                </td>
+                <td className={'td_actions'}>
+                    {item.userId !== null
+                        ? (
+                            <button
+                                type={'button'}
+                                className={'btn_detail'}
+                                onClick={() => router.push(`/users/${item.userId}`)}
+                            >
+                                상세
+                            </button>
                         )
                         : <span>-</span>
                     }
