@@ -1,135 +1,95 @@
 'use client'
 
-import React, {useMemo, useState} from "react";
-import BillingTableBody, {PaymentHistoryItem} from "@/app/(Auth)/billing/component/BillingTableBody";
+import React, {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
+import BillingTableBody, {PAYMENT_STATUS_LABEL, PaymentHistoryItem, PaymentStatus} from "@/app/(Auth)/billing/component/BillingTableBody";
 
-type SearchInputType = {
-    startDate: string;
-    endDate: string;
-    gradeNames: string[];
+export interface BillingListResponse {
+    content: PaymentHistoryItem[];
+    totalElements: number;
+    totalPages: number;
+    currentPage: number;
 }
 
-type FilterOptionType = {
+export interface BillingFilters {
     startDate: string;
     endDate: string;
-    gradeNames: string[];
-    paymentStatus: string;
+    planNames: string[];
+    status: string;
+    page: number;   // 0-based (서버에서 1-based URL을 변환해 전달)
+    size: number;
 }
 
-const PLAN_OPTIONS = ['Premium', 'Pro', 'Plus', 'Free'];
+interface Props {
+    initialData: BillingListResponse;
+    filters: BillingFilters;
+    planOptions: string[];   // 이용플랜 필터 옵션 (서버 /plan-names)
+}
+
+const STATUS_OPTIONS: PaymentStatus[] = ['SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED'];
 const NAV_COUNT = 10;
 
-const USER_NAMES = ['김민수', '이서연', '박지훈', '최유진', '정도현', '강하늘', '윤채원', '임재민', '한소율', '송지우'];
-const METHODS = ['카드', '계좌이체', '카드', 'PayPal'];
+export default function PageContent({initialData, filters, planOptions}: Props) {
+    const router = useRouter();
 
-const pad = (n: number) => String(n).padStart(2, '0');
+    // 풀 SSR: 표시값은 전부 서버 props에서 파생 (URL = 단일 진실)
+    const items = initialData.content;
+    const totalElements = initialData.totalElements;
+    const totalPages = Math.max(1, initialData.totalPages);
+    const currentPage = filters.page;   // 0-based
 
-const mockItems: PaymentHistoryItem[] = Array.from({length: 45}, (_, i) => {
-    const createdDate = new Date(2026, 3, 15);
-    createdDate.setDate(createdDate.getDate() - i * 2);
-    const dateStr = `${createdDate.getFullYear()}-${pad(createdDate.getMonth() + 1)}-${pad(createdDate.getDate())}`;
+    // 검색 영역(결제일자/이용플랜)은 '검색' 버튼을 눌러야 반영되므로 로컬 state로 유지
+    const [searchInput, setSearchInput] = useState({
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        planNames: filters.planNames,
+    });
+    useEffect(() => {
+        setSearchInput({startDate: filters.startDate, endDate: filters.endDate, planNames: filters.planNames});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters.startDate, filters.endDate, filters.planNames.join(',')]);
 
-    const grade = PLAN_OPTIONS[i % PLAN_OPTIONS.length];
-    const amountMap: Record<string, number> = {Premium: 99.00, Pro: 49.00, Plus: 19.00, Free: 0};
-    const amount = amountMap[grade];
-
-    const status: 'COMPLETED' | 'FAILED' = i % 9 === 0 ? 'FAILED' : 'COMPLETED';
-
-    return {
-        id: i + 1,
-        userId: 1000 + i,
-        loginId: `tradeit${211200 + i + 1}@gmail.com`,
-        userName: USER_NAMES[i % USER_NAMES.length],
-        transactionId: `TXN${2026}${pad(createdDate.getMonth() + 1)}${pad(createdDate.getDate())}${pad(i + 1)}`,
-        createdAt: dateStr,
-        gradeName: grade,
-        amount,
-        paymentMethod: METHODS[i % METHODS.length],
-        paymentStatus: status,
+    // 현재 필터 + 변경분으로 URL을 만들어 네비게이션 (router가 basePath/히스토리 정상 처리)
+    const navigate = (next: Partial<BillingFilters>) => {
+        const f = {...filters, ...next};
+        const params = new URLSearchParams();
+        if (f.startDate) params.set('startDate', f.startDate);
+        if (f.endDate) params.set('endDate', f.endDate);
+        if (f.planNames.length > 0) params.set('planNames', f.planNames.join(','));
+        if (f.status) params.set('status', f.status);
+        if (f.page > 0) params.set('page', String(f.page + 1));   // URL은 1-based(표시 페이지)
+        if (f.size !== 10) params.set('size', String(f.size));
+        const qs = params.toString();
+        router.replace(qs ? `/billing?${qs}` : '/billing');
     };
-});
-
-export default function PageContent() {
-
-    const [page, setPage] = useState(1);
-    const [size, setSize] = useState(10);
-
-    const [searchInput, setSearchInput] = useState<SearchInputType>({
-        startDate: '',
-        endDate: '',
-        gradeNames: [],
-    });
-
-    const [filterOption, setFilterOption] = useState<FilterOptionType>({
-        startDate: '',
-        endDate: '',
-        gradeNames: [],
-        paymentStatus: '',
-    });
-
-    const filteredItems = useMemo(() => {
-        return mockItems.filter(item => {
-            if (filterOption.startDate && item.createdAt < filterOption.startDate) return false;
-            if (filterOption.endDate && item.createdAt > filterOption.endDate) return false;
-            if (filterOption.gradeNames.length > 0 && !filterOption.gradeNames.includes(item.gradeName)) return false;
-            if (filterOption.paymentStatus && item.paymentStatus !== filterOption.paymentStatus) return false;
-            return true;
-        });
-    }, [filterOption]);
-
-    const totalElements = filteredItems.length;
-    const totalPages = Math.max(1, Math.ceil(totalElements / size));
-
-    const pagedItems = useMemo(() => {
-        const start = (page - 1) * size;
-        return filteredItems.slice(start, start + size);
-    }, [filteredItems, page, size]);
-
-    const groupStart = Math.floor((page - 1) / NAV_COUNT) * NAV_COUNT + 1;
-    const groupEnd = Math.min(groupStart + NAV_COUNT - 1, totalPages);
-    const navigations: number[] = [];
-    for (let i = groupStart; i <= groupEnd; i++) navigations.push(i);
 
     const handlePlanToggle = (plan: string) => {
         setSearchInput(prev => ({
             ...prev,
-            gradeNames: prev.gradeNames.includes(plan)
-                ? prev.gradeNames.filter(p => p !== plan)
-                : [...prev.gradeNames, plan]
+            planNames: prev.planNames.includes(plan)
+                ? prev.planNames.filter(p => p !== plan)
+                : [...prev.planNames, plan]
         }));
     };
 
     const handleSearch = () => {
-        setPage(1);
-        setFilterOption({
+        navigate({
             startDate: searchInput.startDate,
             endDate: searchInput.endDate,
-            gradeNames: [...searchInput.gradeNames],
-            paymentStatus: filterOption.paymentStatus,
+            planNames: searchInput.planNames,
+            page: 0,
         });
     };
 
     const handleReset = () => {
-        setSearchInput({startDate: '', endDate: '', gradeNames: []});
-        setFilterOption({startDate: '', endDate: '', gradeNames: [], paymentStatus: ''});
-        setPage(1);
-        setSize(10);
+        router.replace('/billing');
     };
 
-    const handlePrevGroup = () => {
-        if (groupStart === 1) return;
-        setPage(groupStart - NAV_COUNT);
-    };
-
-    const handleNextGroup = () => {
-        const nextGroupStart = groupStart + NAV_COUNT;
-        if (nextGroupStart > totalPages) return;
-        setPage(nextGroupStart);
-    };
-
-    const handleInvoice = (transactionId: string) => {
-        alert(`청구서 다운로드 (${transactionId})`);
-    };
+    // 10페이지 단위 그룹
+    const displayPage = currentPage + 1;
+    const groupStart = Math.floor(currentPage / NAV_COUNT) * NAV_COUNT + 1;
+    const groupEnd = Math.min(groupStart + NAV_COUNT - 1, totalPages);
+    const navigations = Array.from({length: Math.max(0, groupEnd - groupStart + 1)}, (_, i) => groupStart + i);
 
     return (
         <>
@@ -151,21 +111,23 @@ export default function PageContent() {
                             />
                         </div>
                     </div>
-                    <div className={'search_plan'}>
-                        <span className={'label'}>이용플랜</span>
-                        <div className={'plan_checks'}>
-                            {PLAN_OPTIONS.map(plan => (
-                                <label key={plan} className={'plan_check_item'}>
-                                    <input
-                                        type={'checkbox'}
-                                        checked={searchInput.gradeNames.includes(plan)}
-                                        onChange={() => handlePlanToggle(plan)}
-                                    />
-                                    <span>{plan}</span>
-                                </label>
-                            ))}
+                    {planOptions.length > 0 && (
+                        <div className={'search_plan'}>
+                            <span className={'label'}>이용플랜</span>
+                            <div className={'plan_checks'}>
+                                {planOptions.map(plan => (
+                                    <label key={plan} className={'plan_check_item'}>
+                                        <input
+                                            type={'checkbox'}
+                                            checked={searchInput.planNames.includes(plan)}
+                                            onChange={() => handlePlanToggle(plan)}
+                                        />
+                                        <span>{plan}</span>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
                     <div className={'search_btns'}>
                         <button type={'button'} className={'btn_search'} onClick={handleSearch}>검색</button>
                         <button type={'button'} className={'btn_reset'} onClick={handleReset}>초기화</button>
@@ -179,22 +141,17 @@ export default function PageContent() {
                 </p>
                 <div className={'search_area'}>
                     <select
-                        value={filterOption.paymentStatus}
-                        onChange={(e) => {
-                            setPage(1);
-                            setFilterOption(prev => ({...prev, paymentStatus: e.target.value}));
-                        }}
+                        value={filters.status}
+                        onChange={(e) => navigate({status: e.target.value, page: 0})}
                     >
                         <option value="">결제상태</option>
-                        <option value="COMPLETED">COMPLETED</option>
-                        <option value="FAILED">FAILED</option>
+                        {STATUS_OPTIONS.map(s => (
+                            <option key={s} value={s}>{PAYMENT_STATUS_LABEL[s]}</option>
+                        ))}
                     </select>
                     <select
-                        value={size}
-                        onChange={(e) => {
-                            setPage(1);
-                            setSize(Number(e.target.value));
-                        }}
+                        value={filters.size}
+                        onChange={(e) => navigate({size: Number(e.target.value), page: 0})}
                     >
                         <option value={10}>10개씩</option>
                         <option value={30}>30개씩</option>
@@ -208,9 +165,10 @@ export default function PageContent() {
                     <thead>
                     <tr>
                         <th>순번</th>
-                        <th>결제일</th>
+                        <th>결제일시</th>
                         <th>결제 ID</th>
                         <th>사용자 ID</th>
+                        <th>회사명</th>
                         <th>사용자명</th>
                         <th>이용플랜</th>
                         <th>결제금액(부가세 포함)</th>
@@ -220,11 +178,10 @@ export default function PageContent() {
                     </tr>
                     </thead>
                     <BillingTableBody
-                        pagedItems={pagedItems}
+                        items={items}
                         totalElements={totalElements}
-                        currentPage={page}
-                        size={size}
-                        onInvoice={handleInvoice}
+                        currentPage={currentPage}
+                        size={filters.size}
                     />
                 </table>
             </div>
@@ -234,7 +191,7 @@ export default function PageContent() {
                     type={'button'}
                     className={'btn_prev'}
                     disabled={groupStart === 1}
-                    onClick={handlePrevGroup}
+                    onClick={() => navigate({page: groupStart - NAV_COUNT - 1})}
                 >
                     <span className={'admin_icon'}/>
                 </button>
@@ -242,8 +199,8 @@ export default function PageContent() {
                     <button
                         key={num}
                         type={'button'}
-                        className={`btn_page ${page === num ? 'on' : ''}`}
-                        onClick={() => setPage(num)}
+                        className={`btn_page ${displayPage === num ? 'on' : ''}`}
+                        onClick={() => navigate({page: num - 1})}
                     >
                         {num}
                     </button>
@@ -252,7 +209,7 @@ export default function PageContent() {
                     type={'button'}
                     className={'btn_next'}
                     disabled={groupStart + NAV_COUNT > totalPages}
-                    onClick={handleNextGroup}
+                    onClick={() => navigate({page: groupStart + NAV_COUNT - 1})}
                 >
                     <span className={'admin_icon'}/>
                 </button>

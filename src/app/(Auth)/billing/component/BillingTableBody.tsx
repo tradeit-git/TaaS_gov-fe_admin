@@ -1,62 +1,75 @@
 'use client'
 
 import React from "react";
+import {formatDateTimeDot} from "@/utill/format";
+
+export type PaymentStatus = 'SUCCESS' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
+
+export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
+    SUCCESS: '결제완료',
+    FAILED: '결제실패',
+    CANCELLED: '결제취소',
+    REFUNDED: '환불',
+};
 
 export type PaymentHistoryItem = {
     id: number;
-    userId: number;
-    loginId: string;
-    userName: string;
-    transactionId: string;
-    createdAt: string;
-    gradeName: string;
-    amount: number;
-    paymentMethod: string;
-    paymentStatus: 'COMPLETED' | 'FAILED';
+    paymentDate: string | null;
+    orderId: string;
+    userId: number | null;
+    loginId: string | null;
+    userName: string | null;
+    companyName: string | null;
+    planName: string | null;
+    totalAmount: number | null;
+    paymentMethodName: string | null;
+    status: PaymentStatus;
+    receiptUrl: string | null;
 }
 
 interface Props {
-    pagedItems: PaymentHistoryItem[];
+    items: PaymentHistoryItem[];
     totalElements: number;
-    currentPage: number;
+    currentPage: number;   // 0-based
     size: number;
-    onInvoice: (transactionId: string) => void;
 }
 
-export default function BillingTableBody({pagedItems, totalElements, currentPage, size, onInvoice}: Props) {
-    const getRowNo = (index: number) => totalElements - ((currentPage - 1) * size) - index;
+export default function BillingTableBody({items, totalElements, currentPage, size}: Props) {
+    const getRowNo = (index: number) => totalElements - (currentPage * size) - index;
 
     return (
         <tbody>
-        {pagedItems.length === 0 ? (
+        {items.length === 0 ? (
             <tr>
-                <td colSpan={10} style={{textAlign: 'center', padding: '40px'}}>결제 이력이 없습니다.</td>
+                <td colSpan={11} style={{textAlign: 'center', padding: '40px'}}>결제 이력이 없습니다.</td>
             </tr>
-        ) : pagedItems.map((item, index) => (
+        ) : items.map((item, index) => (
             <tr key={item.id}>
                 <td>{getRowNo(index)}</td>
-                <td>{item.createdAt}</td>
-                <td>{item.transactionId}</td>
-                <td>{item.loginId}</td>
-                <td>{item.userName}</td>
-                <td>{item.gradeName}</td>
-                <td>${item.amount.toFixed(2)}</td>
-                <td>{item.paymentMethod}</td>
-                <td className={item.paymentStatus === 'FAILED' ? 'status_failed' : 'status_completed'}>
-                    {item.paymentStatus}
+                <td>{formatDateTimeDot(item.paymentDate)}</td>
+                <td>{item.orderId}</td>
+                <td>{item.loginId ?? '-'}</td>
+                <td>{item.companyName ?? '-'}</td>
+                <td>{item.userName ?? '-'}</td>
+                <td>{item.planName ?? '-'}</td>
+                <td>{item.totalAmount !== null ? `${item.totalAmount.toLocaleString()}원` : '-'}</td>
+                <td>{item.paymentMethodName ?? '-'}</td>
+                <td className={item.status === 'SUCCESS' ? 'status_completed' : 'status_failed'}>
+                    {PAYMENT_STATUS_LABEL[item.status] ?? item.status}
                 </td>
                 <td className={'td_actions'}>
-                    {item.paymentStatus === 'FAILED'
-                        ? <span>-</span>
-                        : (
-                            <button
-                                type={'button'}
+                    {item.receiptUrl
+                        ? (
+                            <a
                                 className={'btn_detail'}
-                                onClick={() => onInvoice(item.transactionId)}
+                                href={item.receiptUrl}
+                                target={'_blank'}
+                                rel={'noopener noreferrer'}
                             >
-                                다운로드
-                            </button>
+                                영수증
+                            </a>
                         )
+                        : <span>-</span>
                     }
                 </td>
             </tr>

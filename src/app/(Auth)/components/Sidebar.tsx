@@ -130,8 +130,7 @@ export  default  function Sidebar (){
                 {/*      className={`lnb_name${isOn('client')}`}>*/}
                 {/*    <span className={'admin_icon client'}/>계약계정*/}
                 {/*</Link>*/}
-                {/*<Link href={'/billing'}*/}
-                <Link href={'/404'}
+                <Link href={'/billing'}
                       className={`lnb_name${isOn('billing')}`}>
                     <span className={'admin_icon billing'}/>결제현황
                 </Link>
