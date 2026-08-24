@@ -1,6 +1,7 @@
 'use client'
 
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import '@/style/contact.scss'
 import {useState} from "react";
 import callApi from "@/utill/apiRequest";
@@ -16,6 +17,7 @@ interface Props {
 
 export default function ContactDetailPage({id, initialDetail}: Props) {
     const {addPopup} = usePopupStore();
+    const router = useRouter();
     const [detail, setDetail] = useState<InquiryRow>(initialDetail);
     const [status, setStatus] = useState(initialDetail.status);
     const [adminMemo, setAdminMemo] = useState(initialDetail.adminMemo || '');
@@ -180,7 +182,8 @@ export default function ContactDetailPage({id, initialDetail}: Props) {
                     </div>
                 </section>
                 <div className={'btn_wrap'}>
-                    <Link href="/contact" className={'cancel_btn'}>취소</Link>
+                    {/* 목록으로: 뒤로가기로 되돌아가야 이전 검색/필터(URL 쿼리)가 유지된다 */}
+                    <button type="button" className={'cancel_btn'} onClick={() => router.back()}>취소</button>
                     <button className={'save_btn'} onClick={handleSave}>저장</button>
                 </div>
             </div>

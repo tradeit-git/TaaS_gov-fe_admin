@@ -1,7 +1,8 @@
 'use client'
 
 import Link from "next/link";
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
 import ContactTableBody from "@/app/(Auth)/contact/component/ContactTableBody";
 import callApi from "@/utill/apiRequest";
 import {formatDateDot} from "@/utill/format";
@@ -59,63 +60,57 @@ export interface InquiryListResponse {
     unreadCount: number;
 }
 
-interface Props {
-    initialData: InquiryListResponse;
+export interface InquiryFilters {
+    keyword: string;
+    type: string;
+    status: string;
+    isRead: string;
+    page: number;   // 0-based (서버에서 1-based URL을 변환해 전달)
+    size: number;
 }
 
-export default function ContactPage({initialData}: Props) {
+interface Props {
+    initialData: InquiryListResponse;
+    filters: InquiryFilters;
+}
+
+export default function ContactPage({initialData, filters}: Props) {
     const {addPopup} = usePopupStore();
-    const [data, setData] = useState<InquiryRow[]>(initialData.content);
-    const [searchInput, setSearchInput] = useState('');
-    const [search, setSearch] = useState('');
-    const [currentPage, setCurrentPage] = useState(0);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [totalElements, setTotalElements] = useState(initialData.totalElements);
-    const [totalPages, setTotalPages] = useState(Math.max(1, initialData.totalPages));
-    const [typeFilter, setTypeFilter] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
-    const [isReadFilter, setIsReadFilter] = useState('');
-    const isInitial = useRef(true);
+    const router = useRouter();
 
-    const fetchList = useCallback(async () => {
-        if (isInitial.current) {
-            isInitial.current = false;
-            return;
-        }
+    // 풀 SSR: 표시값은 전부 서버 props에서 파생 (URL = 단일 진실)
+    const data = initialData.content;
+    const totalElements = initialData.totalElements;
+    const totalPages = Math.max(1, initialData.totalPages);
+    const currentPage = filters.page;       // 0-based
+    const itemsPerPage = filters.size;
 
+    // 검색어만 입력 중 로컬 상태 (디바운스 후 네비게이션). 네비게이션 완료 시 서버값과 동기화.
+    const [searchInput, setSearchInput] = useState(filters.keyword);
+    useEffect(() => {
+        setSearchInput(filters.keyword);
+    }, [filters.keyword]);
+
+    // 현재 필터 + 변경분으로 URL을 만들어 네비게이션 (router가 basePath/히스토리 정상 처리)
+    const navigate = (next: Partial<InquiryFilters>) => {
+        const f = {...filters, ...next};
         const params = new URLSearchParams();
-        params.set('page', String(currentPage));
-        params.set('size', String(itemsPerPage));
-        if (search.trim()) params.set('keyword', search.trim());
-        if (typeFilter) params.set('type', typeFilter);
-        if (statusFilter) params.set('status', statusFilter);
-        if (isReadFilter !== '') params.set('isRead', isReadFilter);
+        if (f.keyword.trim()) params.set('keyword', f.keyword.trim());
+        if (f.type) params.set('type', f.type);
+        if (f.status) params.set('status', f.status);
+        if (f.isRead) params.set('isRead', f.isRead);
+        if (f.page > 0) params.set('page', String(f.page + 1));   // URL은 1-based(표시 페이지)
+        if (f.size !== 10) params.set('size', String(f.size));
+        const qs = params.toString();
+        router.replace(qs ? `/contact?${qs}` : '/contact');
+    };
 
-        const options: RequestInit = {
-            method: 'GET',
-            credentials: 'include',
-        };
-        const res = await callApi(`/api/admin/inquiries?${params.toString()}`, options);
-        if (res.result && res.data) {
-            const body = res.data as InquiryListResponse;
-            setData(body.content);
-            setTotalElements(body.totalElements);
-            setTotalPages(Math.max(1, body.totalPages));
-        }
-    }, [currentPage, itemsPerPage, search, typeFilter, statusFilter, isReadFilter]);
-
+    // 검색 디바운스 → 네비게이션 (실제로 바뀐 경우만)
     useEffect(() => {
-        fetchList();
-    }, [fetchList]);
-
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    useEffect(() => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            setSearch(searchInput);
-            setCurrentPage(0);
-        }, 100);
-        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+        if (searchInput === filters.keyword) return;
+        const t = setTimeout(() => navigate({keyword: searchInput, page: 0}), 400);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchInput]);
 
     const handleDelete = (id: number) => {
@@ -126,7 +121,7 @@ export default function ContactPage({initialData}: Props) {
             });
             if (res.result) {
                 addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
-                fetchList();
+                router.refresh();   // 현재 필터/페이지 그대로 서버에서 다시 렌더
             } else {
                 addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
             }
@@ -140,11 +135,6 @@ export default function ContactPage({initialData}: Props) {
     const groupStart = (currentGroup - 1) * pageGroupSize + 1;
     const groupEnd = Math.min(currentGroup * pageGroupSize, totalPages);
     const pageNumbers = Array.from({length: groupEnd - groupStart + 1}, (_, i) => groupStart + i);
-
-    const handleItemsPerPageChange = (value: number) => {
-        setItemsPerPage(value);
-        setCurrentPage(0);
-    };
 
     return (
         <div className={'admin_page'}>
@@ -163,26 +153,26 @@ export default function ContactPage({initialData}: Props) {
                 <div className={'search_area'}>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder={'고객사 검색'}/>
-                        {searchInput && <button type="button" className={'btn_clear'} onClick={() => { setSearchInput(''); setSearch(''); setCurrentPage(0); }}><span className={'admin_icon'}/> </button>}
+                        {searchInput && <button type="button" className={'btn_clear'} onClick={() => setSearchInput('')}><span className={'admin_icon'}/> </button>}
                     </div>
-                    <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setCurrentPage(0); }}>
+                    <select value={filters.type} onChange={e => navigate({type: e.target.value, page: 0})}>
                         <option value="">유형 전체</option>
                         <option value="PARTNERSHIP">도입문의</option>
                         <option value="CRM_1ON1">CRM문의</option>
                     </select>
-                    <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setCurrentPage(0); }}>
+                    <select value={filters.status} onChange={e => navigate({status: e.target.value, page: 0})}>
                         <option value="">처리상태 전체</option>
                         <option value="PENDING">접수</option>
                         <option value="EXCLUDED">대상제외</option>
                         <option value="IN_PROGRESS">처리중</option>
                         <option value="COMPLETED">완료</option>
                     </select>
-                    <select value={isReadFilter} onChange={e => { setIsReadFilter(e.target.value); setCurrentPage(0); }}>
+                    <select value={filters.isRead} onChange={e => navigate({isRead: e.target.value, page: 0})}>
                         <option value="">열람여부 전체</option>
                         <option value="false">미열람</option>
                         <option value="true">열람</option>
                     </select>
-                    <select value={itemsPerPage} onChange={e => handleItemsPerPageChange(Number(e.target.value))}>
+                    <select value={itemsPerPage} onChange={e => navigate({size: Number(e.target.value), page: 0})}>
                         <option value={10}>10개씩</option>
                         <option value={20}>20개씩</option>
                         <option value={50}>50개씩</option>
@@ -226,14 +216,14 @@ export default function ContactPage({initialData}: Props) {
             {/* 페이지네이션 */}
             <div className={'pagination'}>
                 <button type="button" className={'btn_prev'} disabled={currentGroup <= 1}
-                        onClick={() => setCurrentPage(groupStart - pageGroupSize - 1)}><span className={'admin_icon'}/> </button>
+                        onClick={() => navigate({page: groupStart - pageGroupSize - 1})}><span className={'admin_icon'}/> </button>
                 {pageNumbers.map(page => (
                     <button key={page} type="button"
                             className={`btn_page ${page === displayPage ? 'on' : ''}`}
-                            onClick={() => setCurrentPage(page - 1)}>{page}</button>
+                            onClick={() => navigate({page: page - 1})}>{page}</button>
                 ))}
                 <button type="button" className={'btn_next'} disabled={groupEnd >= totalPages}
-                        onClick={() => setCurrentPage(groupEnd)}><span className={'admin_icon'}/></button>
+                        onClick={() => navigate({page: groupEnd})}><span className={'admin_icon'}/></button>
             </div>
         </div>
     );
