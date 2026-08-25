@@ -7,6 +7,7 @@ import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import OverseasPlanPopup, {OverseasPlanFormData} from "@/app/(Auth)/users/[id]/component/OverseasPlanPopup";
 import CreditUsagePopup, {TransactionsResponse} from "@/app/(Auth)/users/[id]/component/CreditUsagePopup";
 import CreditStatusSection from "@/app/(Auth)/users/[id]/component/CreditStatusSection";
+import CustomPgPlanPopup, {CustomPgPlanStatus} from "@/app/(Auth)/users/[id]/component/CustomPgPlanPopup";
 import {CreditPlan, CreditRound, formatNum, getPlanStatus, sortByCreatedDesc} from "@/app/(Auth)/users/[id]/component/planShared";
 import {CreditSummaryType} from "@/types/user/user";
 import callApi from "@/utill/apiRequest";
@@ -175,6 +176,20 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
         addPopup(<OverseasPlanPopup onSave={handleCreateOverseasPlan}/>);
     };
 
+    // 발급된 커스텀 PG 조건과 회원의 결제 가능 여부를 함께 받아 팝업을 연다
+    const handleOpenCustomPgPlanPopup = async () => {
+        const res = await callApi(`/api/admin/members/users/${userId}/custom-pg-plan`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        const status = res.result ? (res.data as CustomPgPlanStatus | null) : null;
+        addPopup(<CustomPgPlanPopup
+            userId={userId}
+            initialData={status?.plan ?? null}
+            blockReason={status?.blockReason ?? null}
+        />);
+    };
+
     const canDeletePlan = (plan: CreditPlan) =>
         plan.rounds.length === 0 || plan.rounds.every(r => (r.status ?? 'SCHEDULED') === 'SCHEDULED');
 
@@ -288,11 +303,16 @@ export default function PlanSection({userId, initialPlans, creditSummary}: Props
                         <span className={'admin_icon arrow_icon'}/>
                         유료플랜 이용 현황
                     </div>
-                    <button type={'button'}
-                            className={`btn_add_plan${!canRegisterOverseasPlan ? ' disabled' : ''}`}
-                            onClick={handleOpenOverseasPlanPopup}>
-                        플랜등록
-                    </button>
+                    <div className={'plan_header_btns'}>
+                        <button type={'button'} className={'btn_custom_pg_plan'} onClick={handleOpenCustomPgPlanPopup}>
+                            PG구독 맞춤설정
+                        </button>
+                        <button type={'button'}
+                                className={`btn_add_plan${!canRegisterOverseasPlan ? ' disabled' : ''}`}
+                                onClick={handleOpenOverseasPlanPopup}>
+                            플랜등록
+                        </button>
+                    </div>
                 </div>
 
                 <div className={'table_wrap'}>

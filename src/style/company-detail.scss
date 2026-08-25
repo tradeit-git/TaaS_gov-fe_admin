@@ -518,6 +518,12 @@
         margin-bottom: 0;
       }
 
+      .plan_header_btns {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
       .btn_add_plan {
         height: 32px;
         padding: 0 16px;
@@ -535,6 +541,22 @@
         &.disabled {
           opacity: 0.4;
           cursor: default;
+        }
+      }
+
+      // 커스텀 PG 구독 조건 발급 (플랜등록과 구분되도록 아웃라인)
+      .btn_custom_pg_plan {
+        height: 32px;
+        padding: 0 16px;
+        font-size: $font-size-sm;
+        background: #fff;
+        color: $theme-color;
+        border: 1px solid $theme-color;
+        border-radius: 6px;
+        white-space: nowrap;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.03);
         }
       }
     }
@@ -1138,6 +1160,134 @@
 
         &:hover {
           border-color: $theme-color;
+        }
+      }
+    }
+  }
+
+  // ── PG구독 맞춤설정 팝업 추가 스타일 ──
+  &.custom_pg_plan_popup {
+    min-height: auto;
+
+    // 발급 상태 배너
+    .custom_pg_status {
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      border: 1px solid #DCE3F5;
+      border-radius: 8px;
+      background: #F6F8FE;
+
+      .status_head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status_badge {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 10px;
+        border-radius: 11px;
+        background: $theme-color;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .status_dday {
+        font-size: 13px;
+        font-weight: 600;
+        color: $theme-color;
+
+        &.urgent {
+          color: #E74C3C;
+        }
+      }
+
+      .status_desc {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #777;
+      }
+    }
+
+    // 결제 불가 경고 (이용 중인 플랜 · 예정된 결제)
+    .custom_pg_block {
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      border: 1px solid #F5C6C2;
+      border-radius: 8px;
+      background: #FDF2F1;
+
+      strong {
+        display: block;
+        font-size: $font-size-sm;
+        font-weight: 600;
+        color: #C0392B;
+      }
+
+      p {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #8C4B45;
+        line-height: 1.6;
+      }
+    }
+
+    // 미발급 안내
+    .custom_pg_empty {
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      border: 1px dashed #ddd;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .popup_field {
+      > input[type="date"] {
+        @extend %field_input;
+        width: 220px;
+      }
+
+      // 조회 모드 — 잠겨 있음이 드러나되 값은 복사할 수 있게 readOnly 사용
+      > input[type="text"][readonly] {
+        background-color: #F5F5F5;
+        color: #555;
+        cursor: default;
+
+        &:focus {
+          border-color: #ddd;
+        }
+      }
+
+      .field_desc {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #888;
+      }
+    }
+
+    // 조회 모드에서는 입력 안내 문구가 불필요
+    &.is_view .popup_field .field_desc {
+      display: none;
+    }
+
+    .popup_btn_wrap {
+      .delete_btn {
+        min-width: 72px;
+        height: 34px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 8px;
+        border: 1px solid #E74C3C;
+        background: #fff;
+        color: #E74C3C;
+        margin-right: auto;
+
+        &:hover {
+          background: #FDF2F1;
         }
       }
     }
