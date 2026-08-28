@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link';
+import {AUTH_COOKIE_PATH} from "@/lib/cookies";
 import {usePathname, useRouter} from "next/navigation";
 import {ADMIN_LOGIN, APP_URL} from "@/lib/routes";
 import Image from "next/image";
@@ -24,8 +25,10 @@ export  default  function Sidebar (){
 
     const onClickLogoutBtn = () => {
         Cookies.remove("_TaaS.auth.admin.token")
+        Cookies.remove("_TaaS.auth.admin.token", {path: AUTH_COOKIE_PATH})
         Cookies.remove("_TaaS.auth.admin.token", {path: '/', domain: `${process.env.NEXT_PUBLIC_SAME_SITE}`})
         Cookies.remove("_TaaS.auth.admin.rf_token")
+        Cookies.remove("_TaaS.auth.admin.rf_token", {path: AUTH_COOKIE_PATH})
         Cookies.remove("_TaaS.auth.admin.rf_token", {path: '/', domain: `${process.env.NEXT_PUBLIC_SAME_SITE}`})
         setAuth(null);
         router.push(ADMIN_LOGIN);

@@ -1,7 +1,7 @@
 import {ApiResponseType} from "@/types/apiResponse";
 import Cookies from "js-cookie";
 import {APP_URL} from "@/lib/routes";
-import {COOKIE_KEYS} from "@/lib/cookies";
+import {AUTH_COOKIE_PATH, COOKIE_KEYS} from "@/lib/cookies";
 
 type ApiCallResult = {
     result: boolean,
@@ -37,7 +37,7 @@ const saveTokens = (tokens: Record<string, string>) => {
     Object.entries(tokens).forEach(([k, v]) => {
         Cookies.set(k, v, {
             expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-            path: "/"
+            path: AUTH_COOKIE_PATH
         });
     });
 };
@@ -45,7 +45,8 @@ const saveTokens = (tokens: Record<string, string>) => {
 const clearAuth = () => {
     const domain = process.env.NEXT_PUBLIC_SAME_SITE;
     [COOKIE_KEYS.AUTH_TOKEN, COOKIE_KEYS.AUTH_REFRESH_TOKEN].forEach(k => {
-        Cookies.remove(k);
+        Cookies.remove(k, { path: AUTH_COOKIE_PATH });
+        Cookies.remove(k); // path=/ 로 심겼던 구형 쿠키
         if (domain) Cookies.remove(k, { path: "/", domain });
     });
 };

@@ -6,6 +6,7 @@ import {usePopupStore} from "@/stores/common/popupStore";
 import {ADMIN_MAIN, APP_URL} from "@/lib/routes";
 import {AdminSchema} from "@/types/auth/admin";
 import Cookies from "js-cookie";
+import {AUTH_COOKIE_PATH} from "@/lib/cookies";
 import {useRouter} from "next/navigation";
 import callApi from "@/utill/apiRequest";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
@@ -42,7 +43,7 @@ export default function LoginForm(){
                 for (const key in newTokens) {
                     Cookies.set(key, newTokens[key], {
                         expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90일
-                        path: "/", // 전체 경로에 대해 쿠키 유효
+                        path: AUTH_COOKIE_PATH, // admin 앱 경로에서만 유효 (CRM 요청에 실리지 않도록)
                     });
                 }
                 //window.location.href = ADMIN_MAIN;

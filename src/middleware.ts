@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const TOKEN_KEY = '_TaaS.auth.admin.token';
 const RF_TOKEN_KEY = '_TaaS.auth.admin.rf_token';
+// CRM 과 같은 호스트를 쓰므로 인증 쿠키를 admin basePath 로 한정한다
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '/';
 
 function hasAuthToken(request: NextRequest): boolean {
     return !!request.cookies.get(TOKEN_KEY)?.value;
@@ -105,7 +107,7 @@ export async function middleware(request: NextRequest) {
             const response = NextResponse.next({ request: { headers: requestHeaders } });
 
             // 브라우저 쿠키도 갱신
-            const cookieOptions = { path: '/', maxAge: 90 * 24 * 60 * 60 } as const;
+            const cookieOptions = { path: BASE_PATH, maxAge: 90 * 24 * 60 * 60 } as const;
             response.cookies.set(TOKEN_KEY, freshTokens.token, cookieOptions);
             response.cookies.set(RF_TOKEN_KEY, freshTokens.rfToken, cookieOptions);
 
