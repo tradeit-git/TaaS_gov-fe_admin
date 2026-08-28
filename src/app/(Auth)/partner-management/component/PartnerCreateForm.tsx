@@ -16,7 +16,7 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
     const {closePopup, addPopup} = usePopupStore();
     const [partnerName, setPartnerName] = useState('');
     const [partnerKey, setPartnerKey] = useState('');
-    const [creditAmount, setCreditAmount] = useState('');
+    const [creditAmount, setCreditAmount] = useState('0');
     const [maxMembers, setMaxMembers] = useState('');
     const [noMemberLimit, setNoMemberLimit] = useState(false);
     const [startDate, setStartDate] = useState('');
@@ -174,7 +174,7 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
                     <div className={'popup_form_left'}>
                         {/* 1. 로고 */}
                         <div className={'popup_field'}>
-                            <label className={'label_required'}>로고 <span className={'required'}>(필수)</span></label>
+                            <label className={'label_required'}>로고 </label>
                             {logoUrl ? (
                                 <div className={'logo_preview_wrap'}>
                                     <img src={logoUrl} alt="logo" className={'logo_preview_img'}/>

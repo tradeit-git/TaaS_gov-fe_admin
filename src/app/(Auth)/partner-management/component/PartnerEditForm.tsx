@@ -206,7 +206,7 @@ export default function PartnerEditForm({uId, partner, onEdited}: Props) {
                     <div className={'popup_form_left'}>
                         {/* 1. 로고 */}
                         <div className={'popup_field'}>
-                            <label className={'label_required'}>로고 <span className={'required'}>(필수)</span></label>
+                            <label className={'label_required'}>로고 </label>
                             {logoUrl ? (
                                 <div className={'logo_preview_wrap'}>
                                     <img src={logoUrl} alt="logo" className={'logo_preview_img'}/>
