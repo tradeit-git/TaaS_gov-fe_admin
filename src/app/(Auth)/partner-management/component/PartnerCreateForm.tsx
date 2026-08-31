@@ -10,9 +10,11 @@ import CreditScheduleEditor, {CreditSchedule} from "@/app/(Auth)/partner-managem
 interface Props {
     uId?: string;
     onCreated?: () => void;
+    /** 등록할 제휴 카테고리. 페이지가 고정으로 넘기며 폼에는 선택 UI 를 두지 않는다. 미지정이면 서버 기본값(BASE) */
+    category?: 'BASE' | 'POC';
 }
 
-export default function PartnerCreateForm({uId, onCreated}: Props) {
+export default function PartnerCreateForm({uId, onCreated, category}: Props) {
     const {closePopup, addPopup} = usePopupStore();
     const [partnerName, setPartnerName] = useState('');
     const [partnerKey, setPartnerKey] = useState('');
@@ -131,6 +133,7 @@ export default function PartnerCreateForm({uId, onCreated}: Props) {
             body: JSON.stringify({
                 partnerKey: partnerKey.trim(),
                 partnerName: partnerName.trim(),
+                category,
                 bonusCredit: Number(creditAmount),
                 maxMembers: noMemberLimit ? 0 : Number(maxMembers || 0),
                 requiresApproval: true, // 승인심사 임시 고정(폼 토글 추가 전까지)

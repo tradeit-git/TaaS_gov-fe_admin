@@ -24,6 +24,7 @@ export interface PartnerRow {
     logoUrl: string;
     requiresApproval: boolean;
     dashboardCode: string;
+    favorite: boolean;
 }
 
 interface CoalitionApiRow {
@@ -41,6 +42,7 @@ interface CoalitionApiRow {
     logoUrl?: string;
     requiresApproval?: boolean;
     dashboardAccessCode?: string;
+    favorite?: boolean;
 }
 
 interface CoalitionListResponse {
@@ -63,9 +65,23 @@ const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
     logoUrl: row.logoUrl ?? '',
     requiresApproval: row.requiresApproval ?? false,
     dashboardCode: row.dashboardAccessCode ?? '',
+    favorite: row.favorite ?? false,
 });
 
-export default function PartnerPage() {
+export type PartnerCategory = 'BASE' | 'POC';
+
+interface Props {
+    /**
+     * 이 페이지가 다루는 제휴 카테고리. 화면에 필터를 두지 않고 페이지가 고정으로 넘긴다.
+     * 미지정이면 전체(협회제휴관리).
+     */
+    category?: PartnerCategory;
+    title?: string;
+    /** 가입명단 등 하위 화면의 라우트 베이스 (기본 /partner-management) */
+    basePath?: string;
+}
+
+export default function PartnerPage({category, title = '협회제휴관리', basePath = '/partner-management'}: Props) {
     const {addPopup} = usePopupStore();
     const [data, setData] = useState<PartnerRow[]>([]);
     const [searchInput, setSearchInput] = useState('');
@@ -75,6 +91,8 @@ export default function PartnerPage() {
     const [totalElements, setTotalElements] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState('');
+    // 즐겨찾기는 관리자 개인 설정(북마크)이며 담당 배정이나 접근 권한이 아니다.
+    const [favoriteOnly, setFavoriteOnly] = useState(false);
 
     const fetchList = useCallback(async () => {
         const params = new URLSearchParams();
@@ -82,6 +100,8 @@ export default function PartnerPage() {
         params.set('size', String(itemsPerPage));
         if (statusFilter) params.set('status', statusFilter);
         if (search.trim()) params.set('search', search.trim());
+        if (category) params.set('category', category);
+        if (favoriteOnly) params.set('favoriteOnly', 'true');
 
         const res = await callApi(`/api/admin/partner-keys/list?${params.toString()}`, {
             method: 'GET',
@@ -94,7 +114,7 @@ export default function PartnerPage() {
             setTotalElements(body.totalElements);
             setTotalPages(Math.max(1, body.totalPages));
         }
-    }, [currentPage, itemsPerPage, search, statusFilter]);
+    }, [currentPage, itemsPerPage, search, statusFilter, favoriteOnly, category]);
 
     useEffect(() => {
         fetchList();
@@ -125,14 +145,33 @@ export default function PartnerPage() {
     };
 
     const handleOpenCreatePopup = () => {
-        addPopup(<PartnerCreateForm onCreated={fetchList}/>);
+        addPopup(<PartnerCreateForm category={category} onCreated={fetchList}/>);
     };
 
     const handleReset = () => {
         setSearchInput('');
         setSearch('');
         setStatusFilter('');
+        setFavoriteOnly(false);
         setCurrentPage(0);
+    };
+
+    // 즐겨찾기 토글. 리로드 없이 해당 행만 갱신하되, 즐겨찾기만 보기 상태면 목록에서 빠져야 하므로 재조회한다.
+    const handleToggleFavorite = async (row: PartnerRow) => {
+        const next = !row.favorite;
+        setData(prev => prev.map(r => (r.id === row.id ? {...r, favorite: next} : r)));
+
+        const res = await callApi(`/api/admin/partner-keys/${row.id}/favorite`, {
+            method: next ? 'POST' : 'DELETE',
+            credentials: 'include',
+        });
+
+        if (!res.result) {
+            setData(prev => prev.map(r => (r.id === row.id ? {...r, favorite: !next} : r)));
+            addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '즐겨찾기 처리에 실패했습니다.'}/>);
+            return;
+        }
+        if (favoriteOnly) fetchList();
     };
 
     const handleEdit = (row: PartnerRow) => {
@@ -157,13 +196,13 @@ export default function PartnerPage() {
     return (
         <div className={'admin_page partner_page'}>
             <div className={'page_start_box'}>
-                <h2>협회제휴관리</h2>
+                <h2>{title}</h2>
                 <ul className={'breadcrumb'}>
                     <li>홈</li>
                     <li><span className={'admin_icon icon_next'}/></li>
                     <li>AP</li>
                     <li><span className={'admin_icon icon_next'}/></li>
-                    <li><Link href={'/partner-management'}>정산관리</Link></li>
+                    <li><Link href={basePath}>{title}</Link></li>
                 </ul>
             </div>
 
@@ -180,6 +219,14 @@ export default function PartnerPage() {
                         <option value="진행">진행</option>
                         <option value="종료">종료</option>
                     </select>
+                    <button type="button"
+                            className={`btn_favorite_filter ${favoriteOnly ? 'on' : ''}`}
+                            onClick={() => {
+                                setFavoriteOnly(prev => !prev);
+                                setCurrentPage(0);
+                            }}>
+                        <span className={'star'}>★</span> 즐겨찾기만
+                    </button>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
                                placeholder={'제휴명 검색'}/>
@@ -204,10 +251,11 @@ export default function PartnerPage() {
             <div className={'table_wrap'}>
                 <table className={'client_table partner_table'}>
                     <colgroup>
-                        <col style={{width: '4%'}}/>
+                        <col style={{width: '3%'}}/>
+                        <col style={{width: '3.5%'}}/>
                         <col style={{width: '5%'}}/>
                         <col style={{width: '6%'}}/>
-                        <col style={{width: '13%'}}/>
+                        <col style={{width: '12.5%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '11%'}}/>
                         <col style={{width: '6%'}}/>
@@ -219,6 +267,7 @@ export default function PartnerPage() {
                     </colgroup>
                     <thead>
                     <tr>
+                        <th style={{textAlign: 'center'}}>★</th>
                         <th style={{textAlign: 'center'}}>순번</th>
                         <th>상태</th>
                         <th>로고</th>
@@ -241,6 +290,8 @@ export default function PartnerPage() {
                         formatDate={formatDateDot}
                         onDelete={handleDelete}
                         onEdit={handleEdit}
+                        onToggleFavorite={handleToggleFavorite}
+                        basePath={basePath}
                     />
                 </table>
             </div>

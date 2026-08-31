@@ -7,6 +7,8 @@ type ApiCallResult = {
     result: boolean,
     data: object | object[] | string | null;
     message: string,
+    /** 서버 도메인 코드(i18n 키). 실패 원인을 문구가 아니라 코드로 분기할 때 쓴다. */
+    code: string | null,
 }
 
 const MAX_RETRY_COUNT = 5;
@@ -18,6 +20,7 @@ const parseApi = (result: boolean, json: ApiResponseType | null): ApiCallResult 
     result,
     data: json?.data ?? null,
     message: json?.message ?? "",
+    code: json?.code ?? null,
 });
 
 const fetchJson = async (url: string, option: RequestInit) => {
@@ -116,6 +119,7 @@ export default async function callApi(
             result: false,
             data: null,
             message: "The server is currently busy. Please try again later.",
+            code: null,
         };
 
     } catch (e) {
@@ -124,6 +128,7 @@ export default async function callApi(
             result: false,
             data: null,
             message: "Server Error",
+            code: null,
         };
     }
 }

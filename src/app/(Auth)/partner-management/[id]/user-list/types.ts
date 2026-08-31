@@ -1,5 +1,5 @@
-// 제휴 대시보드 공용 API(/api/crm/partner-keys/common/**) 응답 타입.
-// CRM(Taas_gov-fe_crm) dashboard/types.ts 에서 두 탭이 쓰는 것만 옮김.
+// 어드민 제휴 관리 API(/api/admin/partner-keys/**) 응답 타입.
+// 원래 CRM 공용 API 응답을 그대로 받아 썼고 응답 형태는 같지만, 경로는 어드민 전용으로 분리했다.
 
 export interface MemberRow {
     id: number;
@@ -63,4 +63,69 @@ export interface MemberStatsResponse {
     currentPage: number;
     statsStartDate: string | null; // 총 접속 수 집계 기준 시작일 (크레딧 스케줄 min start_date)
     statsEndDate: string | null; // 총 접속 수 집계 기준 종료일 (크레딧 스케줄 max expiration_date)
+}
+
+// TM 영업관리 — 어드민 전용 API(/api/admin/partner-keys/{id}/tm-members) 전용.
+// 등급/도입의향 같은 내부 영업 데이터라 CRM 공용 경로로는 절대 내보내지 않는다.
+export type CustomerGrade = 'A' | 'B' | 'C' | 'D' | 'E';
+export type AdoptionTiming = 'IMMEDIATE' | 'M1' | 'M3' | 'M6' | 'HOLD';
+
+export const ADOPTION_TIMING_LABEL: Record<AdoptionTiming, string> = {
+    IMMEDIATE: '즉시',
+    M1: '1개월',
+    M3: '3개월',
+    M6: '6개월',
+    HOLD: '보류',
+};
+
+export interface TmMemberRow extends MemberStatsRow {
+    customerGrade: CustomerGrade | null;
+    adoptionTiming: AdoptionTiming | null;
+    lastContactedOn: string | null; // "YYYY-MM-DD"
+    noContactDays: number | null; // 접촉 이력이 없으면 null
+    tmEntered: boolean; // TM 프로필이 한 번이라도 저장됐는지
+}
+
+export interface TmMemberResponse extends Omit<MemberStatsResponse, 'content'> {
+    content: TmMemberRow[];
+}
+
+// ── TM 입력 드로어 ──
+export type TmLevel = 'HIGH' | 'MID' | 'LOW';
+
+export const TM_LEVEL_LABEL: Record<TmLevel, string> = {HIGH: '상', MID: '중', LOW: '하'};
+
+/** TM 필수 입력 7항목의 현재값. 변경 이력은 남기지 않는다. */
+export interface TmProfile {
+    exportNeeds: string | null;
+    buyerFit: TmLevel | null;
+    buyerFitComment: string | null;
+    serviceValue: TmLevel | null;
+    serviceValueComment: string | null;
+    adoptionIntent: TmLevel | null;
+    adoptionIntentComment: string | null;
+    blocker: string | null;
+    adoptionTiming: AdoptionTiming | null;
+    adoptionTimingComment: string | null;
+    customerGrade: CustomerGrade | null;
+    customerGradeComment: string | null;
+    lastContactedOn: string | null; // 접촉이력에서 파생 (읽기 전용)
+    /** 저장 충돌 감지용. 불러온 값을 그대로 돌려보낸다. 미저장이면 null */
+    version: number | null;
+}
+
+export interface TmContact {
+    id: number;
+    contactedOn: string; // "YYYY-MM-DD"
+    comment: string;
+    adminId: number;
+    adminName: string;
+    mine: boolean; // 본인 작성분만 수정/삭제 가능
+    createdAt: string;
+}
+
+/** 조회·저장·접촉이력 변경 모두 같은 형태로 응답한다 (version 이 항상 최신으로 갱신됨) */
+export interface TmDetailResponse {
+    profile: TmProfile;
+    contacts: TmContact[];
 }

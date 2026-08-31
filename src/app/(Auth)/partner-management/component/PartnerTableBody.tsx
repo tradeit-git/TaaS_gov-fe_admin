@@ -11,6 +11,8 @@ interface Props {
     formatDate: (date: string | null | undefined) => string;
     onDelete: (id: number) => void;
     onEdit: (row: PartnerRow) => void;
+    onToggleFavorite: (row: PartnerRow) => void;
+    basePath: string;
 }
 
 const getStatus = (startDate: string, endDate: string): { label: string; className: string } => {
@@ -20,7 +22,7 @@ const getStatus = (startDate: string, endDate: string): { label: string; classNa
     return {label: '종료', className: 'expired'};
 };
 
-export default function PartnerTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onEdit}: Props) {
+export default function PartnerTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onEdit, onToggleFavorite, basePath}: Props) {
     const router = useRouter();
     const frontUrl = process.env.NEXT_PUBLIC_FRONT_URL ?? '';
     return (
@@ -31,6 +33,12 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
             const partnerBase = `${frontUrl}/partner/${row.partnerKey}`;
             return (
                 <tr key={row.id}>
+                    <td style={{textAlign: 'center'}}>
+                        <button type="button"
+                                className={`btn_favorite ${row.favorite ? 'on' : ''}`}
+                                title={row.favorite ? '즐겨찾기 해제' : '즐겨찾기'}
+                                onClick={() => onToggleFavorite(row)}>{row.favorite ? '★' : '☆'}</button>
+                    </td>
                     <td style={{textAlign: 'center'}}>{rowNum}</td>
                     <td>
                         <span className={`status_badge ${status.className}`}>{status.label}</span>
@@ -56,7 +64,7 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                         <button type="button" className={'btn_action'}
                                 onClick={() => window.open(`${partnerBase}/dashboard`, '_blank')}>대시보드</button>
                         <button type="button" className={'btn_action'}
-                                onClick={() => router.push(`/partner-management/${row.id}/user-list`)}>가입명단</button>
+                                onClick={() => router.push(`${basePath}/${row.id}/user-list`)}>가입명단</button>
                         <button type="button" className={'btn_action'} onClick={() => onEdit(row)}>수정</button>
                         {row.usedCount === 0 && (
                             <button type="button" className={'btn_action btn_delete_text'}

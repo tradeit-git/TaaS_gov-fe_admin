@@ -1,12 +1,19 @@
 'use client';
 
-import {useState, useRef, useEffect, useCallback, useMemo} from "react";
-import {useRouter} from "next/navigation";
+import {useState, useRef, useEffect, useCallback} from "react";
 import callApi from "@/utill/apiRequest";
-import {MemberStatsResponse, MemberStatsRow} from "@/app/(Auth)/partner-management/[id]/user-list/types";
+import TmInputDrawer from "@/app/(Auth)/partner-management/[id]/user-list/component/TmInputDrawer";
+import {
+    ADOPTION_TIMING_LABEL,
+    AdoptionTiming,
+    CustomerGrade,
+    TmMemberResponse,
+    TmMemberRow,
+} from "@/app/(Auth)/partner-management/[id]/user-list/types";
 
 type SortKey =
     | 'latest'
+    | 'noContact'
     | 'aiCore'
     | 'blSearch'
     | 'supplyChain'
@@ -18,6 +25,7 @@ type SortKey =
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     {key: 'latest', label: '최신 승인순'},
+    {key: 'noContact', label: '미접촉 ↓'},
     {key: 'aiCore', label: 'AI Core ↓'},
     {key: 'blSearch', label: 'B.L Search ↓'},
     {key: 'supplyChain', label: 'Supply Chain ↓'},
@@ -28,12 +36,22 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     {key: 'totalAccess', label: '총접속수 ↓'},
 ];
 
+const GRADE_NONE = 'NONE'; // 등급 미설정 (A~E 와 겹치지 않는 값)
+type GradeFilter = CustomerGrade | typeof GRADE_NONE | '';
+const GRADE_OPTIONS: CustomerGrade[] = ['A', 'B', 'C', 'D', 'E'];
+const TIMING_OPTIONS: AdoptionTiming[] = ['IMMEDIATE', 'M1', 'M3', 'M6', 'HOLD'];
+const NO_CONTACT_THRESHOLD = 7; // 미접촉 경과일 강조 기준
+
+// 새 탭으로 여는 <a href> 는 next/link 를 거치지 않으므로 앱 basePath 를 직접 붙여야 한다.
+const APP_BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
 const SIZE = 10;
 const PAGE_GROUP = 10;
 
 // 프론트 정렬키 → 백엔드 sort 파라미터 (latest 는 sort 미전송 = 최신 승인순 기본)
 const SORT_PARAM: Record<SortKey, string | null> = {
     latest: null,
+    noContact: 'noContact',
     aiCore: 'aiCore',
     blSearch: 'blSearch',
     supplyChain: 'supplyChain',
@@ -53,106 +71,23 @@ const formatDate = (d: string | null) => {
     return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 };
 
-// "YYYY-MM-DD"(또는 앞 10자) → 로컬 자정 Date (TZ 밀림 방지)
-const parseLocalDate = (s: string): Date => {
-    const [y, m, d] = s.slice(0, 10).split('-').map(Number);
-    return new Date(y, m - 1, d);
-};
-const addDays = (d: Date, n: number): Date => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
-const fmtWeek = (d: Date): string =>
-    `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-const isoDate = (d: Date): string =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-export interface WeekOption {
-    label: string; // 화면 표시용 "YY.MM.DD~YY.MM.DD"
-    start: string; // API 전송용 "YYYY-MM-DD"
-    end: string;
-}
-
-export interface StatsPeriod {
-    start: string | null; // 크레딧 스케줄 min start_date
-    end: string | null; // 크레딧 스케줄 max expiration_date
-}
-
-/**
- * 집계 기간 [min, max]을 주(일~토) 단위로 분할해 옵션 목록 생성(최신 주가 앞).
- * - 상한은 min(max, 오늘): 이번 주가 진행 중이면 오늘까지만 끊는다(예: 오늘 목요일 → 일~목).
- * - max(만료일) 없으면 무만료(운영중) → 오늘까지. min(시작일) 없으면 빈 배열.
- */
-const generateWeekOptions = (minStr: string | null, maxStr: string | null): WeekOption[] => {
-    if (!minStr) return [];
-    const min = parseLocalDate(minStr);
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const max = maxStr ? parseLocalDate(maxStr) : today; // 무만료면 오늘까지
-    const end = max.getTime() < today.getTime() ? max : today;
-    if (end.getTime() < min.getTime()) return [];
-
-    const options: WeekOption[] = [];
-    let weekStart = min;
-    while (weekStart.getTime() <= end.getTime()) {
-        const calSat = addDays(weekStart, 6 - weekStart.getDay()); // 그 주의 토요일
-        const weekEnd = calSat.getTime() > end.getTime() ? end : calSat;
-        options.push({label: `${fmtWeek(weekStart)}~${fmtWeek(weekEnd)}`, start: isoDate(weekStart), end: isoDate(weekEnd)});
-        weekStart = addDays(calSat, 1); // 다음 주 일요일
-    }
-    return options.reverse();
-};
-
 interface Props {
-    partnerId: string; // 상세보기 라우팅용 (제휴 PK)
-    partnerKey: string;
-    // 제휴 대시보드 접속코드. CRM 은 쿠키에서 읽지만 admin 은 제휴 상세에서 받아 그대로 넘긴다.
-    code: string;
-    // 주 옵션/선택값은 상위(UserListPage)에서 보관 → 탭 전환(언마운트)에도 유지된다.
-    statsPeriod: StatsPeriod;
-    setStatsPeriod: (p: StatsPeriod) => void;
-    selectedWeek: WeekOption | null;
-    setSelectedWeek: (w: WeekOption | null) => void;
+    partnerId: string; // 제휴 PK
+    basePath: string; // 상세보기 라우팅 베이스 (/partner-management | /poc-management)
 }
 
-export default function CompanyActivityList({partnerId, partnerKey, code, statsPeriod, setStatsPeriod, selectedWeek, setSelectedWeek}: Props) {
-    const router = useRouter();
+export default function CompanyActivityList({partnerId, basePath}: Props) {
     const [sortKey, setSortKey] = useState<SortKey>('latest');
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
-    const [rows, setRows] = useState<MemberStatsRow[]>([]);
+    const [rows, setRows] = useState<TmMemberRow[]>([]);
     const [totalPages, setTotalPages] = useState(1);
-    // 집계 기간(크레딧 스케줄 min~max)을 주(일~토) 단위로 분할. 기간 없으면 빈 목록.
-    const WEEK_OPTIONS = useMemo(
-        () => generateWeekOptions(statsPeriod.start, statsPeriod.end),
-        [statsPeriod],
-    );
-    const weekRange = selectedWeek?.label ?? ''; // 트리거 표시용 주 label
-    // 주 옵션이 생기면 선택값이 없거나 유효하지 않을 때만 최신 주로 기본 선택(상위 상태 유지).
-    useEffect(() => {
-        if (WEEK_OPTIONS.length === 0) return;
-        if (!selectedWeek || !WEEK_OPTIONS.some(o => o.label === selectedWeek.label)) {
-            setSelectedWeek(WEEK_OPTIONS[0]);
-        }
-    }, [WEEK_OPTIONS, selectedWeek, setSelectedWeek]);
-    const [weekOpen, setWeekOpen] = useState(false);
-    const [weekDropPos, setWeekDropPos] = useState<{ top: number; left: number }>({top: 0, left: 0});
-    const weekRef = useRef<HTMLDivElement>(null);
-    const weekTriggerRef = useRef<HTMLButtonElement>(null);
-
-    const openWeekDropdown = useCallback(() => {
-        if (weekTriggerRef.current) {
-            const rect = weekTriggerRef.current.getBoundingClientRect();
-            setWeekDropPos({top: rect.bottom + 4, left: rect.left + rect.width / 2 - 75});
-        }
-        setWeekOpen(prev => !prev);
-    }, []);
-
-    useEffect(() => {
-        const handler = (e: MouseEvent) => {
-            if (weekRef.current && !weekRef.current.contains(e.target as Node)) setWeekOpen(false);
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
+    // TM 영업관리 필터
+    const [gradeFilter, setGradeFilter] = useState<GradeFilter>('');
+    const [timingFilter, setTimingFilter] = useState<AdoptionTiming | ''>('');
+    // TM 입력 드로어 대상 행 (null 이면 닫힘)
+    const [tmTarget, setTmTarget] = useState<TmMemberRow | null>(null);
 
     const fetchStats = useCallback(async () => {
         const params = new URLSearchParams();
@@ -164,23 +99,20 @@ export default function CompanyActivityList({partnerId, partnerKey, code, statsP
             params.set('sort', sortParam);
             params.set('direction', 'desc'); // 활동량 많은 순
         }
-        if (selectedWeek) {
-            params.set('weekStart', selectedWeek.start);
-            params.set('weekEnd', selectedWeek.end);
-        }
-        if (code) params.set('code', code);
+        if (gradeFilter) params.set('grade', gradeFilter);
+        if (timingFilter) params.set('adoptionTiming', timingFilter);
 
+        // TM 값(등급/도입시기/접촉)이 섞여 나오므로 CRM 공개 API 가 아니라 어드민 전용 API 를 쓴다.
         const res = await callApi(
-            `/api/crm/partner-keys/common/${encodeURIComponent(partnerKey)}/dashboard/members/stats?${params.toString()}`,
+            `/api/admin/partner-keys/${partnerId}/tm-members?${params.toString()}`,
             {method: 'GET', credentials: 'include'},
         );
         if (res.result && res.data) {
-            const body = res.data as unknown as MemberStatsResponse;
+            const body = res.data as unknown as TmMemberResponse;
             setRows(body.content);
             setTotalPages(Math.max(1, body.totalPages));
-            setStatsPeriod({start: body.statsStartDate, end: body.statsEndDate});
         }
-    }, [partnerKey, code, page, search, sortKey, selectedWeek?.start, selectedWeek?.end, setStatsPeriod]);
+    }, [partnerId, page, search, sortKey, gradeFilter, timingFilter]);
 
     useEffect(() => {
         fetchStats();
@@ -227,6 +159,24 @@ export default function CompanyActivityList({partnerId, partnerKey, code, statsP
                     ))}
                 </div>
                 <div className={'v2_activity_actions'}>
+                    {/* TM 영업관리 필터 */}
+                    <select className={'v2_tm_filter'} value={gradeFilter}
+                            onChange={e => {
+                                setGradeFilter(e.target.value as GradeFilter);
+                                setPage(1);
+                            }}>
+                        <option value="">등급 전체</option>
+                        {GRADE_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
+                        <option value={GRADE_NONE}>미설정</option>
+                    </select>
+                    <select className={'v2_tm_filter'} value={timingFilter}
+                            onChange={e => {
+                                setTimingFilter(e.target.value as AdoptionTiming | '');
+                                setPage(1);
+                            }}>
+                        <option value="">도입시기 전체</option>
+                        {TIMING_OPTIONS.map(t => <option key={t} value={t}>{ADOPTION_TIMING_LABEL[t]}</option>)}
+                    </select>
                     <div className={'v2_search_wrap'}>
                         <svg className={'v2_search_icon'} width="14" height="14" viewBox="0 0 14 14" fill="none">
                             <circle cx="6" cy="6" r="5" stroke="#999" strokeWidth="1.5"/>
@@ -250,37 +200,42 @@ export default function CompanyActivityList({partnerId, partnerKey, code, statsP
             {/* 테이블 */}
             <div className={'v2_table_wrap'}>
                 <table className={'v2_table v2_activity_table'}>
+                    {/* 상세보기 열 자리를 TM 영업관리 4컬럼이 대신한다 (진입은 미접촉 칸의 ✎ 아이콘) */}
                     <colgroup>
-                        <col style={{width: '3.5%'}}/>
-                        <col style={{width: '11%'}}/>
-                        <col style={{width: '7.5%'}}/>
-                        <col style={{width: '4.7%'}}/>
-                        <col style={{width: '4.7%'}}/>
-                        <col style={{width: '4.7%'}}/>
-                        <col style={{width: '4.7%'}}/>
-                        <col style={{width: '4.7%'}}/>
-                        <col style={{width: '4.7%'}}/>
-                        <col style={{width: '4%'}}/>
-                        <col style={{width: '4%'}}/>
-                        <col style={{width: '4%'}}/>
-                        <col style={{width: '4%'}}/>
-                        <col style={{width: '5.5%'}}/>
-                        <col style={{width: '11%'}}/>
-                        <col style={{width: '5.5%'}}/>
-                        <col style={{width: '5.8%'}}/>
-                        <col style={{width: '6%'}}/>{/* 상세보기 (우측 고정) */}
+                        <col style={{width: '44px'}}/>{/* 좌측 고정 — CSS sticky left 값과 맞춰야 한다 */}
+                        <col style={{width: '170px'}}/>{/* 좌측 고정. 회사명 + 상세보기 아이콘 */}
+                        <col style={{width: '4%'}}/>{/* TM 등급 */}
+                        <col style={{width: '5.5%'}}/>{/* TM 도입시기 */}
+                        <col style={{width: '5.5%'}}/>{/* TM 최근접촉 */}
+                        <col style={{width: '6.5%'}}/>{/* TM 미접촉 + ✎ */}
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '5%'}}/>
+                        <col style={{width: '4.4%'}}/>
+                        <col style={{width: '4.4%'}}/>
+                        <col style={{width: '4.4%'}}/>
+                        <col style={{width: '4.4%'}}/>
+                        <col style={{width: '5.3%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '7.8%'}}/>
                     </colgroup>
                     <thead>
                     <tr className={'v2_thead_group'}>
                         <th rowSpan={2}>순번</th>
                         <th rowSpan={2}>회사명</th>
-                        <th rowSpan={2}>사업자번호</th>
+                        <th colSpan={4} className={'v2_th_group v2_th_tm'}>TM 영업관리</th>
                         <th colSpan={6} className={'v2_th_group'}>주요기능 이용현황</th>
                         <th colSpan={5} className={'v2_th_group'}>바이어 등록현황</th>
-                        <th colSpan={3} className={'v2_th_group'}>접속 트래픽</th>
-                        <th rowSpan={2} className={'v2_col_detail'}>상세보기</th>
+                        <th colSpan={2} className={'v2_th_group'}>접속 트래픽</th>
                     </tr>
                     <tr className={'v2_thead_sub'}>
+                        <th className={'v2_th_tm'}>등급</th>
+                        <th className={'v2_th_tm'}>도입<br/>시기</th>
+                        <th className={'v2_th_tm'}>최근<br/>접촉</th>
+                        <th className={'v2_th_tm'}>미접촉</th>
                         <th>AI<br/>Core</th>
                         <th>B.L<br/>Search</th>
                         <th>Supply<br/>chain</th>
@@ -292,30 +247,6 @@ export default function CompanyActivityList({partnerId, partnerKey, code, statsP
                         <th><span className={'v2_buyer_badge b3'}>3</span><br/>Target</th>
                         <th><span className={'v2_buyer_badge b4'}>4</span><br/>Client</th>
                         <th>합계</th>
-                        <th>
-                            <div className={'v2_week_header'}>주간 접속수</div>
-                            <div className={`v2_week_custom ${weekOpen ? 'open' : ''}`} ref={weekRef}>
-                                <button type="button" className={'v2_week_trigger'} ref={weekTriggerRef} onClick={openWeekDropdown}>
-                                    {weekRange}
-                                    <span className={'v2_week_arrow'}/>
-                                </button>
-                                {weekOpen && (
-                                    <ul className={'v2_week_dropdown'} style={{top: weekDropPos.top, left: weekDropPos.left}}>
-                                        {WEEK_OPTIONS.map(opt => (
-                                            <li key={opt.label}>
-                                                <button
-                                                    type="button"
-                                                    className={weekRange === opt.label ? 'on' : ''}
-                                                    onClick={() => { setSelectedWeek(opt); setWeekOpen(false); }}
-                                                >
-                                                    {opt.label}
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-                        </th>
                         <th>총 접속수</th>
                         <th>최근접속일</th>
                     </tr>
@@ -323,15 +254,45 @@ export default function CompanyActivityList({partnerId, partnerKey, code, statsP
                     <tbody>
                     {rows.length === 0 ? (
                         <tr>
-                            <td colSpan={18} className={'v2_empty_td'}>등록된 기업 활동 데이터가 없습니다.</td>
+                            <td colSpan={19} className={'v2_empty_td'}>등록된 기업 활동 데이터가 없습니다.</td>
                         </tr>
                     ) : rows.map((r, i) => (
                         <tr key={r.id}>
                             <td>{(page - 1) * SIZE + i + 1}</td>
                             <td className={'v2_td_company'} title={r.companyName}>
-                                {r.companyName.length > 12 ? r.companyName.slice(0, 12) + '...' : r.companyName}
+                                <span className={'v2_company_name'}>
+                                    {r.companyName.length > 11 ? r.companyName.slice(0, 11) + '...' : r.companyName}
+                                </span>
+                                {/* 상세보기 — TM 입력 중 화면을 잃지 않도록 새 탭으로 연다 */}
+                                <a className={'v2_btn_detail'}
+                                   href={`${APP_BASE_PATH}${basePath}/${partnerId}/user-list/${r.id}`}
+                                   target="_blank" rel="noopener noreferrer"
+                                   title={'상세보기 (새 탭)'}>↗</a>
                             </td>
-                            <td>{r.businessNumber || '-'}</td>
+                            {/* TM 영업관리 — 4칸 전체가 드로어 진입 영역 (별도 버튼 컬럼을 두지 않는다) */}
+                            <td className={'v2_td_tm'} onClick={() => setTmTarget(r)}>
+                                {r.customerGrade
+                                    ? <span className={'v2_grade_badge'}>{r.customerGrade}</span>
+                                    : <span className={'v2_grade_badge empty'}>–</span>}
+                            </td>
+                            <td className={'v2_td_tm'} onClick={() => setTmTarget(r)}>
+                                {r.adoptionTiming ? ADOPTION_TIMING_LABEL[r.adoptionTiming] : '-'}
+                            </td>
+                            <td className={'v2_td_tm'} onClick={() => setTmTarget(r)}>
+                                {formatDate(r.lastContactedOn)}
+                            </td>
+                            <td className={'v2_td_tm v2_td_tm_last'} onClick={() => setTmTarget(r)}>
+                                {r.noContactDays === null
+                                    ? <span className={'v2_no_contact none'}>-</span>
+                                    : <span className={`v2_no_contact ${r.noContactDays >= NO_CONTACT_THRESHOLD ? 'warn' : ''}`}>
+                                        {r.noContactDays}일
+                                    </span>}
+                                <button type="button" className={'v2_btn_tm_edit'} title={'TM 입력'}
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            setTmTarget(r);
+                                        }}>✎</button>
+                            </td>
                             <td>{formatNumber(r.aiCore)}</td>
                             <td>{formatNumber(r.blSearch)}</td>
                             <td>{formatNumber(r.supplyChain)}</td>
@@ -344,20 +305,10 @@ export default function CompanyActivityList({partnerId, partnerKey, code, statsP
                             <td>{formatNumber(r.client)}</td>
                             <td className={'v2_td_total'}>{formatNumber(r.buyerTotal)}</td>
                             <td>
-                                {formatNumber(r.weeklyVisitDays)}
-                                <span className={'v2_day_suffix'}> 일</span>
-                            </td>
-                            <td>
                                 {formatNumber(r.visitDays)}
                                 <span className={'v2_day_suffix'}> 일</span>
                             </td>
                             <td>{formatDate(r.lastLoginAt)}</td>
-                            <td className={'v2_col_detail'}>
-                                <button type="button" className={'v2_btn_view'}
-                                        onClick={() => router.push(`/partner-management/${partnerId}/user-list/${r.id}`)}>
-                                    보기
-                                </button>
-                            </td>
                         </tr>
                     ))}
                     </tbody>
@@ -372,6 +323,15 @@ export default function CompanyActivityList({partnerId, partnerKey, code, statsP
                 ))}
                 <button type="button" disabled={groupEnd >= totalPages} onClick={() => setPage(groupEnd + 1)}>›</button>
             </div>
+
+            {tmTarget && (
+                <TmInputDrawer
+                    partnerId={partnerId}
+                    row={tmTarget}
+                    onClose={() => setTmTarget(null)}
+                    onSaved={fetchStats}
+                />
+            )}
         </div>
     );
 }

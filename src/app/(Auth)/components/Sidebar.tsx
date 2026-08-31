@@ -128,6 +128,10 @@ export  default  function Sidebar (){
                       className={`lnb_name${isOn('partner-management')}`}>
                     <span className={'admin_icon partner management'}/>협회제휴관리
                 </Link>
+                <Link href={'/poc-management'}
+                      className={`lnb_name${isOn('poc-management')}`}>
+                    <span className={'admin_icon partner management'}/>PoC 관리
+                </Link>
 
                 {/*<Link href={'/client'}*/}
                 {/*      className={`lnb_name${isOn('client')}`}>*/}

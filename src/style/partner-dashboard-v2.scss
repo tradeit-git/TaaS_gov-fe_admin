@@ -107,7 +107,6 @@
 }
 
 /* ==================== 공통 테이블 ==================== */
-/* 세로는 주간 드롭다운이 넘칠 수 있도록 visible */
 .v2_table_wrap {
     overflow-x: auto;
     overflow-y: visible;
@@ -199,17 +198,28 @@
     background: #1a6ce8;
 }
 
-/* 활동현황 테이블은 17컬럼이라 가로 스크롤이 상시 발생 → 맨 뒤 상세보기 컬럼을 오른쪽에 고정.
- * border-collapse: collapse 라 스크롤 중 좌측 보더가 안 그려져서 box-shadow 로 대체한다. */
-.v2_activity_table .v2_col_detail {
+/* 활동현황 테이블은 20컬럼이라 가로 스크롤이 상시 발생 → 순번/회사명을 왼쪽에 고정.
+ * border-collapse: collapse 라 스크롤 중 보더가 안 그려져서 box-shadow 로 대체한다.
+ * left 값은 colgroup 첫 컬럼의 px 폭(44)과 맞춰야 한다. */
+.v2_activity_table .v2_thead_group th:nth-child(1),
+.v2_activity_table tbody td:nth-child(1) {
     position: sticky;
-    right: 0;
+    left: 0;
     z-index: 3;
     background: #fff;
-    box-shadow: -1px 0 0 #e5e5e5;
 }
 
-.v2_activity_table thead .v2_col_detail {
+.v2_activity_table .v2_thead_group th:nth-child(2),
+.v2_activity_table tbody td:nth-child(2) {
+    position: sticky;
+    left: 44px;
+    z-index: 3;
+    background: #fff;
+    box-shadow: 1px 0 0 #e5e5e5;
+}
+
+.v2_activity_table .v2_thead_group th:nth-child(1),
+.v2_activity_table .v2_thead_group th:nth-child(2) {
     z-index: 4;
     background: #FBFBFB;
 }
@@ -514,6 +524,97 @@
     text-align: center;
 }
 
+/* ==================== TM 영업관리 ==================== */
+/* 입력 버튼 컬럼을 따로 두지 않는다. TM 4칸 전체가 드로어 진입 영역이고 ✎ 는 그 안에 얹는다. */
+.v2_activity_table .v2_th_tm {
+    background: #F4F8FF;
+    color: #1d4ed8;
+}
+
+.v2_activity_table tbody .v2_td_tm {
+    background: #FAFCFF;
+    cursor: pointer;
+}
+
+.v2_activity_table tbody tr:hover .v2_td_tm {
+    background: #EFF6FF;
+}
+
+.v2_activity_table .v2_td_tm_last {
+    position: relative;
+    padding-right: 22px;
+}
+
+/* 고객 등급 A~E. 미입력이면 점선 "–" 로 떠서 등급 열만 봐도 구분된다. */
+.v2_grade_badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #cbd5e1;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    background: #fff;
+
+    &.empty {
+        border-style: dashed;
+        color: #cbd5e1;
+        font-weight: 400;
+    }
+}
+
+.v2_no_contact {
+    &.warn {
+        color: #d97706;
+        font-weight: 600;
+    }
+
+    &.none {
+        color: #cbd5e1;
+    }
+}
+
+.v2_btn_tm_edit {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    padding: 0 2px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    line-height: 1;
+    color: #cbd5e1;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        color: #1d4ed8;
+    }
+
+    &:disabled {
+        cursor: default;
+    }
+}
+
+.v2_activity_table tbody tr:hover .v2_btn_tm_edit:not(:disabled) {
+    color: #2563eb;
+}
+
+/* 활동현황 헤더의 TM 필터 */
+.v2_tm_filter {
+    height: 32px;
+    padding: 0 8px;
+    font-size: 13px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+}
+
 /* 바이어 번호 뱃지 */
 .v2_buyer_badge {
     display: inline-flex;
@@ -544,93 +645,466 @@
     color: #999;
 }
 
-/* 주간 접속수 헤더 */
-.v2_week_header {
-    margin-bottom: 4px;
-    color: #5d5c63;
-    font-size: 13px;
-}
-
-/* 주간 접속수 커스텀 드롭다운 */
-.v2_week_custom {
-    position: relative;
-    display: inline-block;
-}
-
-.v2_week_trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    height: 26px;
-    padding: 0 8px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
-    font-size: 13px;
-    color: #555;
-    cursor: pointer;
-    white-space: nowrap;
-    width: 154px;
-    justify-content: space-between;
-}
-
-.v2_week_trigger:hover {
-    border-color: #bbb;
-}
-
-.v2_week_custom.open .v2_week_trigger {
-    border-color: #2B7FFF;
-}
-
-.v2_week_arrow {
-    display: inline-block;
-    width: 8px;
-    height: 5px;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%23888' stroke-width='1.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
-    transition: transform 0.2s;
-}
-
-.v2_week_custom.open .v2_week_arrow {
-    transform: rotate(180deg);
-}
-
-.v2_week_dropdown {
-    position: fixed;
-    z-index: 100;
-    min-width: 150px;
-    margin: 0;
-    padding: 4px 0;
-    list-style: none;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.v2_week_dropdown button {
-    display: block;
-    width: 100%;
-    padding: 7px 12px;
-    border: none;
-    background: none;
-    font-size: 13px;
-    color: #333;
-    text-align: left;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.v2_week_dropdown button:hover {
-    background: #f5f6f8;
-}
-
-.v2_week_dropdown button.on {
-    color: #2B7FFF;
-    font-weight: 600;
-}
-
 /* 회사명 셀 */
 .v2_td_company {
     text-align: left !important;
     font-weight: 500;
+}
+
+/* 회사명 옆 상세보기 아이콘 (새 탭). 별도 컬럼을 두지 않고 회사명 칸 안에 붙인다.
+ * td 는 display:flex 로 바꾸면 table-cell 이 아니게 되어 colgroup 폭/sticky 가 깨지므로 인라인으로 배치한다. */
+.v2_activity_table .v2_td_company {
+    white-space: nowrap;
+
+    .v2_company_name {
+        display: inline-block;
+        max-width: calc(100% - 26px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+
+    .v2_btn_detail {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        margin-left: 4px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        background: #fff;
+        color: #999;
+        font-size: 11px;
+        line-height: 1;
+        text-decoration: none;
+        vertical-align: middle;
+
+        &:hover {
+            border-color: #2563eb;
+            color: #1d4ed8;
+        }
+    }
+}
+
+/* ==================== TM 입력 드로어 ====================
+ * 우측 슬라이드. 통화하면서 입력하고 바로 다음 고객으로 넘어가는 흐름이라
+ * 페이지 이동 없이 목록 위에 얹는다. 저장하면 목록의 등급·최근접촉이 곧바로 갱신된다. */
+.tm_drawer_overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.28);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.tm_drawer {
+    display: flex;
+    flex-direction: column;
+    width: 960px;
+    max-width: 100vw;
+    height: 100%;
+    background: #fff;
+    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.12);
+}
+
+.tm_drawer_head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid #eaebed;
+
+    strong { font-size: 16px; }
+
+    .tm_drawer_sub {
+        display: block;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #888;
+    }
+}
+
+.tm_drawer_close {
+    border: none;
+    background: none;
+    font-size: 16px;
+    color: #888;
+    cursor: pointer;
+
+    &:hover { color: #111; }
+}
+
+/* 자동 집계 — TM 이 입력하는 값이 아니라 통화 중 근거자료다 */
+.tm_usage {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    padding: 10px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid #eaebed;
+    font-size: 12px;
+    color: #64748b;
+
+    b {
+        color: #0f172a;
+        font-weight: 600;
+    }
+}
+
+.tm_conflict {
+    margin: 12px 20px 0;
+    padding: 10px 12px;
+    border: 1px solid #f59e0b;
+    border-radius: 6px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 12.5px;
+    line-height: 1.5;
+
+    button {
+        display: block;
+        margin-top: 6px;
+        padding: 4px 10px;
+        border: 1px solid #92400e;
+        border-radius: 4px;
+        background: #fff;
+        color: #92400e;
+        font-size: 12px;
+        cursor: pointer;
+    }
+}
+
+.tm_error {
+    margin: 12px 20px 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 12.5px;
+}
+
+.tm_loading {
+    padding: 40px 20px;
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+}
+
+/* 좌: TM 7항목 / 우: 접촉이력. 이력은 계속 쌓이므로 각각 따로 스크롤한다. */
+.tm_drawer_body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+}
+
+.tm_col_main {
+    flex: 0 0 480px;
+    overflow-y: auto;
+    padding: 16px 20px 24px;
+}
+
+.tm_col_contacts {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 16px 20px 24px;
+    border-left: 1px solid #eaebed;
+    background: #fcfcfd;
+}
+
+.tm_field {
+    margin-bottom: 18px;
+
+    textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: inherit;
+        line-height: 1.5;
+        resize: vertical;
+
+        &:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+    }
+}
+
+.tm_field_head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+
+    label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .tm_hint {
+        font-size: 11px;
+        color: #94a3b8;
+    }
+}
+
+.tm_comment_toggle,
+.tm_help {
+    border: none;
+    background: none;
+    padding: 0 2px;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.45;
+
+    &:hover { opacity: 1; }
+
+    &.on { opacity: 1; }
+}
+
+.tm_segment {
+    display: flex;
+    gap: 6px;
+
+    button {
+        min-width: 52px;
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 13px;
+        color: #475569;
+        cursor: pointer;
+
+        &:hover { background: #f5f5f5; }
+
+        &.on {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+    }
+}
+
+.tm_segment_grade button {
+    min-width: 40px;
+    font-weight: 600;
+}
+
+.tm_comment {
+    margin-top: 6px;
+    background: #fcfcfd;
+}
+
+.tm_grade_help {
+    margin-top: 6px;
+    padding: 8px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #f8fafc;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #475569;
+
+    b { color: #0f172a; }
+
+    .step {
+        display: inline-block;
+        min-width: 62px;
+        margin: 0 6px;
+        color: #2563eb;
+    }
+}
+
+/* 접촉이력 — 누적. 저장 버튼과 별개로 즉시 반영된다. */
+.tm_contact_form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+
+    textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: inherit;
+        line-height: 1.5;
+        resize: vertical;
+
+        &:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+    }
+
+    input[type="date"] {
+        width: 150px;
+        height: 30px;
+        padding: 0 8px;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: inherit;
+    }
+}
+
+.tm_contact_form_actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+
+    button {
+        height: 30px;
+        padding: 0 14px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        cursor: pointer;
+    }
+
+    .btn_add {
+        border: none;
+        background: #2563eb;
+        color: #fff;
+
+        &:hover { opacity: 0.9; }
+    }
+
+    .btn_ghost {
+        border: 1px solid #d0d0d0;
+        background: #fff;
+        color: #677793;
+    }
+}
+
+.tm_timeline {
+    margin-top: 12px;
+
+    li {
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+
+        &:last-child { border-bottom: none; }
+    }
+
+    .tm_timeline_empty {
+        padding: 16px 0;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 12.5px;
+    }
+}
+
+.tm_timeline_head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 12px;
+
+    .date {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .who { color: #64748b; }
+
+    .acts {
+        margin-left: auto;
+        display: flex;
+        gap: 6px;
+
+        button {
+            border: none;
+            background: none;
+            padding: 0;
+            font-size: 11.5px;
+            color: #94a3b8;
+            text-decoration: underline;
+            cursor: pointer;
+
+            &:hover { color: #2563eb; }
+        }
+    }
+}
+
+/* 개행을 그대로 보여준다 (통화 내용을 여러 줄로 적는다) */
+.tm_timeline_body {
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #334155;
+}
+
+.tm_more {
+    margin-top: 2px;
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 11.5px;
+    color: #2563eb;
+    cursor: pointer;
+}
+
+.tm_drawer_foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid #eaebed;
+
+    .tm_saved_flash {
+        margin-right: 4px;
+        font-size: 12.5px;
+        color: #16a34a;
+    }
+
+    .tm_dirty_flag {
+        margin-right: auto;
+        font-size: 12.5px;
+        color: #d97706;
+    }
+
+    button {
+        min-width: 88px;
+        height: 36px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .btn_cancel {
+        border: 1px solid #d0d0d0;
+        background: #fff;
+        color: #677793;
+    }
+
+    .btn_save {
+        border: none;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 600;
+
+        &:hover:not(:disabled) { opacity: 0.9; }
+
+        &:disabled {
+            background: #cbd5e1;
+            cursor: default;
+        }
+    }
 }

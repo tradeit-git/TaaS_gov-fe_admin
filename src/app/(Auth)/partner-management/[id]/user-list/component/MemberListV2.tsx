@@ -26,13 +26,11 @@ const formatDate = (d: string) => {
 };
 
 interface Props {
-    partnerId: string; // 상세보기 라우팅용 (제휴 PK)
-    partnerKey: string;
-    // 제휴 대시보드 접속코드. CRM 은 쿠키에서 읽지만 admin 은 제휴 상세에서 받아 그대로 넘긴다.
-    code: string;
+    partnerId: string; // 제휴 PK
+    basePath: string; // 상세보기 라우팅 베이스 (/partner-management | /poc-management)
 }
 
-export default function MemberListV2({partnerId, partnerKey, code}: Props) {
+export default function MemberListV2({partnerId, basePath}: Props) {
     const router = useRouter();
     const [rows, setRows] = useState<MembersResponse['content']>([]);
     const [page, setPage] = useState(1);
@@ -52,10 +50,9 @@ export default function MemberListV2({partnerId, partnerKey, code}: Props) {
         params.set('size', String(SIZE));
         if (search.trim()) params.set('companyName', search.trim());
         if (approvalFilter) params.set('approvalStatus', approvalFilter);
-        if (code) params.set('code', code);
 
         const res = await callApi(
-            `/api/crm/partner-keys/common/${encodeURIComponent(partnerKey)}/dashboard/members?${params.toString()}`,
+            `/api/admin/partner-keys/${partnerId}/members?${params.toString()}`,
             {method: 'GET', credentials: 'include'},
         );
         if (res.result && res.data) {
@@ -68,7 +65,7 @@ export default function MemberListV2({partnerId, partnerKey, code}: Props) {
             setRejectedCount(body.rejectedCount);
             setApprovalEdits({});
         }
-    }, [partnerKey, code, page, search, approvalFilter]);
+    }, [partnerId, page, search, approvalFilter]);
 
     useEffect(() => {
         fetchMembers();
@@ -95,8 +92,6 @@ export default function MemberListV2({partnerId, partnerKey, code}: Props) {
         const status = approvalEdits[id];
         if (!status) return;
 
-        // 조회는 CRM 공용 API(permitAll)를 그대로 쓰지만, 쓰기는 admin JWT 로 보호되는
-        // admin 엔드포인트를 쓴다. 양쪽 모두 PartnerMemberApprovalService 를 호출해 동작은 같다.
         await callApi(
             `/api/admin/partner-keys/members/${id}/approval`,
             {method: 'PUT', credentials: 'include', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({approvalStatus: status})},
@@ -111,10 +106,9 @@ export default function MemberListV2({partnerId, partnerKey, code}: Props) {
         params.set('size', '100000');
         if (search.trim()) params.set('companyName', search.trim());
         if (approvalFilter) params.set('approvalStatus', approvalFilter);
-        if (code) params.set('code', code);
 
         const res = await callApi(
-            `/api/crm/partner-keys/common/${encodeURIComponent(partnerKey)}/dashboard/members?${params.toString()}`,
+            `/api/admin/partner-keys/${partnerId}/members?${params.toString()}`,
             {method: 'GET', credentials: 'include'},
         );
         if (!res.result || !res.data) return;
@@ -278,7 +272,7 @@ export default function MemberListV2({partnerId, partnerKey, code}: Props) {
                                 </td>
                                 <td>
                                     <button type="button" className={'v2_btn_view'}
-                                            onClick={() => router.push(`/partner-management/${partnerId}/user-list/${m.id}`)}>
+                                            onClick={() => router.push(`${basePath}/${partnerId}/user-list/${m.id}`)}>
                                         보기
                                     </button>
                                 </td>

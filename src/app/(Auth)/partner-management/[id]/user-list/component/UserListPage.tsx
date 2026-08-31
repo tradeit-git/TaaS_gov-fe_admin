@@ -5,7 +5,7 @@ import {useCallback, useEffect, useState} from "react";
 import {formatDateDot} from "@/utill/format";
 import callApi from "@/utill/apiRequest";
 import MemberListV2 from "@/app/(Auth)/partner-management/[id]/user-list/component/MemberListV2";
-import CompanyActivityList, {StatsPeriod, WeekOption} from "@/app/(Auth)/partner-management/[id]/user-list/component/CompanyActivityList";
+import CompanyActivityList from "@/app/(Auth)/partner-management/[id]/user-list/component/CompanyActivityList";
 
 interface CoalitionDetailApiRow {
     id: number;
@@ -16,7 +16,6 @@ interface CoalitionDetailApiRow {
     endDate: string;
     createdAt: string;
     requiresApproval?: boolean;
-    dashboardAccessCode?: string | null;
 }
 
 interface PartnerInfo {
@@ -26,7 +25,6 @@ interface PartnerInfo {
     startDate: string;
     endDate: string;
     requiresApproval: boolean;
-    dashboardAccessCode: string; // 대시보드 공용 API 호출 시 code 로 전달 (미설정이면 빈 문자열)
 }
 
 const mapToPartnerInfo = (row: CoalitionDetailApiRow): PartnerInfo => ({
@@ -36,19 +34,19 @@ const mapToPartnerInfo = (row: CoalitionDetailApiRow): PartnerInfo => ({
     startDate: row.startDate,
     endDate: row.endDate,
     requiresApproval: row.requiresApproval ?? false,
-    dashboardAccessCode: row.dashboardAccessCode ?? '',
 });
 
 interface Props {
     partnerId: string;
+    /** 상단 표기 (협회제휴관리 / PoC 관리) */
+    title?: string;
+    /** "목록으로" 가 돌아갈 목록 라우트 */
+    basePath?: string;
 }
 
-export default function UserListPage({partnerId}: Props) {
+export default function UserListPage({partnerId, title = '협회제휴관리', basePath = '/partner-management'}: Props) {
     const [partner, setPartner] = useState<PartnerInfo | null>(null);
     const [activeTab, setActiveTab] = useState<'members' | 'activity'>('members');
-    // 기업별 활동현황 주 옵션/선택값은 여기서 보관 → 탭 전환(자식 언마운트)에도 유지.
-    const [activityPeriod, setActivityPeriod] = useState<StatsPeriod>({start: null, end: null});
-    const [activityWeek, setActivityWeek] = useState<WeekOption | null>(null);
 
     const fetchPartner = useCallback(async () => {
         const res = await callApi(`/api/admin/partner-keys/${partnerId}`, {
@@ -68,11 +66,11 @@ export default function UserListPage({partnerId}: Props) {
     return (
         <div className={'admin_page partner_page'}>
             <div className={'page_start_box'}>
-                <h2>협회제휴관리</h2>
+                <h2>{title}</h2>
                 <ul className={'breadcrumb'}>
                     <li>홈</li>
                     <li><span className={'admin_icon icon_next'}/></li>
-                    <li><Link href={'/partner-management'}>협회제휴관리</Link></li>
+                    <li><Link href={basePath}>{title}</Link></li>
                     <li><span className={'admin_icon icon_next'}/></li>
                     <li>가입명단</li>
                 </ul>
@@ -107,7 +105,7 @@ export default function UserListPage({partnerId}: Props) {
                             <span>{formatDateDot(partner.endDate)}</span>
                         </div>
                     </>}
-                    <Link href={'/partner-management'} className={'list_button info_row_list_button'}>목록으로</Link>
+                    <Link href={basePath} className={'list_button info_row_list_button'}>목록으로</Link>
                 </div>
             </div>
 
@@ -131,21 +129,15 @@ export default function UserListPage({partnerId}: Props) {
                     </button>
                 </div>
 
-                {/* 탭 콘텐츠 — 두 탭 모두 partnerKey 기준이라 제휴 정보 로드 후에만 렌더 */}
+                {/* 탭 콘텐츠 — 제휴 정보 로드 후에만 렌더 */}
                 <div className={`v2_tab_content ${activeTab !== 'members' ? 'v2_tab_content_round_left' : ''}`}>
                     {partner && activeTab === 'members' && <MemberListV2
                         partnerId={partnerId}
-                        partnerKey={partner.partnerKey}
-                        code={partner.dashboardAccessCode}
+                        basePath={basePath}
                     />}
                     {partner && activeTab === 'activity' && <CompanyActivityList
                         partnerId={partnerId}
-                        partnerKey={partner.partnerKey}
-                        code={partner.dashboardAccessCode}
-                        statsPeriod={activityPeriod}
-                        setStatsPeriod={setActivityPeriod}
-                        selectedWeek={activityWeek}
-                        setSelectedWeek={setActivityWeek}
+                        basePath={basePath}
                     />}
                 </div>
             </div>
