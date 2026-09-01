@@ -1,7 +1,8 @@
 'use client'
 
 import Link from "next/link";
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
 import PartnerCreateForm from "@/app/(Auth)/partner-management/component/PartnerCreateForm";
 import PartnerEditForm from "@/app/(Auth)/partner-management/component/PartnerEditForm";
 import PartnerTableBody from "@/app/(Auth)/partner-management/component/PartnerTableBody";
@@ -9,68 +10,17 @@ import {formatDateDot} from "@/utill/format";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import callApi from "@/utill/apiRequest";
-
-export interface PartnerRow {
-    id: number;
-    partnerKey: string;
-    partnerName: string;
-    startDate: string;
-    endDate: string;
-    creditAmount: number;
-    maxMembers: number;
-    usedCount: number;
-    approvedCount: number;
-    createdAt: string;
-    logoUrl: string;
-    requiresApproval: boolean;
-    dashboardCode: string;
-    favorite: boolean;
-}
-
-interface CoalitionApiRow {
-    id: number;
-    partnerName: string;
-    partnerKey: string;
-    bonusCredit: number;
-    maxMembers: number;
-    startDate: string;
-    endDate: string;
-    createdAt: string;
-    userCount: number;
-    approvedCount?: number;
-    status: string;
-    logoUrl?: string;
-    requiresApproval?: boolean;
-    dashboardAccessCode?: string;
-    favorite?: boolean;
-}
-
-interface CoalitionListResponse {
-    content: CoalitionApiRow[];
-    totalElements: number;
-    totalPages: number;
-}
-
-const mapToPartnerRow = (row: CoalitionApiRow): PartnerRow => ({
-    id: row.id,
-    partnerKey: row.partnerKey,
-    partnerName: row.partnerName,
-    startDate: row.startDate,
-    endDate: row.endDate,
-    creditAmount: row.bonusCredit,
-    maxMembers: row.maxMembers ?? 0,
-    usedCount: row.userCount,
-    approvedCount: row.approvedCount ?? 0,
-    createdAt: row.createdAt,
-    logoUrl: row.logoUrl ?? '',
-    requiresApproval: row.requiresApproval ?? false,
-    dashboardCode: row.dashboardAccessCode ?? '',
-    favorite: row.favorite ?? false,
-});
-
-export type PartnerCategory = 'BASE' | 'POC';
+import {
+    buildPartnerQuery,
+    PartnerCategory,
+    PartnerFilters,
+    PartnerListData,
+    PartnerRow,
+} from "@/app/(Auth)/partner-management/component/types";
 
 interface Props {
+    data: PartnerListData;
+    filters: PartnerFilters;
     /**
      * 이 페이지가 다루는 제휴 카테고리. 화면에 필터를 두지 않고 페이지가 고정으로 넘긴다.
      * 미지정이면 전체(협회제휴관리).
@@ -81,55 +31,45 @@ interface Props {
     basePath?: string;
 }
 
-export default function PartnerPage({category, title = '협회제휴관리', basePath = '/partner-management'}: Props) {
+export default function PartnerPage({data, filters, category, title = '협회제휴관리', basePath = '/partner-management'}: Props) {
+    const router = useRouter();
     const {addPopup} = usePopupStore();
-    const [data, setData] = useState<PartnerRow[]>([]);
-    const [searchInput, setSearchInput] = useState('');
-    const [search, setSearch] = useState('');
-    const [currentPage, setCurrentPage] = useState(0);
-    const [itemsPerPage, setItemsPerPage] = useState(15);
-    const [totalElements, setTotalElements] = useState(0);
-    const [totalPages, setTotalPages] = useState(1);
-    const [statusFilter, setStatusFilter] = useState('');
-    // 즐겨찾기는 관리자 개인 설정(북마크)이며 담당 배정이나 접근 권한이 아니다.
-    const [favoriteOnly, setFavoriteOnly] = useState(false);
 
-    const fetchList = useCallback(async () => {
-        const params = new URLSearchParams();
-        params.set('page', String(currentPage + 1));
-        params.set('size', String(itemsPerPage));
-        if (statusFilter) params.set('status', statusFilter);
-        if (search.trim()) params.set('search', search.trim());
-        if (category) params.set('category', category);
-        if (favoriteOnly) params.set('favoriteOnly', 'true');
+    // 풀 SSR: 표시값은 전부 서버 props 에서 파생 (URL = 단일 진실)
+    const totalElements = data.totalElements;
+    const totalPages = data.totalPages;
+    const currentPage = filters.page;       // 0-based
+    const itemsPerPage = filters.size;
 
-        const res = await callApi(`/api/admin/partner-keys/list?${params.toString()}`, {
-            method: 'GET',
-            credentials: 'include',
-        });
-
-        if (res.result && res.data) {
-            const body = res.data as CoalitionListResponse;
-            setData(body.content.map(mapToPartnerRow));
-            setTotalElements(body.totalElements);
-            setTotalPages(Math.max(1, body.totalPages));
-        }
-    }, [currentPage, itemsPerPage, search, statusFilter, favoriteOnly, category]);
-
+    // 검색어만 입력 중 로컬 상태 (디바운스 후 네비게이션). 네비게이션 완료 시 서버값과 동기화.
+    const [searchInput, setSearchInput] = useState(filters.search);
     useEffect(() => {
-        fetchList();
-    }, [fetchList]);
+        setSearchInput(filters.search);
+    }, [filters.search]);
 
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // 즐겨찾기는 서버 렌더를 기다리지 않고 먼저 반영한다. 새 서버 데이터가 오면 비운다.
+    const [favoriteOverride, setFavoriteOverride] = useState<Record<number, boolean>>({});
     useEffect(() => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            setSearch(searchInput);
-            setCurrentPage(0);
-        }, 100);
-        return () => {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-        };
+        setFavoriteOverride({});
+    }, [data]);
+
+    const rows = data.rows.map(r => (r.id in favoriteOverride ? {...r, favorite: favoriteOverride[r.id]} : r));
+
+    // 현재 필터 + 변경분으로 URL을 만들어 네비게이션 (router가 basePath/히스토리 정상 처리)
+    const navigate = (next: Partial<PartnerFilters>) => {
+        const qs = buildPartnerQuery({...filters, ...next});
+        router.replace(qs ? `${basePath}?${qs}` : basePath);
+    };
+
+    // 가입명단으로 들고 갈 현재 검색조건. 거기서 "목록으로" 를 누르면 이 상태로 돌아온다.
+    const listQuery = buildPartnerQuery(filters);
+
+    // 검색 디바운스 → 네비게이션 (실제로 바뀐 경우만)
+    useEffect(() => {
+        if (searchInput === filters.search) return;
+        const t = setTimeout(() => navigate({search: searchInput, page: 0}), 400);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchInput]);
 
     const displayPage = currentPage + 1;
@@ -139,27 +79,22 @@ export default function PartnerPage({category, title = '협회제휴관리', bas
     const groupEnd = Math.min(currentGroup * pageGroupSize, totalPages);
     const pageNumbers = Array.from({length: groupEnd - groupStart + 1}, (_, i) => groupStart + i);
 
-    const handleItemsPerPageChange = (value: number) => {
-        setItemsPerPage(value);
-        setCurrentPage(0);
-    };
+    // 목록을 바꾸는 작업은 현재 필터/페이지 그대로 서버에서 다시 렌더한다.
+    const refresh = () => router.refresh();
 
     const handleOpenCreatePopup = () => {
-        addPopup(<PartnerCreateForm category={category} onCreated={fetchList}/>);
+        addPopup(<PartnerCreateForm category={category} onCreated={refresh}/>);
     };
 
     const handleReset = () => {
         setSearchInput('');
-        setSearch('');
-        setStatusFilter('');
-        setFavoriteOnly(false);
-        setCurrentPage(0);
+        router.replace(basePath);
     };
 
-    // 즐겨찾기 토글. 리로드 없이 해당 행만 갱신하되, 즐겨찾기만 보기 상태면 목록에서 빠져야 하므로 재조회한다.
+    // 즐겨찾기만 보기 상태면 목록에서 빠져야 하므로 성공 후 서버 렌더를 다시 받는다.
     const handleToggleFavorite = async (row: PartnerRow) => {
         const next = !row.favorite;
-        setData(prev => prev.map(r => (r.id === row.id ? {...r, favorite: next} : r)));
+        setFavoriteOverride(prev => ({...prev, [row.id]: next}));
 
         const res = await callApi(`/api/admin/partner-keys/${row.id}/favorite`, {
             method: next ? 'POST' : 'DELETE',
@@ -167,15 +102,19 @@ export default function PartnerPage({category, title = '협회제휴관리', bas
         });
 
         if (!res.result) {
-            setData(prev => prev.map(r => (r.id === row.id ? {...r, favorite: !next} : r)));
+            setFavoriteOverride(prev => {
+                const rollback = {...prev};
+                delete rollback[row.id];
+                return rollback;
+            });
             addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '즐겨찾기 처리에 실패했습니다.'}/>);
             return;
         }
-        if (favoriteOnly) fetchList();
+        refresh();
     };
 
     const handleEdit = (row: PartnerRow) => {
-        addPopup(<PartnerEditForm partner={row} onEdited={fetchList}/>);
+        addPopup(<PartnerEditForm partner={row} onEdited={refresh}/>);
     };
 
     const handleDelete = (id: number) => {
@@ -186,7 +125,7 @@ export default function PartnerPage({category, title = '협회제휴관리', bas
             });
             if (res.result) {
                 addPopup(<AlertComponent alertType={'alert'} infoContent={'삭제되었습니다.'}/>);
-                fetchList();
+                refresh();
             } else {
                 addPopup(<AlertComponent alertType={'error'} infoContent={res.message || '삭제에 실패했습니다.'}/>);
             }
@@ -200,8 +139,6 @@ export default function PartnerPage({category, title = '협회제휴관리', bas
                 <ul className={'breadcrumb'}>
                     <li>홈</li>
                     <li><span className={'admin_icon icon_next'}/></li>
-                    <li>AP</li>
-                    <li><span className={'admin_icon icon_next'}/></li>
                     <li><Link href={basePath}>{title}</Link></li>
                 </ul>
             </div>
@@ -210,34 +147,24 @@ export default function PartnerPage({category, title = '협회제휴관리', bas
             <div className={'list_header'}>
                 <p className={'result_count'}>{totalElements.toLocaleString()} records founds</p>
                 <div className={'search_area'}>
-                    <select value={statusFilter} onChange={e => {
-                        setStatusFilter(e.target.value);
-                        setCurrentPage(0);
-                    }}>
+                    <select value={filters.status} onChange={e => navigate({status: e.target.value, page: 0})}>
                         <option value="">상태 전체</option>
                         <option value="예정">예정</option>
                         <option value="진행">진행</option>
                         <option value="종료">종료</option>
                     </select>
                     <button type="button"
-                            className={`btn_favorite_filter ${favoriteOnly ? 'on' : ''}`}
-                            onClick={() => {
-                                setFavoriteOnly(prev => !prev);
-                                setCurrentPage(0);
-                            }}>
+                            className={`btn_favorite_filter ${filters.favoriteOnly ? 'on' : ''}`}
+                            onClick={() => navigate({favoriteOnly: !filters.favoriteOnly, page: 0})}>
                         <span className={'star'}>★</span> 즐겨찾기만
                     </button>
                     <div className={'search_input_wrap'}>
                         <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
                                placeholder={'제휴명 검색'}/>
                         {searchInput && <button type="button" className={'btn_clear'}
-                                                onClick={() => {
-                                                    setSearchInput('');
-                                                    setSearch('');
-                                                    setCurrentPage(0);
-                                                }}><span className={'admin_icon'}/></button>}
+                                                onClick={() => setSearchInput('')}><span className={'admin_icon'}/></button>}
                     </div>
-                    <select value={itemsPerPage} onChange={e => handleItemsPerPageChange(Number(e.target.value))}>
+                    <select value={itemsPerPage} onChange={e => navigate({size: Number(e.target.value), page: 0})}>
                         <option value={15}>15개씩 보기</option>
                         <option value={30}>30개씩 보기</option>
                         <option value={50}>50개씩 보기</option>
@@ -283,7 +210,7 @@ export default function PartnerPage({category, title = '협회제휴관리', bas
                     </tr>
                     </thead>
                     <PartnerTableBody
-                        data={data}
+                        data={rows}
                         totalElements={totalElements}
                         currentPage={currentPage}
                         itemsPerPage={itemsPerPage}
@@ -292,6 +219,7 @@ export default function PartnerPage({category, title = '협회제휴관리', bas
                         onEdit={handleEdit}
                         onToggleFavorite={handleToggleFavorite}
                         basePath={basePath}
+                        listQuery={listQuery}
                     />
                 </table>
             </div>
@@ -300,16 +228,16 @@ export default function PartnerPage({category, title = '협회제휴관리', bas
             <div className={'pagination'}>
                 {currentGroup > 1 &&
                     <button type="button" className={'btn_prev'}
-                            onClick={() => setCurrentPage(groupStart - pageGroupSize - 1)}><span
+                            onClick={() => navigate({page: groupStart - pageGroupSize - 1})}><span
                         className={'admin_icon'}/></button>}
                 {pageNumbers.map(page => (
                     <button key={page} type="button"
                             className={`btn_page ${page === displayPage ? 'on' : ''}`}
-                            onClick={() => setCurrentPage(page - 1)}>{page}</button>
+                            onClick={() => navigate({page: page - 1})}>{page}</button>
                 ))}
                 {groupEnd < totalPages &&
                     <button type="button" className={'btn_next'}
-                            onClick={() => setCurrentPage(groupEnd)}><span
+                            onClick={() => navigate({page: groupEnd})}><span
                         className={'admin_icon'}/></button>}
             </div>
         </div>

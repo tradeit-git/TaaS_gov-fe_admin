@@ -90,6 +90,80 @@ export interface TmMemberResponse extends Omit<MemberStatsResponse, 'content'> {
     content: TmMemberRow[];
 }
 
+// ── 화면 상태 (URL = 단일 진실) ──
+// 두 탭이 같은 페이지를 쓰므로 쿼리도 한 벌만 둔다. 탭을 바꾸면 다른 탭의 필터는 버린다.
+
+export interface PartnerInfo {
+    partnerName: string;
+    partnerKey: string;
+    creditAmount: number;
+    startDate: string;
+    endDate: string;
+    requiresApproval: boolean;
+}
+
+export type UserListTab = 'members' | 'activity';
+
+export type SortKey =
+    | 'latest'
+    | 'noContact'
+    | 'aiCore'
+    | 'blSearch'
+    | 'supplyChain'
+    | 'buyerEnrich'
+    | 'buyerFit'
+    | 'salesActivity'
+    | 'buyerTotal'
+    | 'totalAccess';
+
+/** 프론트 정렬키 → 백엔드 sort 파라미터 (latest 는 sort 미전송 = 최신 승인순 기본) */
+export const SORT_PARAM: Record<SortKey, string | null> = {
+    latest: null,
+    noContact: 'noContact',
+    aiCore: 'aiCore',
+    blSearch: 'blSearch',
+    supplyChain: 'supplyChain',
+    buyerEnrich: 'buyerEnrich',
+    buyerFit: 'buyerFit',
+    salesActivity: 'salesLog',
+    buyerTotal: 'buyerTotal',
+    totalAccess: 'visitDays',
+};
+
+export const SIZE_OPTIONS = [10, 50, 100];
+export const DEFAULT_TAB_SIZE = SIZE_OPTIONS[0];
+
+export interface UserListFilters {
+    tab: UserListTab;
+    q: string;      // 회사명 검색 (두 탭 공용)
+    page: number;   // 1-based
+    size: number;
+    approval: string;   // 가입명단 탭
+    sort: SortKey;      // 활동현황 탭
+    grade: string;      // 활동현황 탭 (A~E, 또는 미설정 NONE)
+    timing: string;     // 활동현황 탭
+    /** 들어올 때의 목록 검색조건(쿼리스트링). "목록으로" 가 이 상태로 돌아간다. */
+    from: string;
+}
+
+/** 기본값은 URL 에 싣지 않는다. 현재 탭과 무관한 필터도 빠지므로 탭 전환 시 자동으로 정리된다. */
+export function buildUserListQuery(f: UserListFilters): string {
+    const p = new URLSearchParams();
+    if (f.tab !== 'members') p.set('tab', f.tab);
+    if (f.q.trim()) p.set('q', f.q.trim());
+    if (f.page > 1) p.set('page', String(f.page));
+    if (f.size !== DEFAULT_TAB_SIZE) p.set('size', String(f.size));
+    if (f.tab === 'members' && f.approval) p.set('approval', f.approval);
+    if (f.tab === 'activity') {
+        if (f.sort !== 'latest') p.set('sort', f.sort);
+        if (f.grade) p.set('grade', f.grade);
+        if (f.timing) p.set('timing', f.timing);
+    }
+    // 탭을 옮기거나 필터를 바꿔도 돌아갈 목록 조건은 잃지 않아야 한다.
+    if (f.from) p.set('from', f.from);
+    return p.toString();
+}
+
 // ── TM 입력 드로어 ──
 export type TmLevel = 'HIGH' | 'MID' | 'LOW';
 

@@ -1,27 +1,18 @@
 'use client';
 
-import {useState, useRef, useEffect, useCallback} from "react";
-import callApi from "@/utill/apiRequest";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
 import TmInputDrawer from "@/app/(Auth)/partner-management/[id]/user-list/component/TmInputDrawer";
 import {
     ADOPTION_TIMING_LABEL,
     AdoptionTiming,
     CustomerGrade,
+    SIZE_OPTIONS,
+    SortKey,
     TmMemberResponse,
     TmMemberRow,
+    UserListFilters,
 } from "@/app/(Auth)/partner-management/[id]/user-list/types";
-
-type SortKey =
-    | 'latest'
-    | 'noContact'
-    | 'aiCore'
-    | 'blSearch'
-    | 'supplyChain'
-    | 'buyerEnrich'
-    | 'buyerFit'
-    | 'salesActivity'
-    | 'buyerTotal'
-    | 'totalAccess';
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     {key: 'latest', label: '최신 승인순'},
@@ -37,7 +28,6 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 ];
 
 const GRADE_NONE = 'NONE'; // 등급 미설정 (A~E 와 겹치지 않는 값)
-type GradeFilter = CustomerGrade | typeof GRADE_NONE | '';
 const GRADE_OPTIONS: CustomerGrade[] = ['A', 'B', 'C', 'D', 'E'];
 const TIMING_OPTIONS: AdoptionTiming[] = ['IMMEDIATE', 'M1', 'M3', 'M6', 'HOLD'];
 const NO_CONTACT_THRESHOLD = 7; // 미접촉 경과일 강조 기준
@@ -45,22 +35,7 @@ const NO_CONTACT_THRESHOLD = 7; // 미접촉 경과일 강조 기준
 // 새 탭으로 여는 <a href> 는 next/link 를 거치지 않으므로 앱 basePath 를 직접 붙여야 한다.
 const APP_BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
-const SIZE_OPTIONS = [10, 50, 100];
 const PAGE_GROUP = 10;
-
-// 프론트 정렬키 → 백엔드 sort 파라미터 (latest 는 sort 미전송 = 최신 승인순 기본)
-const SORT_PARAM: Record<SortKey, string | null> = {
-    latest: null,
-    noContact: 'noContact',
-    aiCore: 'aiCore',
-    blSearch: 'blSearch',
-    supplyChain: 'supplyChain',
-    buyerEnrich: 'buyerEnrich',
-    buyerFit: 'buyerFit',
-    salesActivity: 'salesLog',
-    buyerTotal: 'buyerTotal',
-    totalAccess: 'visitDays',
-};
 
 const formatNumber = (n: number) => n.toLocaleString();
 
@@ -74,68 +49,35 @@ const formatDate = (d: string | null) => {
 interface Props {
     partnerId: string; // 제휴 PK
     basePath: string; // 상세보기 라우팅 베이스 (/partner-management | /poc-management)
+    data: TmMemberResponse;
+    filters: UserListFilters;
+    navigate: (next: Partial<UserListFilters>) => void;
 }
 
-export default function CompanyActivityList({partnerId, basePath}: Props) {
-    const [sortKey, setSortKey] = useState<SortKey>('latest');
-    const [searchInput, setSearchInput] = useState('');
-    const [search, setSearch] = useState('');
-    const [page, setPage] = useState(1);
-    const [size, setSize] = useState(SIZE_OPTIONS[0]);
-    const [rows, setRows] = useState<TmMemberRow[]>([]);
-    const [totalPages, setTotalPages] = useState(1);
-    // TM 영업관리 필터
-    const [gradeFilter, setGradeFilter] = useState<GradeFilter>('');
-    const [timingFilter, setTimingFilter] = useState<AdoptionTiming | ''>('');
+export default function CompanyActivityList({partnerId, basePath, data, filters, navigate}: Props) {
+    const router = useRouter();
+
+    // 풀 SSR: 표시값은 전부 서버 props 에서 파생 (URL = 단일 진실)
+    const rows = data.content;
+    const totalPages = Math.max(1, data.totalPages);
+    const page = filters.page;
+    const size = filters.size;
+
     // TM 입력 드로어 대상 행 (null 이면 닫힘)
     const [tmTarget, setTmTarget] = useState<TmMemberRow | null>(null);
 
-    const fetchStats = useCallback(async () => {
-        const params = new URLSearchParams();
-        params.set('page', String(page));
-        params.set('size', String(size));
-        if (search.trim()) params.set('companyName', search.trim());
-        const sortParam = SORT_PARAM[sortKey];
-        if (sortParam) {
-            params.set('sort', sortParam);
-            params.set('direction', 'desc'); // 활동량 많은 순
-        }
-        if (gradeFilter) params.set('grade', gradeFilter);
-        if (timingFilter) params.set('adoptionTiming', timingFilter);
-
-        // TM 값(등급/도입시기/접촉)이 섞여 나오므로 CRM 공개 API 가 아니라 어드민 전용 API 를 쓴다.
-        const res = await callApi(
-            `/api/admin/partner-keys/${partnerId}/tm-members?${params.toString()}`,
-            {method: 'GET', credentials: 'include'},
-        );
-        if (res.result && res.data) {
-            const body = res.data as unknown as TmMemberResponse;
-            setRows(body.content);
-            setTotalPages(Math.max(1, body.totalPages));
-        }
-    }, [partnerId, page, size, search, sortKey, gradeFilter, timingFilter]);
+    // 검색어만 입력 중 로컬 상태 (디바운스 후 네비게이션). 네비게이션 완료 시 서버값과 동기화.
+    const [searchInput, setSearchInput] = useState(filters.q);
+    useEffect(() => {
+        setSearchInput(filters.q);
+    }, [filters.q]);
 
     useEffect(() => {
-        fetchStats();
-    }, [fetchStats]);
-
-    // 검색 디바운스
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    useEffect(() => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            setSearch(searchInput);
-            setPage(1);
-        }, 500);
-        return () => {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-        };
+        if (searchInput === filters.q) return;
+        const t = setTimeout(() => navigate({q: searchInput, page: 1}), 400);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchInput]);
-
-    const handleSort = (key: SortKey) => {
-        setSortKey(key);
-        setPage(1);
-    };
 
     const currentGroup = Math.ceil(page / PAGE_GROUP);
     const groupStart = (currentGroup - 1) * PAGE_GROUP + 1;
@@ -151,8 +93,8 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
                         <button
                             key={opt.key}
                             type="button"
-                            className={`v2_sort_btn ${sortKey === opt.key ? 'on' : ''}`}
-                            onClick={() => handleSort(opt.key)}
+                            className={`v2_sort_btn ${filters.sort === opt.key ? 'on' : ''}`}
+                            onClick={() => navigate({sort: opt.key, page: 1})}
                         >
                             <span className={'content_icon'}/>
                             {opt.label}
@@ -161,20 +103,14 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
                 </div>
                 <div className={'v2_activity_actions'}>
                     {/* TM 영업관리 필터 */}
-                    <select className={'v2_tm_filter'} value={gradeFilter}
-                            onChange={e => {
-                                setGradeFilter(e.target.value as GradeFilter);
-                                setPage(1);
-                            }}>
+                    <select className={'v2_tm_filter'} value={filters.grade}
+                            onChange={e => navigate({grade: e.target.value, page: 1})}>
                         <option value="">등급 전체</option>
                         {GRADE_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
                         <option value={GRADE_NONE}>미설정</option>
                     </select>
-                    <select className={'v2_tm_filter'} value={timingFilter}
-                            onChange={e => {
-                                setTimingFilter(e.target.value as AdoptionTiming | '');
-                                setPage(1);
-                            }}>
+                    <select className={'v2_tm_filter'} value={filters.timing}
+                            onChange={e => navigate({timing: e.target.value, page: 1})}>
                         <option value="">도입시기 전체</option>
                         {TIMING_OPTIONS.map(t => <option key={t} value={t}>{ADOPTION_TIMING_LABEL[t]}</option>)}
                     </select>
@@ -196,10 +132,7 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
                         />
                     </div>
                     <select className={'v2_tm_filter'} value={size}
-                            onChange={e => {
-                                setSize(Number(e.target.value));
-                                setPage(1); // 페이지 수가 줄어 현재 페이지가 사라질 수 있다
-                            }}>
+                            onChange={e => navigate({size: Number(e.target.value), page: 1})}>
                         {SIZE_OPTIONS.map(n => <option key={n} value={n}>{n}개씩</option>)}
                     </select>
                 </div>
@@ -325,11 +258,11 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
 
             {/* 페이지네이션 */}
             <div className={'v2_pagination'}>
-                <button type="button" disabled={currentGroup <= 1} onClick={() => setPage(groupStart - 1)}>‹</button>
+                <button type="button" disabled={currentGroup <= 1} onClick={() => navigate({page: groupStart - 1})}>‹</button>
                 {pageNumbers.map(p => (
-                    <button key={p} type="button" className={p === page ? 'on' : ''} onClick={() => setPage(p)}>{p}</button>
+                    <button key={p} type="button" className={p === page ? 'on' : ''} onClick={() => navigate({page: p})}>{p}</button>
                 ))}
-                <button type="button" disabled={groupEnd >= totalPages} onClick={() => setPage(groupEnd + 1)}>›</button>
+                <button type="button" disabled={groupEnd >= totalPages} onClick={() => navigate({page: groupEnd + 1})}>›</button>
             </div>
 
             {tmTarget && (
@@ -337,7 +270,7 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
                     partnerId={partnerId}
                     row={tmTarget}
                     onClose={() => setTmTarget(null)}
-                    onSaved={fetchStats}
+                    onSaved={() => router.refresh()}
                 />
             )}
         </div>

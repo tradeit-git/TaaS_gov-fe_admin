@@ -1,67 +1,60 @@
 'use client';
 
 import Link from "next/link";
-import {useCallback, useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
 import {formatDateDot} from "@/utill/format";
-import callApi from "@/utill/apiRequest";
 import MemberListV2 from "@/app/(Auth)/partner-management/[id]/user-list/component/MemberListV2";
 import CompanyActivityList from "@/app/(Auth)/partner-management/[id]/user-list/component/CompanyActivityList";
-
-interface CoalitionDetailApiRow {
-    id: number;
-    partnerName: string;
-    partnerKey: string;
-    bonusCredit: number;
-    startDate: string;
-    endDate: string;
-    createdAt: string;
-    requiresApproval?: boolean;
-}
-
-interface PartnerInfo {
-    partnerName: string;
-    partnerKey: string;
-    creditAmount: number;
-    startDate: string;
-    endDate: string;
-    requiresApproval: boolean;
-}
-
-const mapToPartnerInfo = (row: CoalitionDetailApiRow): PartnerInfo => ({
-    partnerName: row.partnerName,
-    partnerKey: row.partnerKey,
-    creditAmount: row.bonusCredit,
-    startDate: row.startDate,
-    endDate: row.endDate,
-    requiresApproval: row.requiresApproval ?? false,
-});
+import {
+    buildUserListQuery,
+    DEFAULT_TAB_SIZE,
+    MembersResponse,
+    PartnerInfo,
+    TmMemberResponse,
+    UserListFilters,
+    UserListTab,
+} from "@/app/(Auth)/partner-management/[id]/user-list/types";
 
 interface Props {
     partnerId: string;
+    partner: PartnerInfo | null;
+    filters: UserListFilters;
+    /** 현재 탭의 데이터만 서버에서 받는다. 나머지 한쪽은 null */
+    members: MembersResponse | null;
+    activity: TmMemberResponse | null;
     /** 상단 표기 (협회제휴관리 / PoC 관리) */
     title?: string;
     /** "목록으로" 가 돌아갈 목록 라우트 */
     basePath?: string;
 }
 
-export default function UserListPage({partnerId, title = '협회제휴관리', basePath = '/partner-management'}: Props) {
-    const [partner, setPartner] = useState<PartnerInfo | null>(null);
-    const [activeTab, setActiveTab] = useState<'members' | 'activity'>('members');
+export default function UserListPage({
+                                         partnerId, partner, filters, members, activity,
+                                         title = '협회제휴관리', basePath = '/partner-management',
+                                     }: Props) {
+    const router = useRouter();
+    const pageUrl = `${basePath}/${partnerId}/user-list`;
 
-    const fetchPartner = useCallback(async () => {
-        const res = await callApi(`/api/admin/partner-keys/${partnerId}`, {
-            method: 'GET',
-            credentials: 'include',
+    // 현재 필터 + 변경분으로 URL을 만들어 네비게이션 (router가 basePath/히스토리 정상 처리)
+    const navigate = (next: Partial<UserListFilters>) => {
+        const qs = buildUserListQuery({...filters, ...next});
+        router.replace(qs ? `${pageUrl}?${qs}` : pageUrl);
+    };
+
+    // 탭 전환은 검색어·페이지까지 초기화한다. 탭마다 목록이 달라 이어받을 이유가 없다.
+    // 돌아갈 목록 조건(from)만 유지한다.
+    const goTab = (tab: UserListTab) => {
+        if (tab === filters.tab) return;
+        const qs = buildUserListQuery({
+            ...filters, tab,
+            q: '', page: 1, size: DEFAULT_TAB_SIZE,
+            approval: '', sort: 'latest', grade: '', timing: '',
         });
+        router.replace(qs ? `${pageUrl}?${qs}` : pageUrl);
+    };
 
-        if (res.result && res.data) {
-            setPartner(mapToPartnerInfo(res.data as unknown as CoalitionDetailApiRow));
-        }
-    }, [partnerId]);
-
-    useEffect(() => {
-        fetchPartner();
-    }, [fetchPartner]);
+    // 진입 시점의 목록 검색조건으로 되돌아간다. 직접 URL 로 들어왔으면 조건 없는 목록.
+    const listUrl = filters.from ? `${basePath}?${filters.from}` : basePath;
 
     return (
         <div className={'admin_page partner_page'}>
@@ -105,7 +98,7 @@ export default function UserListPage({partnerId, title = '협회제휴관리', b
                             <span>{formatDateDot(partner.endDate)}</span>
                         </div>
                     </>}
-                    <Link href={basePath} className={'list_button info_row_list_button'}>목록으로</Link>
+                    <Link href={listUrl} className={'list_button info_row_list_button'}>목록으로</Link>
                 </div>
             </div>
 
@@ -115,29 +108,35 @@ export default function UserListPage({partnerId, title = '협회제휴관리', b
                 <div className={'v2_tab_bar'}>
                     <button
                         type="button"
-                        className={`v2_tab ${activeTab === 'members' ? 'on' : ''}`}
-                        onClick={() => setActiveTab('members')}
+                        className={`v2_tab ${filters.tab === 'members' ? 'on' : ''}`}
+                        onClick={() => goTab('members')}
                     >
                         가입명단관리
                     </button>
                     <button
                         type="button"
-                        className={`v2_tab ${activeTab === 'activity' ? 'on' : ''}`}
-                        onClick={() => setActiveTab('activity')}
+                        className={`v2_tab ${filters.tab === 'activity' ? 'on' : ''}`}
+                        onClick={() => goTab('activity')}
                     >
                         기업별 활동현황
                     </button>
                 </div>
 
                 {/* 탭 콘텐츠 — 제휴 정보 로드 후에만 렌더 */}
-                <div className={`v2_tab_content ${activeTab !== 'members' ? 'v2_tab_content_round_left' : ''}`}>
-                    {partner && activeTab === 'members' && <MemberListV2
+                <div className={`v2_tab_content ${filters.tab !== 'members' ? 'v2_tab_content_round_left' : ''}`}>
+                    {partner && filters.tab === 'members' && members && <MemberListV2
                         partnerId={partnerId}
                         basePath={basePath}
+                        data={members}
+                        filters={filters}
+                        navigate={navigate}
                     />}
-                    {partner && activeTab === 'activity' && <CompanyActivityList
+                    {partner && filters.tab === 'activity' && activity && <CompanyActivityList
                         partnerId={partnerId}
                         basePath={basePath}
+                        data={activity}
+                        filters={filters}
+                        navigate={navigate}
                     />}
                 </div>
             </div>

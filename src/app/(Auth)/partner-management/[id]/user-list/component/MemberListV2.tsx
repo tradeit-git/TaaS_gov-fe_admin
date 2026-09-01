@@ -1,15 +1,17 @@
 'use client';
 
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 import * as XLSX from 'xlsx-js-style';
 import callApi from "@/utill/apiRequest";
-import {MembersResponse} from "@/app/(Auth)/partner-management/[id]/user-list/types";
+import {
+    MembersResponse,
+    SIZE_OPTIONS,
+    UserListFilters,
+} from "@/app/(Auth)/partner-management/[id]/user-list/types";
 
 type ApprovalStatus = 'REQUESTED' | 'APPROVED' | 'PENDING'; // 신청 / 승인 / 미승인
-type ApprovalFilter = '' | ApprovalStatus;
 
-const SIZE_OPTIONS = [10, 50, 100];
 const PAGE_GROUP = 10;
 
 const STATUS_LABEL: Record<ApprovalStatus, string> = {
@@ -28,61 +30,38 @@ const formatDate = (d: string) => {
 interface Props {
     partnerId: string; // 제휴 PK
     basePath: string; // 상세보기 라우팅 베이스 (/partner-management | /poc-management)
+    data: MembersResponse;
+    filters: UserListFilters;
+    navigate: (next: Partial<UserListFilters>) => void;
 }
 
-export default function MemberListV2({partnerId, basePath}: Props) {
+export default function MemberListV2({partnerId, basePath, data, filters, navigate}: Props) {
     const router = useRouter();
-    const [rows, setRows] = useState<MembersResponse['content']>([]);
-    const [page, setPage] = useState(1);
-    const [size, setSize] = useState(SIZE_OPTIONS[0]);
-    const [totalElements, setTotalElements] = useState(0);
-    const [totalPages, setTotalPages] = useState(1);
-    const [requestedCount, setRequestedCount] = useState(0);
-    const [approvedCount, setApprovedCount] = useState(0);
-    const [rejectedCount, setRejectedCount] = useState(0);
-    const [searchInput, setSearchInput] = useState('');
-    const [search, setSearch] = useState('');
-    const [approvalFilter, setApprovalFilter] = useState<ApprovalFilter>('');
+
+    // 풀 SSR: 표시값은 전부 서버 props 에서 파생 (URL = 단일 진실)
+    const rows = data.content;
+    const totalElements = data.totalElements;
+    const totalPages = Math.max(1, data.totalPages);
+    const page = filters.page;
+    const size = filters.size;
+
     const [approvalEdits, setApprovalEdits] = useState<Record<number, ApprovalStatus>>({});
+    // 새 서버 데이터가 오면 편집 중이던 선택은 버린다.
+    useEffect(() => {
+        setApprovalEdits({});
+    }, [data]);
 
-    const fetchMembers = useCallback(async () => {
-        const params = new URLSearchParams();
-        params.set('page', String(page));
-        params.set('size', String(size));
-        if (search.trim()) params.set('companyName', search.trim());
-        if (approvalFilter) params.set('approvalStatus', approvalFilter);
-
-        const res = await callApi(
-            `/api/admin/partner-keys/${partnerId}/members?${params.toString()}`,
-            {method: 'GET', credentials: 'include'},
-        );
-        if (res.result && res.data) {
-            const body = res.data as unknown as MembersResponse;
-            setRows(body.content);
-            setTotalElements(body.totalElements);
-            setTotalPages(Math.max(1, body.totalPages));
-            setRequestedCount(body.requestedCount);
-            setApprovedCount(body.approvedCount);
-            setRejectedCount(body.rejectedCount);
-            setApprovalEdits({});
-        }
-    }, [partnerId, page, size, search, approvalFilter]);
+    // 검색어만 입력 중 로컬 상태 (디바운스 후 네비게이션). 네비게이션 완료 시 서버값과 동기화.
+    const [searchInput, setSearchInput] = useState(filters.q);
+    useEffect(() => {
+        setSearchInput(filters.q);
+    }, [filters.q]);
 
     useEffect(() => {
-        fetchMembers();
-    }, [fetchMembers]);
-
-    // 검색 디바운스
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    useEffect(() => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            setSearch(searchInput);
-            setPage(1);
-        }, 500);
-        return () => {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-        };
+        if (searchInput === filters.q) return;
+        const t = setTimeout(() => navigate({q: searchInput, page: 1}), 400);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchInput]);
 
     const handleApprovalChange = (id: number, status: ApprovalStatus) => {
@@ -97,7 +76,7 @@ export default function MemberListV2({partnerId, basePath}: Props) {
             `/api/admin/partner-keys/members/${id}/approval`,
             {method: 'PUT', credentials: 'include', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({approvalStatus: status})},
         );
-        fetchMembers();
+        router.refresh();   // 현재 필터/페이지 그대로 서버에서 다시 렌더
     };
 
     // 다운로드: 현재 필터 기준 전체 명단을 받아 클라이언트에서 엑셀 생성
@@ -105,8 +84,8 @@ export default function MemberListV2({partnerId, basePath}: Props) {
         const params = new URLSearchParams();
         params.set('page', '1');
         params.set('size', '100000');
-        if (search.trim()) params.set('companyName', search.trim());
-        if (approvalFilter) params.set('approvalStatus', approvalFilter);
+        if (filters.q.trim()) params.set('companyName', filters.q.trim());
+        if (filters.approval) params.set('approvalStatus', filters.approval);
 
         const res = await callApi(
             `/api/admin/partner-keys/${partnerId}/members?${params.toString()}`,
@@ -151,25 +130,22 @@ export default function MemberListV2({partnerId, basePath}: Props) {
                 <div className={'v2_stats'}>
                     <span className={'v2_stat_item'}>
                         <span className={'content_icon pending_icon'}/>
-                        신청 <b>{requestedCount}</b>
+                        신청 <b>{data.requestedCount}</b>
                     </span>
                     <span className={'v2_stat_item'}>
                         <span className={'content_icon approved_icon'}/>
-                        승인 <b>{approvedCount}</b>
+                        승인 <b>{data.approvedCount}</b>
                     </span>
                     <span className={'v2_stat_item'}>
                         <span className={'content_icon unapproved_icon'}/>
-                        미승인 <b>{rejectedCount}</b>
+                        미승인 <b>{data.rejectedCount}</b>
                     </span>
                 </div>
                 <div className={'v2_list_actions'}>
                     <select
                         className={'v2_filter_select'}
-                        value={approvalFilter}
-                        onChange={e => {
-                            setApprovalFilter(e.target.value as ApprovalFilter);
-                            setPage(1);
-                        }}
+                        value={filters.approval}
+                        onChange={e => navigate({approval: e.target.value, page: 1})}
                     >
                         <option value="">전체</option>
                         <option value="REQUESTED">신청</option>
@@ -189,10 +165,7 @@ export default function MemberListV2({partnerId, basePath}: Props) {
                         />
                     </div>
                     <select className={'v2_filter_select'} value={size}
-                            onChange={e => {
-                                setSize(Number(e.target.value));
-                                setPage(1); // 페이지 수가 줄어 현재 페이지가 사라질 수 있다
-                            }}>
+                            onChange={e => navigate({size: Number(e.target.value), page: 1})}>
                         {SIZE_OPTIONS.map(n => <option key={n} value={n}>{n}개씩</option>)}
                     </select>
                     <button type="button" className={'v2_btn_download'} onClick={handleDownload}>
@@ -294,11 +267,11 @@ export default function MemberListV2({partnerId, basePath}: Props) {
             {/* 페이지네이션 */}
             {totalPages > 1 && (
                 <div className={'v2_pagination'}>
-                    <button type="button" disabled={currentGroup <= 1} onClick={() => setPage(groupStart - 1)}>‹</button>
+                    <button type="button" disabled={currentGroup <= 1} onClick={() => navigate({page: groupStart - 1})}>‹</button>
                     {pageNumbers.map(p => (
-                        <button key={p} type="button" className={p === page ? 'on' : ''} onClick={() => setPage(p)}>{p}</button>
+                        <button key={p} type="button" className={p === page ? 'on' : ''} onClick={() => navigate({page: p})}>{p}</button>
                     ))}
-                    <button type="button" disabled={groupEnd >= totalPages} onClick={() => setPage(groupEnd + 1)}>›</button>
+                    <button type="button" disabled={groupEnd >= totalPages} onClick={() => navigate({page: groupEnd + 1})}>›</button>
                 </div>
             )}
         </div>

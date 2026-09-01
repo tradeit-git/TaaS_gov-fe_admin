@@ -1,7 +1,7 @@
 'use client'
 
 import {useRouter} from "next/navigation";
-import {PartnerRow} from "@/app/(Auth)/partner-management/component/PartnerPage";
+import {PartnerRow} from "@/app/(Auth)/partner-management/component/types";
 
 interface Props {
     data: PartnerRow[];
@@ -13,6 +13,8 @@ interface Props {
     onEdit: (row: PartnerRow) => void;
     onToggleFavorite: (row: PartnerRow) => void;
     basePath: string;
+    /** 목록의 현재 검색조건. 가입명단에서 "목록으로" 가 이 상태로 돌아오게 실어 보낸다. */
+    listQuery: string;
 }
 
 const getStatus = (startDate: string, endDate: string): { label: string; className: string } => {
@@ -22,7 +24,7 @@ const getStatus = (startDate: string, endDate: string): { label: string; classNa
     return {label: '종료', className: 'expired'};
 };
 
-export default function PartnerTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onEdit, onToggleFavorite, basePath}: Props) {
+export default function PartnerTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onEdit, onToggleFavorite, basePath, listQuery}: Props) {
     const router = useRouter();
     const frontUrl = process.env.NEXT_PUBLIC_FRONT_URL ?? '';
     return (
@@ -64,7 +66,9 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                         <button type="button" className={'btn_action'}
                                 onClick={() => window.open(`${partnerBase}/dashboard`, '_blank')}>대시보드</button>
                         <button type="button" className={'btn_action'}
-                                onClick={() => router.push(`${basePath}/${row.id}/user-list`)}>가입명단</button>
+                                onClick={() => router.push(
+                                    `${basePath}/${row.id}/user-list${listQuery ? `?from=${encodeURIComponent(listQuery)}` : ''}`,
+                                )}>가입명단</button>
                         <button type="button" className={'btn_action'} onClick={() => onEdit(row)}>수정</button>
                         {row.usedCount === 0 && (
                             <button type="button" className={'btn_action btn_delete_text'}

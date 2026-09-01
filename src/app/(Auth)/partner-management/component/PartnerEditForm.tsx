@@ -4,7 +4,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {usePopupStore} from "@/stores/common/popupStore";
 import AlertComponent from "@/app/(Auth)/components/AlertComponent";
 import callApi from "@/utill/apiRequest";
-import {PartnerRow} from "@/app/(Auth)/partner-management/component/PartnerPage";
+import {PartnerRow} from "@/app/(Auth)/partner-management/component/types";
 import GuideSectionsEditor, {GuideCard, buildDefaultGuideSections, defaultFormBtnStyle, defaultGuideTitle, normalizeGuideSections} from "@/app/(Auth)/partner-management/component/GuideSectionsEditor";
 import CreditScheduleEditor, {CreditSchedule, normalizeSchedules} from "@/app/(Auth)/partner-management/component/CreditScheduleEditor";
 
