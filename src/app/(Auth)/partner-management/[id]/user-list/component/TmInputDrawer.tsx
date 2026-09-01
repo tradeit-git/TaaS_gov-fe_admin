@@ -69,7 +69,6 @@ export default function TmInputDrawer({partnerId, row, onClose, onSaved}: Props)
     const [saving, setSaving] = useState(false);
     const [conflict, setConflict] = useState(false);
     const [error, setError] = useState('');
-    const [savedFlash, setSavedFlash] = useState(false);
     // 코멘트는 값이 있을 때만 펼친 상태로 시작하고, 나머지는 💬 로 펼친다.
     const [openComments, setOpenComments] = useState<Set<CommentKey>>(new Set());
     const [gradeHelpOpen, setGradeHelpOpen] = useState(false);
@@ -164,18 +163,17 @@ export default function TmInputDrawer({partnerId, row, onClose, onSaved}: Props)
             setError(res.message || '저장에 실패했습니다.');
             return;
         }
-        if (res.data) applyDetail(res.data as unknown as TmDetailResponse);
         setConflict(false);
-        setSavedFlash(true);
         onSaved();
-    };
 
-    // 저장 후에도 드로어는 열어둔다(이어서 접촉이력을 적는 흐름). 대신 반영됐다는 표시는 남긴다.
-    useEffect(() => {
-        if (!savedFlash) return;
-        const t = setTimeout(() => setSavedFlash(false), 2000);
-        return () => clearTimeout(t);
-    }, [savedFlash]);
+        // 접촉이력은 [추가] 시점에 이미 저장되므로, 작성 중인 초안만 날아간다.
+        if (contactComment.trim()
+            && !window.confirm('작성 중인 접촉 이력은 저장되지 않았습니다. 닫으시겠습니까?')) {
+            if (res.data) applyDetail(res.data as unknown as TmDetailResponse);
+            return;
+        }
+        onClose();
+    };
 
     /** 접촉이력 추가/수정/삭제는 응답으로 프로필까지 통째로 돌려받아 version 을 최신으로 유지한다. */
     const submitContactResult = (res: Awaited<ReturnType<typeof callApi>>) => {
@@ -450,9 +448,8 @@ export default function TmInputDrawer({partnerId, row, onClose, onSaved}: Props)
                 )}
 
                 <footer className={'tm_drawer_foot'}>
-                    {dirty && !savedFlash && <span className={'tm_dirty_flag'}>저장되지 않은 변경사항</span>}
+                    {dirty && <span className={'tm_dirty_flag'}>저장되지 않은 변경사항</span>}
                     <button type="button" className={'btn_cancel'} onClick={requestClose}>취소</button>
-                    {savedFlash && <span className={'tm_saved_flash'}>저장됨</span>}
                     <button type="button" className={'btn_save'} disabled={loading || saving} onClick={handleSave}>
                         {saving ? '저장 중…' : '저장'}
                     </button>

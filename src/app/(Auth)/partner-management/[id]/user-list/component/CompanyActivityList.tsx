@@ -45,7 +45,7 @@ const NO_CONTACT_THRESHOLD = 7; // 미접촉 경과일 강조 기준
 // 새 탭으로 여는 <a href> 는 next/link 를 거치지 않으므로 앱 basePath 를 직접 붙여야 한다.
 const APP_BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
-const SIZE = 10;
+const SIZE_OPTIONS = [10, 50, 100];
 const PAGE_GROUP = 10;
 
 // 프론트 정렬키 → 백엔드 sort 파라미터 (latest 는 sort 미전송 = 최신 승인순 기본)
@@ -81,6 +81,7 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
+    const [size, setSize] = useState(SIZE_OPTIONS[0]);
     const [rows, setRows] = useState<TmMemberRow[]>([]);
     const [totalPages, setTotalPages] = useState(1);
     // TM 영업관리 필터
@@ -92,7 +93,7 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
     const fetchStats = useCallback(async () => {
         const params = new URLSearchParams();
         params.set('page', String(page));
-        params.set('size', String(SIZE));
+        params.set('size', String(size));
         if (search.trim()) params.set('companyName', search.trim());
         const sortParam = SORT_PARAM[sortKey];
         if (sortParam) {
@@ -112,7 +113,7 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
             setRows(body.content);
             setTotalPages(Math.max(1, body.totalPages));
         }
-    }, [partnerId, page, search, sortKey, gradeFilter, timingFilter]);
+    }, [partnerId, page, size, search, sortKey, gradeFilter, timingFilter]);
 
     useEffect(() => {
         fetchStats();
@@ -194,6 +195,13 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
                             onChange={e => setSearchInput(e.target.value)}
                         />
                     </div>
+                    <select className={'v2_tm_filter'} value={size}
+                            onChange={e => {
+                                setSize(Number(e.target.value));
+                                setPage(1); // 페이지 수가 줄어 현재 페이지가 사라질 수 있다
+                            }}>
+                        {SIZE_OPTIONS.map(n => <option key={n} value={n}>{n}개씩</option>)}
+                    </select>
                 </div>
             </div>
 
@@ -258,7 +266,7 @@ export default function CompanyActivityList({partnerId, basePath}: Props) {
                         </tr>
                     ) : rows.map((r, i) => (
                         <tr key={r.id}>
-                            <td>{(page - 1) * SIZE + i + 1}</td>
+                            <td>{(page - 1) * size + i + 1}</td>
                             <td className={'v2_td_company'} title={r.companyName}>
                                 <span className={'v2_company_name'}>
                                     {r.companyName.length > 11 ? r.companyName.slice(0, 11) + '...' : r.companyName}

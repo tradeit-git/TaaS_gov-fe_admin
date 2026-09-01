@@ -9,7 +9,7 @@ import {MembersResponse} from "@/app/(Auth)/partner-management/[id]/user-list/ty
 type ApprovalStatus = 'REQUESTED' | 'APPROVED' | 'PENDING'; // 신청 / 승인 / 미승인
 type ApprovalFilter = '' | ApprovalStatus;
 
-const SIZE = 10;
+const SIZE_OPTIONS = [10, 50, 100];
 const PAGE_GROUP = 10;
 
 const STATUS_LABEL: Record<ApprovalStatus, string> = {
@@ -34,6 +34,7 @@ export default function MemberListV2({partnerId, basePath}: Props) {
     const router = useRouter();
     const [rows, setRows] = useState<MembersResponse['content']>([]);
     const [page, setPage] = useState(1);
+    const [size, setSize] = useState(SIZE_OPTIONS[0]);
     const [totalElements, setTotalElements] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [requestedCount, setRequestedCount] = useState(0);
@@ -47,7 +48,7 @@ export default function MemberListV2({partnerId, basePath}: Props) {
     const fetchMembers = useCallback(async () => {
         const params = new URLSearchParams();
         params.set('page', String(page));
-        params.set('size', String(SIZE));
+        params.set('size', String(size));
         if (search.trim()) params.set('companyName', search.trim());
         if (approvalFilter) params.set('approvalStatus', approvalFilter);
 
@@ -65,7 +66,7 @@ export default function MemberListV2({partnerId, basePath}: Props) {
             setRejectedCount(body.rejectedCount);
             setApprovalEdits({});
         }
-    }, [partnerId, page, search, approvalFilter]);
+    }, [partnerId, page, size, search, approvalFilter]);
 
     useEffect(() => {
         fetchMembers();
@@ -187,6 +188,13 @@ export default function MemberListV2({partnerId, basePath}: Props) {
                             onChange={e => setSearchInput(e.target.value)}
                         />
                     </div>
+                    <select className={'v2_filter_select'} value={size}
+                            onChange={e => {
+                                setSize(Number(e.target.value));
+                                setPage(1); // 페이지 수가 줄어 현재 페이지가 사라질 수 있다
+                            }}>
+                        {SIZE_OPTIONS.map(n => <option key={n} value={n}>{n}개씩</option>)}
+                    </select>
                     <button type="button" className={'v2_btn_download'} onClick={handleDownload}>
                         <span className={'content_icon'}/>
                         다운로드
@@ -237,7 +245,7 @@ export default function MemberListV2({partnerId, basePath}: Props) {
                         const hasEdit = m.id in approvalEdits && approvalEdits[m.id] !== m.approvalStatus;
                         return (
                             <tr key={m.id}>
-                                <td className={'center'}>{totalElements - (page - 1) * SIZE - i}</td>
+                                <td className={'center'}>{totalElements - (page - 1) * size - i}</td>
                                 <td title={m.companyName}>{m.companyName || '-'}</td>
                                 <td title={m.loginId}>{m.loginId}</td>
                                 <td>{m.name}</td>
