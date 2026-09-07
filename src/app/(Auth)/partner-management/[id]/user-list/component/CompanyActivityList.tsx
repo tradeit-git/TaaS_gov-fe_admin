@@ -1,34 +1,37 @@
 'use client';
 
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useRouter} from "next/navigation";
 import TmInputDrawer from "@/app/(Auth)/partner-management/[id]/user-list/component/TmInputDrawer";
 import {
     ADOPTION_TIMING_LABEL,
     AdoptionTiming,
-    CustomerGrade,
+    DEFAULT_SORT_DIRECTION,
+    GRADE_FILTER_LABEL,
+    GRADE_FILTER_OPTIONS,
+    GradeFilter,
     SIZE_OPTIONS,
+    SortDirection,
     SortKey,
     TmMemberResponse,
     TmMemberRow,
     UserListFilters,
 } from "@/app/(Auth)/partner-management/[id]/user-list/types";
 
+// 방향 화살표는 label 에 넣지 않는다. 선택된 버튼만 현재 방향을, 나머지는 처음 눌렀을 때의 방향(내림차순)을 보여준다.
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     {key: 'latest', label: '최신 승인순'},
-    {key: 'noContact', label: '미접촉 ↓'},
-    {key: 'aiCore', label: 'AI Core ↓'},
-    {key: 'blSearch', label: 'B.L Search ↓'},
-    {key: 'supplyChain', label: 'Supply Chain ↓'},
-    {key: 'buyerEnrich', label: 'Buyer Enrich ↓'},
-    {key: 'buyerFit', label: 'Buyer Fit(적합도분석) ↓'},
-    {key: 'salesActivity', label: '영업활동일지 ↓'},
-    {key: 'buyerTotal', label: '바이어 등록 ↓'},
-    {key: 'totalAccess', label: '총접속수 ↓'},
+    {key: 'noContact', label: '미접촉'},
+    {key: 'aiCore', label: 'AI Core'},
+    {key: 'blSearch', label: 'B.L Search'},
+    {key: 'supplyChain', label: 'Supply Chain'},
+    {key: 'buyerEnrich', label: 'Buyer Enrich'},
+    {key: 'buyerFit', label: 'Buyer Fit(적합도분석)'},
+    {key: 'salesActivity', label: '영업활동일지'},
+    {key: 'buyerTotal', label: '바이어 등록'},
+    {key: 'totalAccess', label: '총접속수'},
 ];
 
-const GRADE_NONE = 'NONE'; // 등급 미설정 (A~E 와 겹치지 않는 값)
-const GRADE_OPTIONS: CustomerGrade[] = ['A', 'B', 'C', 'D', 'E'];
 const TIMING_OPTIONS: AdoptionTiming[] = ['IMMEDIATE', 'M1', 'M3', 'M6', 'HOLD'];
 const NO_CONTACT_THRESHOLD = 7; // 미접촉 경과일 강조 기준
 
@@ -79,6 +82,49 @@ export default function CompanyActivityList({partnerId, basePath, data, filters,
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchInput]);
 
+    // 같은 정렬을 다시 누르면 방향만 뒤집고, 다른 정렬로 옮기면 내림차순부터 시작한다.
+    const toggleSort = (key: SortKey) => {
+        if (key === 'latest') {
+            navigate({sort: 'latest', dir: DEFAULT_SORT_DIRECTION, page: 1});
+            return;
+        }
+        const dir: SortDirection = filters.sort === key && filters.dir === 'desc' ? 'asc' : DEFAULT_SORT_DIRECTION;
+        navigate({sort: key, dir, page: 1});
+    };
+
+    // 등급 다중 선택 드롭다운. 바깥을 누르면 닫는다.
+    const [gradeOpen, setGradeOpen] = useState(false);
+    const gradeRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!gradeOpen) return;
+        const onDown = (e: MouseEvent) => {
+            if (!gradeRef.current?.contains(e.target as Node)) setGradeOpen(false);
+        };
+        document.addEventListener('mousedown', onDown);
+        return () => document.removeEventListener('mousedown', onDown);
+    }, [gradeOpen]);
+
+    // 필터 없음(= 전체)은 "전부 선택"과 결과가 같으므로 체크박스도 전부 켜서 보여준다.
+    const gradeAll = filters.grade.length === 0;
+    const gradeChecked = (g: GradeFilter) => gradeAll || filters.grade.includes(g);
+
+    // 체크 토글. 옵션 순서를 유지해야 URL(grade=A,B) 이 선택 순서와 무관하게 일정해진다.
+    const toggleGrade = (g: GradeFilter) => {
+        const current = gradeAll ? GRADE_FILTER_OPTIONS : filters.grade;
+        const next = current.includes(g)
+            ? current.filter(v => v !== g)
+            : GRADE_FILTER_OPTIONS.filter(o => o === g || current.includes(o));
+        // 전부 선택 / 전부 해제는 둘 다 "전체"와 같다. 빈 배열로 정규화해 URL 에 grade 가 남지 않게 한다.
+        const all = next.length === 0 || next.length === GRADE_FILTER_OPTIONS.length;
+        navigate({grade: all ? [] : next, page: 1});
+    };
+
+    const gradeLabel = gradeAll
+        ? '등급 전체'
+        : filters.grade.length <= 3
+            ? `등급 ${filters.grade.map(g => GRADE_FILTER_LABEL[g]).join(', ')}`
+            : `등급 ${filters.grade.length}개 선택`;
+
     const currentGroup = Math.ceil(page / PAGE_GROUP);
     const groupStart = (currentGroup - 1) * PAGE_GROUP + 1;
     const groupEnd = Math.min(currentGroup * PAGE_GROUP, totalPages);
@@ -89,26 +135,53 @@ export default function CompanyActivityList({partnerId, basePath, data, filters,
             {/* 정렬 + 검색 */}
             <div className={'v2_activity_header'}>
                 <div className={'v2_sort_buttons'}>
-                    {SORT_OPTIONS.map(opt => (
-                        <button
-                            key={opt.key}
-                            type="button"
-                            className={`v2_sort_btn ${filters.sort === opt.key ? 'on' : ''}`}
-                            onClick={() => navigate({sort: opt.key, page: 1})}
-                        >
-                            <span className={'content_icon'}/>
-                            {opt.label}
-                        </button>
-                    ))}
+                    {SORT_OPTIONS.map(opt => {
+                        const on = filters.sort === opt.key;
+                        // latest 는 백엔드가 방향을 받지 않으므로 화살표도 토글도 없다.
+                        const directional = opt.key !== 'latest';
+                        const dir = on ? filters.dir : DEFAULT_SORT_DIRECTION;
+                        return (
+                            <button
+                                key={opt.key}
+                                type="button"
+                                className={`v2_sort_btn ${on ? 'on' : ''}`}
+                                title={directional ? (dir === 'desc' ? '내림차순 (다시 누르면 오름차순)' : '오름차순 (다시 누르면 내림차순)') : undefined}
+                                onClick={() => toggleSort(opt.key)}
+                            >
+                                <span className={'content_icon'}/>
+                                {opt.label}
+                                {directional && <span className={'v2_sort_arrow'}>{dir === 'desc' ? '↓' : '↑'}</span>}
+                            </button>
+                        );
+                    })}
                 </div>
                 <div className={'v2_activity_actions'}>
-                    {/* TM 영업관리 필터 */}
-                    <select className={'v2_tm_filter'} value={filters.grade}
-                            onChange={e => navigate({grade: e.target.value, page: 1})}>
-                        <option value="">등급 전체</option>
-                        {GRADE_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
-                        <option value={GRADE_NONE}>미설정</option>
-                    </select>
+                    {/* TM 영업관리 필터 — 등급은 다중 선택 (선택 없음 = 전체) */}
+                    <div className={'v2_multi_filter'} ref={gradeRef}>
+                        <button type="button"
+                                className={`v2_tm_filter v2_multi_filter_btn ${gradeAll ? '' : 'on'}`}
+                                onClick={() => setGradeOpen(o => !o)}>
+                            <span className={'v2_multi_filter_label'} title={gradeLabel}>{gradeLabel}</span>
+                            <span className={'v2_multi_filter_caret'}>▾</span>
+                        </button>
+                        {gradeOpen && (
+                            <div className={'v2_multi_filter_panel'}>
+                                {GRADE_FILTER_OPTIONS.map(g => (
+                                    <label key={g} className={'v2_multi_filter_item'}>
+                                        <input type="checkbox"
+                                               checked={gradeChecked(g)}
+                                               onChange={() => toggleGrade(g)}/>
+                                        <span>{GRADE_FILTER_LABEL[g]}</span>
+                                    </label>
+                                ))}
+                                <button type="button" className={'v2_multi_filter_clear'}
+                                        disabled={gradeAll}
+                                        onClick={() => navigate({grade: [], page: 1})}>
+                                    초기화
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     <select className={'v2_tm_filter'} value={filters.timing}
                             onChange={e => navigate({timing: e.target.value, page: 1})}>
                         <option value="">도입시기 전체</option>

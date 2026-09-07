@@ -1,10 +1,13 @@
 import callApi from "@/utill/apiRequest";
 import {getServerRequestOptions} from "@/lib/serverRequest";
 import {
+    DEFAULT_SORT_DIRECTION,
     DEFAULT_TAB_SIZE,
     MembersResponse,
+    parseGradeFilter,
     PartnerInfo,
     SORT_PARAM,
+    SortDirection,
     SortKey,
     TmMemberResponse,
     UserListFilters,
@@ -39,7 +42,8 @@ export function parseUserListFilters(sp: Record<string, string | undefined>): Us
         size: Number(sp.size ?? String(DEFAULT_TAB_SIZE)) || DEFAULT_TAB_SIZE,
         approval: sp.approval ?? '',
         sort,
-        grade: sp.grade ?? '',
+        dir: (sp.dir === 'asc' ? 'asc' : DEFAULT_SORT_DIRECTION) as SortDirection,
+        grade: parseGradeFilter(sp.grade),
         timing: sp.timing ?? '',
         from: sp.from ?? '',
     };
@@ -114,9 +118,10 @@ export async function loadActivity(partnerId: string, filters: UserListFilters):
     const sortParam = SORT_PARAM[filters.sort];
     if (sortParam) {
         params.set('sort', sortParam);
-        params.set('direction', 'desc'); // 활동량 많은 순
+        params.set('direction', filters.dir); // 기본 desc = 활동량 많은 순
     }
-    if (filters.grade) params.set('grade', filters.grade);
+    // 다중 선택은 콤마로 이어 보낸다 (어드민 API 가 A,B,NONE 를 split 해서 OR 로 필터한다)
+    if (filters.grade.length) params.set('grade', filters.grade.join(','));
     if (filters.timing) params.set('adoptionTiming', filters.timing);
 
     try {

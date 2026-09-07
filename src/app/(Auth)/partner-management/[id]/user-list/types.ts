@@ -116,6 +116,11 @@ export type SortKey =
     | 'buyerTotal'
     | 'totalAccess';
 
+export type SortDirection = 'desc' | 'asc';
+
+/** 정렬 버튼을 처음 누르면 내림차순, 같은 버튼을 다시 누르면 오름차순으로 뒤집는다. */
+export const DEFAULT_SORT_DIRECTION: SortDirection = 'desc';
+
 /** 프론트 정렬키 → 백엔드 sort 파라미터 (latest 는 sort 미전송 = 최신 승인순 기본) */
 export const SORT_PARAM: Record<SortKey, string | null> = {
     latest: null,
@@ -133,6 +138,24 @@ export const SORT_PARAM: Record<SortKey, string | null> = {
 export const SIZE_OPTIONS = [10, 50, 100];
 export const DEFAULT_TAB_SIZE = SIZE_OPTIONS[0];
 
+/** 등급 필터 값. 'NONE' 은 등급 미설정(아직 TM 을 손대지 않은 고객)이라 A~E 와 겹치지 않는 값으로 둔다. */
+export const GRADE_NONE = 'NONE';
+export type GradeFilter = CustomerGrade | typeof GRADE_NONE;
+export const GRADE_FILTER_OPTIONS: GradeFilter[] = ['A', 'B', 'C', 'D', 'E', GRADE_NONE];
+
+export const GRADE_FILTER_LABEL: Record<GradeFilter, string> = {
+    A: 'A', B: 'B', C: 'C', D: 'D', E: 'E', [GRADE_NONE]: '미설정',
+};
+
+/** URL 의 grade=A,B,NONE 를 파싱. 모르는 값은 버린다. */
+export function parseGradeFilter(raw: string | undefined): GradeFilter[] {
+    if (!raw) return [];
+    const seen = new Set<string>();
+    return raw.split(',')
+        .map(v => v.trim().toUpperCase())
+        .filter(v => GRADE_FILTER_OPTIONS.includes(v as GradeFilter) && !seen.has(v) && seen.add(v)) as GradeFilter[];
+}
+
 export interface UserListFilters {
     tab: UserListTab;
     q: string;      // 회사명 검색 (두 탭 공용)
@@ -140,7 +163,8 @@ export interface UserListFilters {
     size: number;
     approval: string;   // 가입명단 탭
     sort: SortKey;      // 활동현황 탭
-    grade: string;      // 활동현황 탭 (A~E, 또는 미설정 NONE)
+    dir: SortDirection; // 활동현황 탭. sort 의 방향 (latest 에는 적용되지 않음)
+    grade: GradeFilter[]; // 활동현황 탭. 다중 선택이며 빈 배열 = 전체
     timing: string;     // 활동현황 탭
     /** 들어올 때의 목록 검색조건(쿼리스트링). "목록으로" 가 이 상태로 돌아간다. */
     from: string;
@@ -155,8 +179,12 @@ export function buildUserListQuery(f: UserListFilters): string {
     if (f.size !== DEFAULT_TAB_SIZE) p.set('size', String(f.size));
     if (f.tab === 'members' && f.approval) p.set('approval', f.approval);
     if (f.tab === 'activity') {
-        if (f.sort !== 'latest') p.set('sort', f.sort);
-        if (f.grade) p.set('grade', f.grade);
+        if (f.sort !== 'latest') {
+            p.set('sort', f.sort);
+            // latest 는 방향을 못 바꾸므로 dir 을 싣지 않는다 (URL 에 죽은 파라미터가 남지 않게)
+            if (f.dir !== DEFAULT_SORT_DIRECTION) p.set('dir', f.dir);
+        }
+        if (f.grade.length) p.set('grade', f.grade.join(','));
         if (f.timing) p.set('timing', f.timing);
     }
     // 탭을 옮기거나 필터를 바꿔도 돌아갈 목록 조건은 잃지 않아야 한다.

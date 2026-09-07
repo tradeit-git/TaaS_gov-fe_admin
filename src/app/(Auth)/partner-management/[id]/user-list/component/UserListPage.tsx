@@ -7,6 +7,7 @@ import MemberListV2 from "@/app/(Auth)/partner-management/[id]/user-list/compone
 import CompanyActivityList from "@/app/(Auth)/partner-management/[id]/user-list/component/CompanyActivityList";
 import {
     buildUserListQuery,
+    DEFAULT_SORT_DIRECTION,
     DEFAULT_TAB_SIZE,
     MembersResponse,
     PartnerInfo,
@@ -48,7 +49,7 @@ export default function UserListPage({
         const qs = buildUserListQuery({
             ...filters, tab,
             q: '', page: 1, size: DEFAULT_TAB_SIZE,
-            approval: '', sort: 'latest', grade: '', timing: '',
+            approval: '', sort: 'latest', dir: DEFAULT_SORT_DIRECTION, grade: [], timing: '',
         });
         router.replace(qs ? `${pageUrl}?${qs}` : pageUrl);
     };
