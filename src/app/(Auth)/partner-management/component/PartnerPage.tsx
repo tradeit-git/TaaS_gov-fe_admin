@@ -72,6 +72,9 @@ export default function PartnerPage({data, filters, category, title = '협회제
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchInput]);
 
+    // PoC 목록은 보너스 크레딧을 쓰지 않는다. 그만큼 교유식별자 컬럼에 폭을 넘긴다.
+    const showCredit = category !== 'POC';
+
     const displayPage = currentPage + 1;
     const pageGroupSize = 10;
     const currentGroup = Math.ceil(displayPage / pageGroupSize);
@@ -183,10 +186,10 @@ export default function PartnerPage({data, filters, category, title = '협회제
                         <col style={{width: '5%'}}/>
                         <col style={{width: '6%'}}/>
                         <col style={{width: '12.5%'}}/>
-                        <col style={{width: '6%'}}/>
+                        <col style={{width: showCredit ? '6%' : '13%'}}/>
                         <col style={{width: '11%'}}/>
                         <col style={{width: '6%'}}/>
-                        <col style={{width: '7%'}}/>
+                        {showCredit && <col style={{width: '7%'}}/>}
                         <col style={{width: '7%'}}/>
                         <col style={{width: '5%'}}/>
                         <col style={{width: '5%'}}/>
@@ -202,7 +205,7 @@ export default function PartnerPage({data, filters, category, title = '협회제
                         <th>교유식별자</th>
                         <th>모집기간</th>
                         <th>모집인원</th>
-                        <th>보너스 크레딧(%)</th>
+                        {showCredit && <th>보너스 크레딧(%)</th>}
                         <th>대시보드 접속코드</th>
                         <th>신청수</th>
                         <th>승인수</th>
@@ -220,6 +223,7 @@ export default function PartnerPage({data, filters, category, title = '협회제
                         onToggleFavorite={handleToggleFavorite}
                         basePath={basePath}
                         listQuery={listQuery}
+                        showCredit={showCredit}
                     />
                 </table>
             </div>

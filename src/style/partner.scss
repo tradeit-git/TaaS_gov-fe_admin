@@ -431,8 +431,14 @@
     }
   }
 
-  td:nth-child(3),
-  td:nth-child(5) {
+  td:nth-child(3) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // 컬럼 폭을 넘치면 ... 으로 자른다. 전체 값은 title 속성(마우스 호버)으로 확인.
+  td.td_ellipsis {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

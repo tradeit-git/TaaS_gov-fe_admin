@@ -15,6 +15,8 @@ interface Props {
     basePath: string;
     /** 목록의 현재 검색조건. 가입명단에서 "목록으로" 가 이 상태로 돌아오게 실어 보낸다. */
     listQuery: string;
+    /** 보너스 크레딧 컬럼 노출 여부 (PoC 목록에서는 숨긴다) */
+    showCredit?: boolean;
 }
 
 const getStatus = (startDate: string, endDate: string): { label: string; className: string } => {
@@ -24,7 +26,7 @@ const getStatus = (startDate: string, endDate: string): { label: string; classNa
     return {label: '종료', className: 'expired'};
 };
 
-export default function PartnerTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onEdit, onToggleFavorite, basePath, listQuery}: Props) {
+export default function PartnerTableBody({data, totalElements, currentPage, itemsPerPage, formatDate, onDelete, onEdit, onToggleFavorite, basePath, listQuery, showCredit = true}: Props) {
     const router = useRouter();
     const frontUrl = process.env.NEXT_PUBLIC_FRONT_URL ?? '';
     return (
@@ -50,14 +52,14 @@ export default function PartnerTableBody({data, totalElements, currentPage, item
                             ? <img src={row.logoUrl} alt={row.partnerName} className={'partner_logo'}/>
                             : <span className={'partner_logo_empty'}/>}
                     </td>
-                    <td>{row.partnerName}</td>
-                    <td>
+                    <td className={'td_ellipsis'} title={row.partnerName}>{row.partnerName}</td>
+                    <td className={'td_ellipsis'} title={row.partnerKey}>
                         <span className={'partner_key'}>{row.partnerKey}</span>
                     </td>
                     <td>{formatDate(row.startDate)} ~ {formatDate(row.endDate)}</td>
                     <td>{row.maxMembers === 0 ? '인원제한없음' : `${row.maxMembers.toLocaleString()}`}</td>
-                    <td>{row.creditAmount}%</td>
-                    <td>{row.dashboardCode || '-'}</td>
+                    {showCredit && <td>{row.creditAmount}%</td>}
+                    <td className={'td_ellipsis'} title={row.dashboardCode || ''}>{row.dashboardCode || '-'}</td>
                     <td>{row.usedCount.toLocaleString()}</td>
                     <td>{row.approvedCount.toLocaleString()}</td>
                     <td className={'td_actions'}>
