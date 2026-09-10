@@ -60,6 +60,34 @@ export default function CompanyListPage({data, filters, tags}: Props) {
                                allTags={tags} onSaved={() => router.refresh()}/>);
     };
 
+    // TODO(임시) 자동 매칭 일괄 실행 버튼. 운영에서 한 번 돌리려고 둔 것이라 쓰고 나면 지운다.
+    //   지울 때 이 블록과 아래 「자동 매칭 실행」 버튼 두 군데만 지우면 된다.
+    const [rematching, setRematching] = useState(false);
+    const runRematch = () => {
+        addPopup(<AlertComponent
+            alertType={'confirm'}
+            infoContent={`사업자번호가 일치하는 미연결 가입계정을 한 번에 붙입니다.
+이미 연결된 계정과 관리기업 목록은 건드리지 않습니다.`}
+            callback={async () => {
+                setRematching(true);
+                const res = await callApi(`${API_BASE}/rematch`, {
+                    method: 'POST',
+                    credentials: 'include',
+                });
+                setRematching(false);
+
+                if (res.result) {
+                    const linked = (res.data as { linked?: number } | null)?.linked ?? 0;
+                    addPopup(<AlertComponent alertType={'alert'}
+                                             infoContent={`가입계정 ${linked}건을 연결했습니다.`}/>);
+                    router.refresh();
+                } else {
+                    addPopup(<AlertComponent alertType={'alert'}
+                                             infoContent={res.message || '실행에 실패했습니다.'}/>);
+                }
+            }}/>);
+    };
+
     const allOn = rows.length > 0 && selected.size === rows.length;
     const toggleAll = () => setSelected(allOn ? new Set() : new Set(rows.map(r => r.targetId)));
 
@@ -197,6 +225,12 @@ export default function CompanyListPage({data, filters, tags}: Props) {
                 </p>
 
                 <div className={'ds_list_head_right'}>
+                    {/* TODO(임시) 한 번 돌리고 지울 버튼 */}
+                    <button type="button" className={'ds_ghost_btn'} disabled={rematching}
+                            onClick={runRematch}>
+                        {rematching ? '실행 중...' : '자동 매칭 실행'}
+                    </button>
+
                     {/* 고른 게 있을 때만 띄웠더니 체크박스가 왜 있는지 알 수가 없었다.
                         늘 보이게 두고 아무것도 안 골랐을 때는 눌리지만 않게 한다 */}
                     <button type="button" disabled={selected.size === 0 || working}
