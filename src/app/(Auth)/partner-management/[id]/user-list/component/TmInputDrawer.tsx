@@ -9,8 +9,8 @@ import {
     TM_LEVEL_LABEL,
     TmContact,
     TmDetailResponse,
+    TmDrawerRow,
     TmLevel,
-    TmMemberRow,
     TmProfile,
 } from "@/app/(Auth)/partner-management/[id]/user-list/types";
 
@@ -55,7 +55,9 @@ type CommentKey = 'buyerFitComment' | 'serviceValueComment' | 'adoptionIntentCom
 
 interface Props {
     partnerId: string;
-    row: TmMemberRow; // 사용량 요약은 목록 행이 이미 갖고 있어 다시 조회하지 않는다
+    // 사용량 요약은 목록 행이 이미 갖고 있어 다시 조회하지 않는다.
+    // 사용량 없이 여는 화면(국내 영업 관리)도 있어 집계는 선택값이다
+    row: TmDrawerRow;
     onClose: () => void;
     onSaved: () => void; // 목록의 등급·최근접촉 갱신용
 }
@@ -280,14 +282,18 @@ export default function TmInputDrawer({partnerId, row, onClose, onSaved}: Props)
                     <button type="button" className={'tm_drawer_close'} onClick={requestClose}>✕</button>
                 </header>
 
-                {/* 자동 집계 — TM 이 입력하는 값이 아니라 통화 중 근거자료다 */}
-                <div className={'tm_usage'}>
-                    <span>최근접속 <b>{formatDate(row.lastLoginAt)}</b></span>
-                    <span>접속 <b>{row.visitDays}</b>일</span>
-                    <span>Enrich <b>{row.buyerEnrich}</b></span>
-                    <span>Buyer Fit <b>{row.buyerFit}</b></span>
-                    <span>바이어 <b>{row.buyerTotal}</b></span>
-                </div>
+                {/* 자동 집계 — TM 이 입력하는 값이 아니라 통화 중 근거자료다.
+                    사용량을 안 들고 연 화면에서는 이 줄 자체를 빼는 게 낫다.
+                    0 으로 채우면 「안 쓴 회원」 으로 읽혀서 통화 중 판단을 흐린다 */}
+                {row.visitDays != null && (
+                    <div className={'tm_usage'}>
+                        <span>최근접속 <b>{formatDate(row.lastLoginAt ?? null)}</b></span>
+                        <span>접속 <b>{row.visitDays}</b>일</span>
+                        <span>Enrich <b>{row.buyerEnrich}</b></span>
+                        <span>Buyer Fit <b>{row.buyerFit}</b></span>
+                        <span>바이어 <b>{row.buyerTotal}</b></span>
+                    </div>
+                )}
 
                 {conflict && (
                     <div className={'tm_conflict'}>

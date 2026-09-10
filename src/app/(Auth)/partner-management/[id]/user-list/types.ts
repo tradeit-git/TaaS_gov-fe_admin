@@ -86,6 +86,26 @@ export interface TmMemberRow extends MemberStatsRow {
     tmEntered: boolean; // TM 프로필이 한 번이라도 저장됐는지
 }
 
+/**
+ * TM 입력 드로어가 실제로 읽는 것만.
+ * <p>
+ * 제휴 회원 목록에서 열면 {@link TmMemberRow} 가 그대로 들어와 사용량까지 채워진다.
+ * 국내 영업 관리처럼 사용량을 안 들고 있는 화면에서도 열 수 있어야 해서
+ * 집계 5개는 선택값이다 — 없으면 드로어가 그 줄을 안 그린다.
+ */
+export interface TmDrawerRow {
+    id: number;
+    companyName: string;
+    name: string;
+    contact: string | null;
+
+    lastLoginAt?: string | null;
+    visitDays?: number;
+    buyerEnrich?: number;
+    buyerFit?: number;
+    buyerTotal?: number;
+}
+
 export interface TmMemberResponse extends Omit<MemberStatsResponse, 'content'> {
     content: TmMemberRow[];
 }

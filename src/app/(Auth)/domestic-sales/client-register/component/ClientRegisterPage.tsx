@@ -12,8 +12,8 @@ import callApi from "@/utill/apiRequest";
 export interface ClientRow {
     id: number;
     name: string;
-    bizNo: string;
-    ceoName: string;
+    bizNo: string | null;      // 일괄 적재된 기준 DB 행은 비어 있을 수 있다
+    ceoName: string | null;
     sidoName: string | null;
     sigunguName: string | null;
     bizField: string | null;
@@ -79,20 +79,13 @@ export default function ClientRegisterPage() {
         return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
     }, [searchInput]);
 
-    const handleRegister = () => {
-        addPopup(<ClientFormPopup onSuccess={() => {
-            setCurrentPage(0);
-            loadList();
-        }}/>);
-    };
-
     const handleEdit = (row: ClientRow) => {
         addPopup(<ClientFormPopup
             initialData={{
                 id: row.id,
                 companyName: row.name,
-                businessNumber: row.bizNo,
-                ceoName: row.ceoName,
+                businessNumber: row.bizNo ?? '',
+                ceoName: row.ceoName ?? '',
                 sidoName: row.sidoName,
                 sigunguName: row.sigunguName,
                 businessField: row.bizField ?? '',
@@ -172,9 +165,6 @@ export default function ClientRegisterPage() {
                     <input ref={fileInputRef} type="file" accept=".xlsx,.xls" style={{display: 'none'}} onChange={handleExcelUpload}/>
                     <button type="button" className={'btn_excel_upload'} onClick={() => fileInputRef.current?.click()}>
                         엑셀업로드
-                    </button>
-                    <button type="button" className={'news_register_btn'} onClick={handleRegister}>
-                        고객사 신규등록
                     </button>
                     <select value={itemsPerPage} onChange={e => handleItemsPerPageChange(Number(e.target.value))}>
                         <option value={10}>10개씩</option>

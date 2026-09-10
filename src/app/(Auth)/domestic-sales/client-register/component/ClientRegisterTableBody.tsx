@@ -29,8 +29,8 @@ export default function ClientRegisterTableBody({data, totalElements, currentPag
                     <tr key={row.id}>
                         <td>{rowNum}</td>
                         <td>{row.name}</td>
-                        <td>{row.bizNo}</td>
-                        <td>{row.ceoName}</td>
+                        <td>{row.bizNo || '-'}</td>
+                        <td>{row.ceoName || '-'}</td>
                         <td>{region}</td>
                         <td>{row.bizField || '-'}</td>
                         <td>{formatDate(row.createdAt)}</td>

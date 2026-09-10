@@ -97,13 +97,15 @@ export  default  function Sidebar (){
                     </button>
                     {domesticSalesOpen && (
                         <div className={'lnb_sub'}>
-                            <Link href={'/domestic-sales/client-register'}
-                                  className={`lnb_sub_item${isDomesticSales && subSegment === 'client-register' ? ' on' : ''}`}>
-                                고객사등록
+                            {/* 고객사등록 · 영업파이프라인은 메뉴에서 뺐다. 화면은 아직 남아 있지만
+                                기업정보조회 · 관리기업으로 대체됐고 곧 지운다 (기존 데이터 이관도 하지 않는다) */}
+                            <Link href={'/domestic-sales/company-info'}
+                                  className={`lnb_sub_item${isDomesticSales && subSegment === 'company-info' ? ' on' : ''}`}>
+                                기업정보조회
                             </Link>
-                            <Link href={'/domestic-sales/sales-pipeline'}
-                                  className={`lnb_sub_item${isDomesticSales && subSegment === 'sales-pipeline' ? ' on' : ''}`}>
-                                영업파이프라인
+                            <Link href={'/domestic-sales/companies'}
+                                  className={`lnb_sub_item${isDomesticSales && subSegment === 'companies' ? ' on' : ''}`}>
+                                관리기업
                             </Link>
                         </div>
                     )}

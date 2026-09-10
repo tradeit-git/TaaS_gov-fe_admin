@@ -1,0 +1,957 @@
+@use './variable' as *;
+
+// 국내 영업 관리 (관리기업 목록 · 상세)
+// contact.scss 의 admin_page / list_header / contact_table / pagination 을 그대로 쓰고
+// 여기서는 이 화면에만 있는 것(회차 아코디언 · 타임라인 · 접히는 활동 본문)만 정의한다.
+
+// -------------------- 목록 --------------------
+
+.ds_filter_bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+
+  select, input[type='text'] {
+    height: 31px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    padding: 0 10px;
+    font-size: $font-size-sm;
+    color: #555;
+  }
+
+  .ds_keyword {
+    width: 300px;
+  }
+
+  .ds_toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 31px;
+    padding: 0 11px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    color: #555;
+    font-size: $font-size-sm;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &.on {
+      border-color: #0E2946;
+      background: #0E2946;
+      color: #fff;
+    }
+  }
+
+  // 필터바에서는 select·토글과 한 줄에 서므로 높이·테두리를 맞춘다
+  .ds_ghost_btn {
+    height: 31px;
+    border-color: #ddd;
+    border-radius: 6px;
+    font-size: $font-size-sm;
+    white-space: nowrap;
+  }
+
+  // 다중 선택 필터. select 와 같은 줄에 서므로 높이·테두리를 맞춘다
+  .ds_multi {
+    position: relative;
+  }
+
+  .ds_multi_btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 31px;
+    padding: 0 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    color: #555;
+    font-size: $font-size-sm;
+    cursor: pointer;
+    white-space: nowrap;
+
+    // 전체가 아니면 걸려 있다는 걸 알려야 한다.
+    // 안 그러면 결과가 적은 이유를 못 찾는다
+    &.on {
+      border-color: #287fff;
+      color: #287fff;
+    }
+  }
+
+  .ds_multi_caret {
+    width: 0;
+    height: 0;
+    border-left: 3.5px solid transparent;
+    border-right: 3.5px solid transparent;
+    border-top: 4px solid currentColor;
+    opacity: .6;
+  }
+
+  .ds_multi_panel {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 148px;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .12);
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      color: #333;
+      font-size: $font-size-sm;
+      white-space: nowrap;
+      cursor: pointer;
+      &:hover { background: #f5f7fa; }
+
+      input { margin: 0; flex: none; cursor: pointer; }
+    }
+
+    .ds_multi_all {
+      margin-bottom: 4px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #EEF0F3;
+      border-radius: 4px 4px 0 0;
+      font-weight: 500;
+    }
+  }
+
+  .ds_primary_btn {
+    margin-left: auto;
+    height: 31px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 4px;
+    background: #0E2946;
+    color: #fff;
+    font-size: $font-size-sm;
+    cursor: pointer;
+
+    &:hover { background: #1d4a7a; }
+  }
+}
+
+.ds_list_head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 31px;   // 선택 버튼이 나타났다 사라져도 표가 위아래로 안 튄다
+  margin-bottom: 8px;
+
+  .ds_count {
+    color: #4a4a4a;
+    b { color: #0E2946; }
+  }
+
+  .ds_list_head_right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  // 필터바 밖이라 .ds_filter_bar select 규칙이 안 닿는다. 여기서 맞춘다
+  .ds_page_size {
+    height: 29px;
+    padding: 0 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    color: #555;
+    font-size: $font-size-sm;
+  }
+}
+
+// 선택 열. 체크박스만 들어가므로 좁게 유지한다
+.ds_check_cell {
+  text-align: center;
+
+  input[type='checkbox'] {
+    margin: 0;
+    cursor: pointer;
+  }
+}
+
+// 고른 줄은 표에서 바로 구분돼야 한다. 스크롤하다 뭘 골랐는지 잊는다
+.ds_row_on > td {
+  background: #F1F6FD;
+}
+
+// 상세로 들어가는 입구.
+// 이 표는 열이 아홉이라 다른 목록처럼 「상세」 버튼 열을 더 두지 않고
+// 기업명 자체를 링크로 쓴다. 그런데 검정 글씨면 눌러도 되는 줄 모른다.
+// 밑줄을 늘 치면 백 몇 줄이 전부 밑줄이라 표가 시끄러워져서, 쉴 때는 색으로
+// 알리고 밑줄은 hover 에서만 낸다
+.ds_name_link {
+  color: #287fff;
+  font-weight: 500;
+  &:hover { text-decoration: underline; }
+}
+
+// 관리상태 변경 버튼. 목록(선택 후)과 상세(제목 줄)에서 같이 쓴다.
+// 칩 줄에 회색으로 뒀더니 태그로 읽혀서, 숨김 칩과 같은 주황 계열로 묶었다 —
+// 「이 버튼이 그 상태를 만든다」 가 색으로 보여야 한다
+.ds_status_btn {
+  height: 29px;
+  padding: 0 13px;
+  border: 1px solid #E8C77E;
+  border-radius: 6px;
+  background: #FFF8EA;
+  color: #A9760A;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover { background: #FDEFD3; border-color: #DDB55E; }
+  &:disabled { opacity: .55; cursor: default; }
+
+  // 되돌리기는 반대 방향이라 색도 반대여야 한다. 주황이면 또 숨기는 걸로 읽힌다
+  &.restore {
+    border-color: #B9D9BE;
+    background: #F1F8F2;
+    color: #2E7D3A;
+
+    &:hover { background: #E4F1E6; border-color: #98C79F; }
+  }
+}
+
+// 값 없음. 숫자 0 과 미확인 둘 다 여기로 모은다
+.ds_empty { color: #bbb; }
+
+// 날짜·사업자번호는 자릿수가 맞아야 눈으로 비교가 된다
+.ds_num { font-variant-numeric: tabular-nums; }
+
+// 날짜 뒤에 붙는 작성자
+.ds_sub {
+  color: #999;
+  font-size: $font-size-xs;
+}
+
+// -------------------- 태그 --------------------
+// 자유 입력이라 개수를 통제할 수 없다. 어디에 놓이든 줄바꿈되게 두고,
+// 목록 셀에서는 줄 수만 제한한다.
+
+.ds_tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 8px;
+  border: 1px solid #E3E7EC;
+  border-radius: 11px;
+  background: #F5F7FA;
+  color: #445;
+  font-size: $font-size-xs;
+  line-height: 18px;
+  white-space: nowrap;
+
+  // 태그명이 길면 칩이 표를 밀어낸다. 칩 안에서 자른다
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  i {
+    color: #9aa3ad;
+    font-style: normal;
+  }
+}
+
+// 셀을 눌러 그 셀을 고친다. 표에 「관리」 열을 하나 더 두는 대신 값 자체를 누르게 했다 —
+// 이 표는 이미 7열이라 버튼 열을 붙일 폭이 없다
+.ds_cell_edit {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #333;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    color: #0E2946;
+    text-decoration: underline;
+  }
+}
+
+// 관리기업 상세 — 현황 칩 줄과 구분되는 태그 줄
+.ds_tag_row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #F0F2F4;
+
+  .ds_tag_row_label {
+    margin-right: 3px;
+    color: #888;
+    font-size: $font-size-xs;
+    font-weight: 500;
+  }
+
+  .ds_tag_edit_btn {
+    margin-left: 4px;
+    padding: 1px 8px;
+    border: 1px solid #d0d0d0;
+    border-radius: 11px;
+    background: #fff;
+    color: #666;
+    font-size: $font-size-xs;
+    line-height: 18px;
+    cursor: pointer;
+
+    &:hover { border-color: #0E2946; color: #0E2946; }
+  }
+}
+
+// 목록의 태그 칸. 통째로 눌러 편집 팝업을 연다
+.ds_tag_cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  width: 100%;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #d0d0d0;
+    background: #fff;
+  }
+
+  .ds_tag_add {
+    color: #aaa;
+    font-size: $font-size-xs;
+  }
+
+  // 관리기업 목록용. 행 높이를 고정해야 옆 칸의 날짜를 눈으로 훑을 수 있다
+  &.one_line {
+    flex-wrap: nowrap;
+    overflow: hidden;
+
+    .ds_tag { flex: 0 1 auto; }
+  }
+
+  .ds_tag_more {
+    flex: none;
+    align-self: center;
+    color: #9aa3ad;
+    font-size: $font-size-xs;
+  }
+}
+
+// -------------------- 태그 입력 --------------------
+
+.ds_tag_picker {
+  .ds_tag_box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    min-height: 38px;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+
+    input {
+      flex: 1;
+      min-width: 120px;
+      height: 22px;
+      border: none;
+      outline: none;
+      font-size: $font-size-sm;
+    }
+
+    // 붙어 있는 태그는 뗄 수 있다는 게 보여야 한다
+    .ds_tag_on {
+      border-color: #0E2946;
+      background: #0E2946;
+      color: #fff;
+
+      button {
+        border: none;
+        background: none;
+        color: #fff;
+        font-size: 13px;
+        line-height: 1;
+        opacity: .7;
+        cursor: pointer;
+        &:hover { opacity: 1; }
+      }
+    }
+  }
+
+  // 제안 목록. 입력이 비어 있어도 깔아둔다 — 어떤 태그가 있는지 여기서만 알 수 있다
+  .ds_tag_suggest {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+    max-height: 132px;
+    overflow-y: auto;
+
+    button.ds_tag {
+      cursor: pointer;
+      &:hover { border-color: #0E2946; color: #0E2946; }
+    }
+
+    .ds_tag_new {
+      border-style: dashed;
+      border-color: #0E2946;
+      background: #fff;
+      color: #0E2946;
+    }
+  }
+}
+
+// -------------------- 태그 필터 패널 --------------------
+
+.ds_tag_panel {
+  width: 232px;
+
+  .ds_tag_search {
+    width: 100%;
+    height: 28px;
+    margin-bottom: 6px;
+    padding: 0 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: $font-size-sm;
+  }
+
+  .ds_tag_clear {
+    width: 100%;
+    margin-bottom: 4px;
+    padding: 4px 0;
+    border: none;
+    border-radius: 4px;
+    background: #F5F7FA;
+    color: #666;
+    font-size: $font-size-xs;
+    cursor: pointer;
+    &:hover { color: #0E2946; }
+  }
+
+  // 태그가 몇백 개까지 늘어날 수 있다. 패널이 화면을 넘지 않게 잘라 둔다
+  .ds_tag_panel_list {
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .ds_tag_count {
+    margin-left: auto;
+    padding-left: 8px;
+    color: #9aa3ad;
+    font-size: $font-size-xs;
+    font-style: normal;
+  }
+
+  .ds_tag_and {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #EEF0F3;
+  }
+}
+
+.ds_result_badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+
+  &.result_open  { background: #e8edf3; color: #0E2946; }
+  &.result_won   { background: #e9f3ec; color: #2c6b47; }
+  &.result_lost  { background: #f2f2f2; color: #777; }
+  &.result_hold  { background: #fbf3e2; color: #8a6410; }
+}
+
+// -------------------- 상세 --------------------
+
+.ds_detail_head {
+  border: 1px solid #EAEBED;
+  border-radius: 6px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+
+  .ds_title_row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    h3 {
+      font-size: 18px;
+      color: #232323;
+    }
+    .ds_meta {
+      color: #888;
+      font-size: $font-size-sm;
+    }
+  }
+
+  // 이 화면엔 저장 버튼이 없어서 아래에 버튼 줄이 없다.
+  // 회차·타임라인 때문에 페이지가 길어 맨 아래에 두면 스크롤해야 보인다 — 머리에 붙인다.
+  // 오른쪽 끝(margin-left:auto)에 뒀더니 카드가 화면 폭만큼 넓어서
+  // 기업명에서 한참 떨어져 눈에 안 들어왔다. 제목 바로 왼쪽이 맞다
+  .ds_back_btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 29px;
+    padding: 0 12px;
+    border: 1px solid #C3DBFF;
+    border-radius: 6px;
+    background: #F0F6FF;
+    color: #1C6EF2;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+
+    // 회색 버튼은 제목 옆에서 배경에 묻힌다.
+    // 목록의 기업명(.ds_name_link)과 같은 파랑 계열로 맞춰서 왔던 길이 보이게 한다
+    &:hover { background: #E2EEFF; border-color: #A8CBFF; }
+  }
+
+  .ds_back_arrow {
+    width: 0;
+    height: 0;
+    border-top: 3.5px solid transparent;
+    border-bottom: 3.5px solid transparent;
+    border-right: 4px solid currentColor;
+    opacity: .6;
+  }
+
+  .ds_chip_row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .ds_chip {
+    display: inline-block;
+    padding: 3px 9px;
+    border: 1px solid #EAEBED;
+    border-radius: 4px;
+    background: #fafafa;
+    color: #4a4a4a;
+    font-size: $font-size-xs;
+
+    // 숨김은 다른 칩과 같은 회색이면 안 된다.
+    // 이 화면이 목록 기본 조회에서 빠져 있다는 걸 알려주는 유일한 표시다
+    &.ds_chip_dormant {
+      border-color: #F0D9A8;
+      background: #FDF6E7;
+      color: #A9760A;
+      font-weight: 500;
+    }
+
+    // 종료는 숨김과 다른 축이다 — 목록에 그대로 나오므로 「빠져 있다」 는 경고색이면 안 되고,
+    // 그렇다고 나머지 칩과 같은 회색이면 상태라는 게 안 보인다
+    &.ds_chip_closed {
+      border-color: #D3D8DE;
+      background: #EEF1F4;
+      color: #5A6472;
+      font-weight: 500;
+    }
+  }
+
+  // 상세에서는 제목 줄 오른쪽 끝으로 민다 — 카드의 액션 자리
+  .ds_status_btn { margin-left: auto; }
+}
+
+.ds_section {
+  border: 1px solid #E3E6EA;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 26px;   // 섹션끼리 붙어 있으면 어디서 끝나는지 안 보인다
+
+  .ds_section_head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 18px;
+    border-bottom: 1px solid #E3E6EA;
+    border-radius: 8px 8px 0 0;
+    background: #F7F9FB;   // 머리띠가 있어야 섹션의 시작이 보인다
+
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #232323;
+    }
+    .ds_section_actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+
+  .ds_section_body { padding: 4px 18px 16px; }
+
+  .ds_section_empty {
+    padding: 28px 0;
+    text-align: center;
+    color: #999;
+    font-size: $font-size-sm;
+  }
+}
+
+.ds_ghost_btn {
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font-size: $font-size-xs;
+  cursor: pointer;
+
+  &:hover { border-color: #0E2946; color: #0E2946; }
+  &:disabled { opacity: .45; cursor: default; }
+}
+
+// -------------------- 회차 아코디언 --------------------
+
+.ds_round {
+  margin-top: 12px;
+
+  // 회차 머리는 눌러서 접는 자리다. 배경이 없으면 활동 박스와 같은 높이로 읽혀
+  // 「1차 안에 활동이 들어있다」 가 안 보인다
+  .ds_round_head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid #E3E6EA;
+    border-radius: 6px;
+    background: #F7F9FB;
+    text-align: left;
+    font-size: $font-size-sm;
+    font-family: inherit;
+    color: #232323;
+    cursor: pointer;
+
+    &:hover { background: #F1F4F8; }
+
+    .ds_round_no { font-weight: 600; }
+    .ds_round_period { color: #666; }
+    .ds_round_count { margin-left: auto; color: #888; font-size: $font-size-xs; }
+    .ds_arrow { color: #aaa; font-size: 11px; }
+  }
+
+  // 왼쪽 세로줄이 이 활동들이 위 회차에 매달려 있다는 걸 보여준다
+  .ds_round_body {
+    margin: 10px 0 6px 14px;
+    padding: 2px 0 2px 16px;
+    border-left: 2px solid #E3E7EC;
+  }
+
+  .ds_round_actions {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+}
+
+// -------------------- 활동 · 타임라인 --------------------
+
+.ds_activity {
+  padding: 10px 13px;
+  border: 1px solid #EFF1F4;
+  border-radius: 4px;
+  background: #fff;
+  margin-bottom: 6px;
+  &:last-of-type { margin-bottom: 0; }
+}
+
+// 회차 아코디언(.ds_activity)과 통합 타임라인(.ds_timeline_item)이 같이 쓴다.
+// .ds_activity 안에 넣어뒀던 탓에 타임라인에서는 규칙이 안 닿아
+// 줄바꿈이 통째로 뭉개지고(pre-wrap 미적용) 「펼치기」 를 눌러도 아무 일이 없었다
+// (folded 클램프가 없어 애초에 접힌 적이 없다). .ds_account_name 과 같은 사고다.
+.ds_activity_head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+  font-size: $font-size-xs;
+  color: #666;
+
+  .ds_activity_actions {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+  }
+  button {
+    border: none;
+    background: none;
+    color: #888;
+    font-size: $font-size-xs;
+    cursor: pointer;
+    &:hover { color: #0E2946; text-decoration: underline; }
+  }
+}
+
+// 자유 텍스트라 줄바꿈을 살려야 한다. 그대로 두면 20줄이 그대로 나오므로 접는다
+.ds_activity_body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.55;
+  color: #333;
+
+  &.folded {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.ds_fold_btn {
+  margin-top: 6px;
+  border: none;
+  background: none;
+  padding: 0;
+  color: #0E2946;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  &:hover { text-decoration: underline; }
+}
+
+.ds_timeline_tabs {
+  display: flex;
+  gap: 4px;
+
+  button {
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid #EAEBED;
+    border-radius: 4px;
+    background: #fff;
+    color: #666;
+    font-size: $font-size-xs;
+    cursor: pointer;
+
+    &.on { border-color: #0E2946; background: #0E2946; color: #fff; }
+  }
+}
+
+.ds_timeline_item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #F2F3F5;
+  &:last-of-type { border-bottom: none; }
+
+  .ds_timeline_date {
+    flex: none;
+    width: 56px;
+    color: #666;
+    font-size: $font-size-xs;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds_timeline_kind {
+    flex: none;
+    width: 40px;
+    font-size: $font-size-xs;
+
+    &.kind_sales { color: #0E2946; }
+    &.kind_tm { color: #7b3ff2; }
+  }
+
+  .ds_timeline_main { flex: 1; min-width: 0; }
+}
+
+// -------------------- 연결 계정 --------------------
+
+// 연결 후보 팝업에서도 쓴다. .ds_account_row 안에 넣어뒀던 탓에 팝업에서는
+// 규칙이 안 닿아 맨 글씨로 나오고 있었다 — 표로 바꾸면서 밖으로 뺀다
+.ds_account_name { font-weight: 500; color: #232323; }
+.ds_account_sub { margin-top: 3px; color: #999; font-size: $font-size-xs; }
+
+.ds_account_table {
+  // 섹션 안쪽이라 표가 카드 벽에 닿는다. 위아래로만 숨통을 튼다
+  margin-top: 6px;
+
+  .ds_table_empty {
+    padding: 30px 0;
+    text-align: center;
+    color: #999;
+    font-size: $font-size-sm;
+  }
+
+  // 도메인까지 보여야 오연결이 잡힌다. 좁아지면 말줄임하고 title 로 전부 보여준다
+  .ds_cell_email {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #666;
+  }
+
+  .ds_cell_actions {
+    display: flex;
+    gap: 5px;
+
+    // Link 와 button 이 섞여 있어 높이가 안 맞는다
+    .ds_ghost_btn {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+  }
+}
+
+// -------------------- 계정 연결 팝업 --------------------
+
+.ds_link_popup {
+  width: 640px;
+  max-width: 92vw;
+
+  .ds_link_notice {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    border: 1px solid #EAEBED;
+    border-radius: 4px;
+    background: #f3f4f9;
+    color: #0E2946;
+    font-size: $font-size-xs;
+    line-height: 1.5;
+  }
+
+  .ds_link_search {
+    width: 100%;
+    height: 33px;
+    padding: 0 11px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: $font-size-sm;
+  }
+
+  .ds_link_section_label {
+    margin: 14px 0 6px;
+    color: #666;
+    font-size: $font-size-xs;
+    b { color: #0E2946; }
+  }
+
+  // 본문과 후보 목록이 둘 다 구르면 스크롤바가 두 개 생긴다.
+  // 검색창·안내·아래 문구는 붙박이로 두고 목록 하나만 구르게 한다
+  &.news_form_popup .popup_body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .ds_candidate_list {
+    flex: 1;
+    min-height: 180px;   // 결과가 적을 때 팝업이 확 쪼그라들지 않게
+    max-height: none;
+  }
+}
+
+.ds_candidate_list {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #EAEBED;
+  border-radius: 4px;
+}
+
+.ds_candidate {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 13px;
+  border-bottom: 1px solid #F2F3F5;
+  cursor: pointer;
+  &:last-of-type { border-bottom: none; }
+  &:hover { background: #fafbfc; }
+  &.on { background: #eef3f8; }
+
+  input[type='checkbox'] { margin-top: 2px; flex: none; }
+  .ds_candidate_main { flex: 1; min-width: 0; }
+}
+
+.ds_selected_box {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #EAEBED;
+  border-radius: 4px;
+  background: #fafafa;
+
+  .ds_selected_chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 7px;
+  }
+}
+
+.ds_selected_chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid #0E2946;
+  border-radius: 4px;
+  background: #fff;
+  color: #0E2946;
+  font-size: $font-size-xs;
+  cursor: pointer;
+
+  span { color: #888; }
+  &:hover span { color: #d33; }
+}
+
+.ds_type_badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.type_poc     { color: #7b3ff2; background: rgba(123, 63, 242, .1); }
+  &.type_partner { color: #287fff; background: rgba(40, 127, 255, .1); }
+  &.type_etc     { color: #8E8E93; background: rgba(142, 142, 147, .12); }
+}
+
+// 계정 상태. 활성만 정상이고 나머지는 「지금 쓸 수 없는 계정」 이라
+// 눈에 걸려야 한다 — 활성을 오히려 조용하게 두는 이유다
+.ds_status_badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.status_on   { color: #2E7D3A; background: rgba(46, 125, 58, .1); }
+  &.status_wait { color: #A9760A; background: #FDF6E7; }
+  &.status_off  { color: #C0392B; background: rgba(192, 57, 43, .1); }
+}
