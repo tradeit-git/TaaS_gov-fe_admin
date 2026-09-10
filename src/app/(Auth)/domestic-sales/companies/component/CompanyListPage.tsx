@@ -226,10 +226,10 @@ export default function CompanyListPage({data, filters, tags}: Props) {
 
                 <div className={'ds_list_head_right'}>
                     {/* TODO(임시) 한 번 돌리고 지울 버튼 */}
-                    <button type="button" className={'ds_ghost_btn'} disabled={rematching}
-                            onClick={runRematch}>
-                        {rematching ? '실행 중...' : '자동 매칭 실행'}
-                    </button>
+                    {/*<button type="button" className={'ds_ghost_btn'} disabled={rematching}*/}
+                    {/*        onClick={runRematch}>*/}
+                    {/*    {rematching ? '실행 중...' : '자동 매칭 실행'}*/}
+                    {/*</button>*/}
 
                     {/* 고른 게 있을 때만 띄웠더니 체크박스가 왜 있는지 알 수가 없었다.
                         늘 보이게 두고 아무것도 안 골랐을 때는 눌리지만 않게 한다 */}
