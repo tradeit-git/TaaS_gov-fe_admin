@@ -123,6 +123,9 @@ export default function MasterListPage({data, filters, tags}: Props) {
                 국내 기업정보 기준 DB 입니다. 여기서 기업을 찾아 <b>관리기업으로 추가</b>하면 영업 기록을 쌓을 수 있습니다.
                 태그를 달아두면 다음에 그 태그로 찾을 수 있습니다.
                 <b>기업명</b>이나 <b>태그</b> 칸을 누르면 그 자리에서 고칠 수 있습니다.
+                {filters.linkedOnly && !filters.unmanagedOnly && (
+                    <> 「미등록 기업만」 을 같이 켜면 아직 안 담은 후보만 남습니다.</>
+                )}
             </div>
 
             <div className={'ds_filter_bar'}>
@@ -148,6 +151,13 @@ export default function MasterListPage({data, filters, tags}: Props) {
                 <button type="button" className={`ds_toggle${filters.unmanagedOnly ? ' on' : ''}`}
                         onClick={() => navigate({unmanagedOnly: !filters.unmanagedOnly, page: 0})}>
                     미등록 기업만
+                </button>
+
+                {/* 이미 우리 서비스를 쓰는 회원이 있는 기업이 영업 대상으로 먼저다.
+                    「미등록 기업만」 과 같이 켜면 딱 담을 후보가 남는다 */}
+                <button type="button" className={`ds_toggle${filters.linkedOnly ? ' on' : ''}`}
+                        onClick={() => navigate({linkedOnly: !filters.linkedOnly, page: 0})}>
+                    가입계정 있는 기업만
                 </button>
 
                 <button type="button" className={'ds_ghost_btn'} style={{marginLeft: 'auto'}}

@@ -42,6 +42,8 @@ export interface MasterFilters {
     sidoId: number;
     sigunguId: number;
     unmanagedOnly: boolean;
+    /** 가입 계정이 하나라도 붙어 있는 기업만. 「미등록 기업만」 과 같이 켜면 담을 후보가 남는다 */
+    linkedOnly: boolean;
     /** 고른 태그 pk. AND 다 — 전부 가진 기업만 나온다. 빈 배열이면 태그 조건 없음 */
     tagIds: number[];
     /** 0-based. URL 은 1-based */
@@ -55,6 +57,7 @@ export function buildMasterQuery(f: MasterFilters): string {
     if (f.sidoId) params.set('sidoId', String(f.sidoId));
     if (f.sigunguId) params.set('sigunguId', String(f.sigunguId));
     if (f.unmanagedOnly) params.set('unmanagedOnly', 'true');
+    if (f.linkedOnly) params.set('linkedOnly', 'true');
     if (f.tagIds.length) params.set('tagIds', f.tagIds.join(','));
     if (f.page > 0) params.set('page', String(f.page + 1));
     if (f.size !== MASTER_PAGE_SIZE) params.set('size', String(f.size));

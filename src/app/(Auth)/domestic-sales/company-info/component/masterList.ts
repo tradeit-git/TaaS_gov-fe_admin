@@ -19,6 +19,7 @@ export function parseMasterFilters(sp: Record<string, string | undefined>): Mast
         sidoId: Number(sp.sidoId ?? '0') || 0,
         sigunguId: Number(sp.sigunguId ?? '0') || 0,
         unmanagedOnly: sp.unmanagedOnly === 'true',
+        linkedOnly: sp.linkedOnly === 'true',
         tagIds: (sp.tagIds ?? '').split(',').map(Number).filter(n => n > 0),
         page: Math.max(0, (Number(sp.page ?? '1') || 1) - 1),
         size: Number(sp.size ?? String(MASTER_PAGE_SIZE)) || MASTER_PAGE_SIZE,
@@ -33,6 +34,7 @@ export async function loadMasterList(filters: MasterFilters): Promise<MasterList
     if (filters.sidoId) params.set('sidoId', String(filters.sidoId));
     if (filters.sigunguId) params.set('sigunguId', String(filters.sigunguId));
     if (filters.unmanagedOnly) params.set('unmanagedOnly', 'true');
+    if (filters.linkedOnly) params.set('linkedOnly', 'true');
     if (filters.tagIds.length) params.set('tagIds', filters.tagIds.join(','));
 
     try {
