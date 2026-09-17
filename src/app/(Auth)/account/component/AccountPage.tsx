@@ -222,14 +222,14 @@ export default function AccountPage({initialData}: Props) {
                 <table className={'client_table partner_table'}>
                     <colgroup>
                         <col style={{width: '4%'}}/>
-                        <col style={{width: '15%'}}/>
-                        <col style={{width: '6%'}}/>
-                        <col style={{width: '10%'}}/>
-                        <col style={{width: '10%'}}/>
+                        <col style={{width: '13%'}}/>
                         <col style={{width: '7%'}}/>
-                        <col style={{width: '7%'}}/>
-                        <col style={{width: '22%'}}/>
                         <col style={{width: '9%'}}/>
+                        <col style={{width: '19%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '6%'}}/>
+                        <col style={{width: '20%'}}/>
+                        <col style={{width: '6%'}}/>
                         <col style={{width: '10%'}}/>
                     </colgroup>
                     <thead>

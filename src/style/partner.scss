@@ -431,7 +431,17 @@
     }
   }
 
+  td:nth-child(2) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   td:nth-child(3) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  td:nth-child(5) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
