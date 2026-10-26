@@ -15,6 +15,12 @@ export interface MasterCompanyRow {
     bizField: string | null;
     createdAt: string;
 
+    companyEmail: string | null;
+    companyCeoContact: string | null;
+    companyContact: string | null;
+    companyManagerContact: string | null;
+    companyManagerEmail: string | null;
+
     /** 관리 대상이면 그 pk. null 이면 아직 안 담은 기업이다 */
     targetId: number | null;
     targetStatus: string | null;

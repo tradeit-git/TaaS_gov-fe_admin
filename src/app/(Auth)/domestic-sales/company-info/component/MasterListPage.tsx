@@ -176,6 +176,11 @@ export default function MasterListPage({data, filters, tags}: Props) {
                         <col style={{width: 200}}/>
                         <col style={{width: 130}}/>
                         <col style={{width: 90}}/>
+                        <col style={{width: 180}}/>
+                        <col style={{width: 130}}/>
+                        <col style={{width: 130}}/>
+                        <col style={{width: 130}}/>
+                        <col style={{width: 180}}/>
                         <col style={{width: 130}}/>
                         <col style={{width: 140}}/>
                         <col style={{width: 190}}/>
@@ -186,6 +191,11 @@ export default function MasterListPage({data, filters, tags}: Props) {
                         <th>기업명</th>
                         <th>사업자번호</th>
                         <th>대표자</th>
+                        <th>기업 이메일</th>
+                        <th>대표 휴대폰</th>
+                        <th>기업 연락처</th>
+                        <th>담당자 연락처</th>
+                        <th>담당자 이메일</th>
                         <th>지역</th>
                         <th>사업분야</th>
                         <th>태그</th>
@@ -195,7 +205,7 @@ export default function MasterListPage({data, filters, tags}: Props) {
                     <tbody>
                     {rows.length === 0 ? (
                         <tr>
-                            <td colSpan={7} style={{textAlign: 'center', padding: '40px 0', color: '#999'}}>
+                            <td colSpan={12} style={{textAlign: 'center', padding: '40px 0', color: '#999'}}>
                                 조회된 기업이 없습니다.
                             </td>
                         </tr>
@@ -212,6 +222,11 @@ export default function MasterListPage({data, filters, tags}: Props) {
                                     : <span className={'ds_empty'}>미확인</span>}
                             </td>
                             <td>{row.ceoName || <span className={'ds_empty'}>{EMPTY}</span>}</td>
+                            <td>{row.companyEmail || <span className={'ds_empty'}>{EMPTY}</span>}</td>
+                            <td>{row.companyCeoContact || <span className={'ds_empty'}>{EMPTY}</span>}</td>
+                            <td>{row.companyContact || <span className={'ds_empty'}>{EMPTY}</span>}</td>
+                            <td>{row.companyManagerContact || <span className={'ds_empty'}>{EMPTY}</span>}</td>
+                            <td>{row.companyManagerEmail || <span className={'ds_empty'}>{EMPTY}</span>}</td>
                             <td>{regionText(row.sidoName, row.sigunguName)}</td>
                             <td>{row.bizField || <span className={'ds_empty'}>{EMPTY}</span>}</td>
                             <td>
